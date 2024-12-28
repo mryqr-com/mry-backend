@@ -32,6 +32,8 @@ public class JwtCookieFactory {
         Cookie cookie = new Cookie(AUTH_COOKIE_NAME, jwt);
         cookie.setMaxAge(jwtProperties.getExpire() * 60);
         cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setAttribute("SameSite", "strict");
         cookie.setDomain(commonProperties.getBaseDomainName());
         return cookie;
     }
@@ -43,6 +45,7 @@ public class JwtCookieFactory {
         cookie.setPath("/");
         cookie.setSecure(true);
         cookie.setHttpOnly(true);
+        cookie.setAttribute("SameSite", "strict");
         return cookie;
     }
 
