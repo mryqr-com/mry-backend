@@ -7,24 +7,10 @@ import com.mryqr.core.common.domain.user.User;
 import com.mryqr.core.common.exception.MryException;
 import com.mryqr.core.order.domain.Order;
 import com.mryqr.core.order.domain.delivery.Consignee;
-import com.mryqr.core.order.domain.detail.ExtraMemberOrderDetail;
-import com.mryqr.core.order.domain.detail.ExtraSmsOrderDetail;
-import com.mryqr.core.order.domain.detail.ExtraStorageOrderDetail;
-import com.mryqr.core.order.domain.detail.ExtraVideoTrafficOrderDetail;
-import com.mryqr.core.order.domain.detail.OrderDetail;
-import com.mryqr.core.order.domain.detail.PlanOrderDetail;
+import com.mryqr.core.order.domain.detail.*;
 import com.mryqr.core.plan.domain.Plan;
 import com.mryqr.core.plan.domain.PlanType;
-import com.mryqr.core.tenant.domain.event.TenantActivatedEvent;
-import com.mryqr.core.tenant.domain.event.TenantBaseSettingUpdatedEvent;
-import com.mryqr.core.tenant.domain.event.TenantCreatedEvent;
-import com.mryqr.core.tenant.domain.event.TenantDeactivatedEvent;
-import com.mryqr.core.tenant.domain.event.TenantInvoiceTitleUpdatedEvent;
-import com.mryqr.core.tenant.domain.event.TenantOrderAppliedEvent;
-import com.mryqr.core.tenant.domain.event.TenantPlanUpdatedEvent;
-import com.mryqr.core.tenant.domain.event.TenantResourceUsageUpdatedEvent;
-import com.mryqr.core.tenant.domain.event.TenantSubdomainReadyStatusUpdatedEvent;
-import com.mryqr.core.tenant.domain.event.TenantSubdomainUpdatedEvent;
+import com.mryqr.core.tenant.domain.event.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,17 +18,9 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
-import static com.mryqr.core.common.exception.ErrorCode.CONSIGNEE_ID_DUPLICATED;
-import static com.mryqr.core.common.exception.ErrorCode.FORBIDDEN_SUBDOMAIN_PREFIX;
-import static com.mryqr.core.common.exception.ErrorCode.MAX_CONSIGNEE_REACHED;
-import static com.mryqr.core.common.exception.ErrorCode.SUBDOMAIN_UPDATED_TOO_OFTEN;
-import static com.mryqr.core.common.exception.ErrorCode.TENANT_ALREADY_DEACTIVATED;
+import static com.mryqr.core.common.exception.ErrorCode.*;
 import static com.mryqr.core.common.utils.Identified.isDuplicated;
 import static com.mryqr.core.common.utils.MapUtils.mapOf;
 import static com.mryqr.core.common.utils.MryConstants.TENANT_COLLECTION;
@@ -64,7 +42,7 @@ public class Tenant extends AggregateRoot {
     private static final Set<String> FORBIDDEN_SUBDOMAIN_PREFIXES = Set.of("www", "ww", "help", "helps", "api", "apis", "image", "images",
             "doc", "docs", "blog", "blogs", "admin", "administrator", "ops", "kibana", "console", "consoles", "manager", "managers",
             "mry", "contact", "contacts", "new", "news", "mail", "mails", "ftp", "ftps", "me", "my", "video", "videos", "tv", "sex", "porn", "naked",
-            "official", "gov", "government", "file", "files", "hr", "job", "work", "career", "forum", "m", "static");
+            "official", "gov", "government", "file", "files", "hr", "job", "work", "career", "forum", "m", "static", "g");
     private String name;//租户名称
     private Packages packages;//当前套餐
     private ResourceUsage resourceUsage;//当前资源使用量统计
