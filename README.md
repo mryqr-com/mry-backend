@@ -5,18 +5,15 @@
 
 
 ## 如何访问码如云在线服务
-- 码如云提供免费的在线SaaS服务，访问地址：[https://www.mryqr.com](https://www.mryqr.com)。
+- 码如云提供免费的在线SaaS服务，访问地址为：[https://www.mryqr.com](https://www.mryqr.com)。
 
 
 ## 为什么开发码如云
-- 为了开发出一款能让自己满意的软件；
-- 为了证明DDD能够真实落地；
-- 为了实践[整洁架构](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)；
-- 更多信息请参考笔者的文章[构建自己的软件大厦](https://docs.mryqr.com/build-your-own-software-skyscraper/)。
+- 请参考作者的文章：[构建自己的软件大厦](https://docs.mryqr.com/build-your-own-software-skyscraper/)。
 
 
 ## 本地运行
-- 确保本地已安装Java 17+及Docker；
+- 确保本地已安装Java 17及以上版本，以及Docker；
 - 本地启动：`./local-run.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再启动Spring Boot主程序，启动后访问 http://localhost:8080/about
   ，如可正常访问则表示启动成功；
 - 本地构建：`./ci.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再运行单元测试，API测试以及动态代码检查等构建步骤；
