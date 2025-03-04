@@ -4,7 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -21,23 +24,19 @@ public class WebhookWebSecurityConfiguration {
     public SecurityFilterChain webhookFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher("/webhook/**")
                 .authorizeHttpRequests(registry -> registry.anyRequest().authenticated())
-                .exceptionHandling()
-                .accessDeniedHandler(accessDeniedHandler)
-                .authenticationEntryPoint(authenticationEntryPoint)
-                .and()
+                .exceptionHandling(it -> it.accessDeniedHandler(accessDeniedHandler).authenticationEntryPoint(authenticationEntryPoint))
                 .authenticationProvider(this.webhookAuthenticationProvider)
-                .httpBasic().authenticationEntryPoint(authenticationEntryPoint)
-                .and()
-                .headers().and()
-                .cors().disable()
-                .anonymous().disable()
-                .csrf().disable()
-                .servletApi().disable()
-                .logout().disable()
-                .sessionManagement().disable()
-                .securityContext().disable()
-                .requestCache().disable()
-                .formLogin().disable();
+                .httpBasic(configurer -> configurer.authenticationEntryPoint(authenticationEntryPoint))
+                .headers(Customizer.withDefaults())
+                .cors(AbstractHttpConfigurer::disable)
+                .anonymous(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
+                .servletApi(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .sessionManagement(AbstractHttpConfigurer::disable)
+                .securityContext(AbstractHttpConfigurer::disable)
+                .requestCache(RequestCacheConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable);
         return http.build();
     }
 }

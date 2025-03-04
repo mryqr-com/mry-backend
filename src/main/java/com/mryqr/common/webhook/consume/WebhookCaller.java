@@ -30,8 +30,8 @@ public class WebhookCaller {
     public WebhookCaller(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder
                 .errorHandler(new WebhookErrorHandler())
-                .setConnectTimeout(ofSeconds(10))
-                .setReadTimeout(ofSeconds(10))
+                .connectTimeout(ofSeconds(10))
+                .readTimeout(ofSeconds(10))
                 .build();
     }
 

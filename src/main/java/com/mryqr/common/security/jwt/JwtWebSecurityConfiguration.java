@@ -9,8 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -46,10 +49,7 @@ public class JwtWebSecurityConfiguration {
                         .requestMatchers(POST, "/submissions/auto-calculate/item-status").permitAll()
                         .anyRequest().authenticated())
                 .authenticationManager(authenticationManager)
-                .exceptionHandling()
-                .accessDeniedHandler(accessDeniedHandler)
-                .authenticationEntryPoint(authenticationEntryPoint)
-                .and()
+                .exceptionHandling(it -> it.accessDeniedHandler(accessDeniedHandler).authenticationEntryPoint(authenticationEntryPoint))
                 .addFilterAfter(new JwtAuthenticationFilter(authenticationManager, objectMapper, mryTracingService), BasicAuthenticationFilter.class)
                 .addFilterAfter(new AutoRefreshJwtFilter(jwtService,
                                 jwtCookieFactory,
@@ -57,17 +57,17 @@ public class JwtWebSecurityConfiguration {
                                 jwtProperties.getAheadAutoRefresh()),
                         AuthorizationFilter.class)
                 .addFilterBefore(new MdcFilter(), ExceptionTranslationFilter.class)
-                .httpBasic().disable()
-                .headers().and()
-                .cors().disable()
-                .anonymous().authenticationFilter(new JwtAnonymousAuthenticationFilter()).and()
-                .csrf().disable()
-                .servletApi().disable()
-                .logout().disable()
-                .sessionManagement().disable()
-                .securityContext().disable()
-                .requestCache().disable()
-                .formLogin().disable();
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .headers(Customizer.withDefaults())
+                .cors(AbstractHttpConfigurer::disable)
+                .anonymous(configurer -> configurer.authenticationFilter(new JwtAnonymousAuthenticationFilter()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .servletApi(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .sessionManagement(AbstractHttpConfigurer::disable)
+                .securityContext(AbstractHttpConfigurer::disable)
+                .requestCache(RequestCacheConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable);
         return http.build();
     }
 

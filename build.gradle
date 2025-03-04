@@ -11,7 +11,7 @@ buildscript {
 
 plugins {
     id 'application'
-    id "org.springframework.boot" version "3.0.0"
+    id "org.springframework.boot" version "3.4.0"
 }
 
 repositories {
@@ -19,7 +19,7 @@ repositories {
 }
 
 wrapper {
-    gradleVersion = '7.6'
+    gradleVersion = '8.5'
 }
 
 application {
@@ -76,7 +76,7 @@ dependencies {
         implementation.extendsFrom(parentBom)
     }
 
-    parentBom platform('org.springframework.boot:spring-boot-dependencies:3.0.0')
+    parentBom platform('org.springframework.boot:spring-boot-dependencies:3.4.0')
 
     //spring
     implementation('org.springframework.boot:spring-boot-starter-web')

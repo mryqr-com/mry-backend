@@ -14,16 +14,16 @@ public class MathExpressionEvaluator {
     public static boolean evalBoolean(String expression, Map<String, Double> variables) {
         requireNonBlank(expression, "Expression must not be blank.");
 
-        SimpleEvaluationContext context = new SimpleEvaluationContext.Builder().build();
+        SimpleEvaluationContext context = SimpleEvaluationContext.forPropertyAccessors().build();
         emptyIfNull(variables).forEach(context::setVariable);
-        Boolean result = parser.parseExpression(expression).getValue(context, Boolean.class);
-        return result != null ? result : false;
+        return parser.parseExpression(expression).getValue(context, Boolean.class);
     }
 
     public static Double evalDouble(String expression, Map<String, Double> variables) {
         requireNonBlank(expression, "Expression must not be blank.");
 
-        SimpleEvaluationContext context = new SimpleEvaluationContext.Builder().build();
+
+        SimpleEvaluationContext context = SimpleEvaluationContext.forPropertyAccessors().build();
         emptyIfNull(variables).forEach(context::setVariable);
         return parser.parseExpression(expression).getValue(context, Double.class);
     }
