@@ -49,6 +49,7 @@ import com.mryqr.core.submission.domain.answer.signature.SignatureAnswer;
 import com.mryqr.core.submission.domain.answer.singlelinetext.SingleLineTextAnswer;
 import com.mryqr.core.submission.domain.answer.time.TimeAnswer;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.RandomUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -85,18 +86,16 @@ import static com.mryqr.core.app.domain.ui.align.VerticalAlignType.MIDDLE;
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang3.RandomStringUtils.*;
-import static org.apache.commons.lang3.RandomUtils.*;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class RandomTestFixture {
 
     public static String rMobile() {
-        return String.valueOf(nextLong(13000000000L, 19000000000L));
+        return String.valueOf(RandomUtils.secure().randomLong(13000000000L, 19000000000L));
     }
 
     public static String rEmail() {
-        return (PersonInfoSource.getInstance().randomEnglishName().split(" ")[0] + "@" + randomAlphabetic(rInt(3, 8)) + ".com").toLowerCase();
+        return (PersonInfoSource.getInstance().randomEnglishName().split(" ")[0] + "@" + RandomStringUtils.secure().nextAlphabetic(rInt(3, 8)) + ".com").toLowerCase();
     }
 
     public static String rMobileOrEmail() {
@@ -104,15 +103,15 @@ public class RandomTestFixture {
     }
 
     public static String rPassword() {
-        return randomAlphanumeric(10);
+        return RandomStringUtils.secure().nextAlphabetic(10);
     }
 
     public static String rVerificationCode() {
-        return randomNumeric(6);
+        return RandomStringUtils.secure().nextNumeric(6);
     }
 
     public static String rMemberName() {
-        return rRawMemberName() + randomAlphanumeric(10);
+        return rRawMemberName() + RandomStringUtils.secure().nextAlphabetic(10);
     }
 
     public static String rRawMemberName() {
@@ -128,47 +127,47 @@ public class RandomTestFixture {
     }
 
     public static String rAppName() {
-        return OtherSource.getInstance().randomEconomicCategory().getName().replace("、", "") + randomAlphanumeric(5) + "应用系统";
+        return OtherSource.getInstance().randomEconomicCategory().getName().replace("、", "") + RandomStringUtils.secure().nextAlphabetic(5) + "应用系统";
     }
 
     public static String rDepartmentName() {
-        return randomAlphanumeric(6) + "部门";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "部门";
     }
 
     public static String rFormName() {
-        return randomAlphanumeric(6) + "表单";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "表单";
     }
 
     public static String rPageActionName() {
-        return randomAlphanumeric(6) + "提交";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "提交";
     }
 
     public static String rMobileWxOpenId() {
-        return randomAlphanumeric(28);
+        return RandomStringUtils.secure().nextAlphabetic(28);
     }
 
     public static String rPcWxOpenId() {
-        return randomAlphanumeric(28);
+        return RandomStringUtils.secure().nextAlphabetic(28);
     }
 
     public static String rWxUnionId() {
-        return randomAlphanumeric(28);
+        return RandomStringUtils.secure().nextAlphabetic(28);
     }
 
     public static String rPageLinkName() {
-        return randomAlphanumeric(6) + "链接";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "链接";
     }
 
     public static String rPageName() {
-        return randomAlphanumeric(6) + "页面";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "页面";
     }
 
     public static String rPlateBatchName() {
-        return randomAlphanumeric(10) + "批次";
+        return RandomStringUtils.secure().nextAlphabetic(10) + "批次";
     }
 
     public static String rQrName() {
-        return rRawQrName() + randomAlphanumeric(10);
+        return rRawQrName() + RandomStringUtils.secure().nextAlphabetic(10);
     }
 
     public static String rRawQrName() {
@@ -194,11 +193,11 @@ public class RandomTestFixture {
     }
 
     public static String rPlateKeyName() {
-        return randomAlphanumeric(6) + "键";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "键";
     }
 
     public static String rGroupName() {
-        return rRawGroupName() + randomAlphanumeric(10);
+        return rRawGroupName() + RandomStringUtils.secure().nextAlphabetic(10);
     }
 
     public static String rRawGroupName() {
@@ -206,39 +205,39 @@ public class RandomTestFixture {
     }
 
     public static String rMobileWxCode() {
-        return randomAlphanumeric(10);
+        return RandomStringUtils.secure().nextAlphabetic(10);
     }
 
     public static String rDeliveryId() {
-        return randomAlphanumeric(10);
+        return RandomStringUtils.secure().nextAlphabetic(10);
     }
 
     public static String rBankAccountId() {
-        return randomNumeric(16);
+        return RandomStringUtils.secure().nextNumeric(16);
     }
 
     public static String rWxPayTxnId() {
-        return randomNumeric(10);
+        return RandomStringUtils.secure().nextNumeric(10);
     }
 
     public static String rSubdomainPrefix() {
-        return randomAlphabetic(2, 10).toLowerCase();
+        return RandomStringUtils.secure().nextAlphabetic(2, 10).toLowerCase();
     }
 
     public static String rAttributeName() {
-        return randomAlphanumeric(6) + "属性";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "属性";
     }
 
     public static String rReportName() {
-        return randomAlphanumeric(6) + "报告";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "报告";
     }
 
     public static String rTrendItemName() {
-        return randomAlphanumeric(6) + "趋势项";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "趋势项";
     }
 
     public static String rControlName() {
-        return randomAlphanumeric(6) + "控件";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "控件";
     }
 
     public static String rAddressDetail() {
@@ -246,7 +245,7 @@ public class RandomTestFixture {
     }
 
     public static String rAssignmentPlanName() {
-        return randomAlphanumeric(6) + "任务计划";
+        return RandomStringUtils.secure().nextAlphabetic(6) + "任务计划";
     }
 
     //排除掉省市县不全的
@@ -258,18 +257,17 @@ public class RandomTestFixture {
         String districtName = null;
 
         List<Administrative> provinces = AdministrativeProvider.CHINA.getChild().stream()
-                .filter(administrative -> !excludedProvinces.contains(administrative.getName()))
-                .collect(toList());
+                .filter(administrative -> !excludedProvinces.contains(administrative.getName())).toList();
 
-        Administrative province = provinces.get(nextInt(0, provinces.size()));
+        Administrative province = provinces.get(RandomUtils.secure().randomInt(0, provinces.size()));
         provinceName = province.getName();
         List<Administrative> cities = province.getChild();
         if (isNotEmpty(cities)) {
-            Administrative city = cities.get(nextInt(0, cities.size()));
+            Administrative city = cities.get(RandomUtils.secure().randomInt(0, cities.size()));
             cityName = city.getName();
             List<Administrative> districts = city.getChild();
             if (isNotEmpty(districts)) {
-                Administrative district = districts.get(nextInt(0, districts.size()));
+                Administrative district = districts.get(RandomUtils.secure().randomInt(0, districts.size()));
                 districtName = district.getName();
             }
         }
@@ -285,8 +283,8 @@ public class RandomTestFixture {
         return Geolocation.builder()
                 .address(rAddress())
                 .point(Geopoint.builder()
-                        .longitude(nextFloat(74, 135))
-                        .latitude(nextFloat(18, 53))
+                        .longitude(RandomUtils.secure().randomFloat(74, 135))
+                        .latitude(RandomUtils.secure().randomFloat(18, 53))
                         .build())
                 .build();
     }
@@ -296,38 +294,38 @@ public class RandomTestFixture {
     }
 
     public static boolean rBool() {
-        return nextBoolean();
+        return RandomUtils.secure().randomBoolean();
     }
 
     public static <T extends Enum<?>> T rEnumOf(Class<T> clazz) {
-        int x = nextInt(0, clazz.getEnumConstants().length);
+        int x = RandomUtils.secure().randomInt(0, clazz.getEnumConstants().length);
         return clazz.getEnumConstants()[x];
     }
 
     public static String rSentence(int maxLength) {
         if (maxLength < 5) {
-            return RandomStringUtils.random(maxLength);
+            return RandomStringUtils.secure().next(maxLength);
         }
 
-        String sentence = OtherSource.getInstance().randomChinese(nextInt(1, 5000));
+        String sentence = OtherSource.getInstance().randomChinese(RandomUtils.secure().randomInt(1, 5000));
         if (sentence.length() > maxLength) {
             return sentence.substring(0, maxLength - 1).trim();
         }
 
         String trimed = sentence.trim();
         if (isBlank(trimed)) {
-            return RandomStringUtils.random(maxLength);
+            return RandomStringUtils.secure().next(maxLength);
         }
 
         return trimed;
     }
 
     public static int rInt(int minInclusive, int maxInclusive) {
-        return nextInt(minInclusive, maxInclusive + 1);
+        return RandomUtils.secure().randomInt(minInclusive, maxInclusive + 1);
     }
 
     public static String rUrl() {
-        return "https://www." + randomAlphanumeric(10) + ".com";
+        return "https://www." + RandomStringUtils.secure().nextAlphabetic(10) + ".com";
     }
 
     public static String rColor() {
@@ -353,7 +351,7 @@ public class RandomTestFixture {
 
     public static String rFontFamily() {
         ArrayList<String> fonts = newArrayList("默认", "宋体", "黑体", "楷体", "Helvetica", "Arial", "Verdana");
-        return fonts.get(nextInt(0, fonts.size()));
+        return fonts.get(RandomUtils.secure().randomInt(0, fonts.size()));
     }
 
     public static FontStyle rFontStyle() {
@@ -432,11 +430,11 @@ public class RandomTestFixture {
     }
 
     public static UploadedFile rUploadedFile() {
-        String ossKey = randomAlphanumeric(10) + "/" + randomAlphanumeric(10) + "/" + ".pdf";
+        String ossKey = RandomStringUtils.secure().nextAlphabetic(10) + "/" + RandomStringUtils.secure().nextAlphabetic(10) + "/" + ".pdf";
         String fileUrl = "https://mry-files-local.oss-cn-hagnzhou.aliyuncs.com/" + ossKey;
         return UploadedFile.builder()
                 .id(newShortUuid())
-                .name(randomAlphanumeric(10) + "文件")
+                .name(RandomStringUtils.secure().nextAlphabetic(10) + "文件")
                 .type("application/pdf")
                 .fileUrl(fileUrl)
                 .ossKey(ossKey)
@@ -445,11 +443,11 @@ public class RandomTestFixture {
     }
 
     public static UploadedFile rImageFile() {
-        String ossKey = randomAlphanumeric(10) + "/" + randomAlphanumeric(10) + "/" + ".png";
+        String ossKey = RandomStringUtils.secure().nextAlphabetic(10) + "/" + RandomStringUtils.secure().nextAlphabetic(10) + "/" + ".png";
         String fileUrl = "https://mry-files-local.oss-cn-hangzhou.aliyuncs.com/" + ossKey;
         return UploadedFile.builder()
                 .id(newShortUuid())
-                .name(randomAlphanumeric(10) + "图片")
+                .name(RandomStringUtils.secure().nextAlphabetic(10) + "图片")
                 .type("image/png")
                 .fileUrl(fileUrl)
                 .ossKey(ossKey)
@@ -458,11 +456,11 @@ public class RandomTestFixture {
     }
 
     public static UploadedFile rVideoFile() {
-        String ossKey = randomAlphanumeric(10) + "/" + randomAlphanumeric(10) + "/" + ".mp4";
+        String ossKey = RandomStringUtils.secure().nextAlphabetic(10) + "/" + RandomStringUtils.secure().nextAlphabetic(10) + "/" + ".mp4";
         String fileUrl = "https://mry-files-local.oss-cn-hangzhou.aliyuncs.com/" + ossKey;
         return UploadedFile.builder()
                 .id(newShortUuid())
-                .name(randomAlphanumeric(10) + "视频")
+                .name(RandomStringUtils.secure().nextAlphabetic(10) + "视频")
                 .type("video/mp4")
                 .fileUrl(fileUrl)
                 .ossKey(ossKey)
@@ -479,11 +477,11 @@ public class RandomTestFixture {
     }
 
     public static String rControlFieldName() {
-        return rBool() ? null : randomAlphanumeric(6) + "字段名";
+        return rBool() ? null : RandomStringUtils.secure().nextAlphabetic(6) + "字段名";
     }
 
     public static String rInputNumberControlSuffix() {
-        return rBool() ? null : randomAlphanumeric(6) + "后缀";
+        return rBool() ? null : RandomStringUtils.secure().nextAlphabetic(6) + "后缀";
     }
 
     public static ControlFillableSetting defaultFillableSetting() {
@@ -502,7 +500,7 @@ public class RandomTestFixture {
         return IntStream.range(0, size).mapToObj(value -> TextOption.builder()
                         .id(newShortUuid())
                         .color(rColor())
-                        .name(randomAlphabetic(6) + "选项")
+                        .name(RandomStringUtils.secure().nextAlphabetic(6) + "选项")
                         .build())
                 .collect(toList());
     }
@@ -1191,7 +1189,7 @@ public class RandomTestFixture {
     }
 
     public static RadioAnswer.RadioAnswerBuilder<?, ?> rAnswerBuilder(FRadioControl control) {
-        TextOption option = control.getOptions().get(nextInt(0, control.getOptions().size()));
+        TextOption option = control.getOptions().get(RandomUtils.secure().randomInt(0, control.getOptions().size()));
         return RadioAnswer.builder().controlId(control.getId()).controlType(control.getType()).optionId(option.getId());
     }
 
@@ -1390,10 +1388,10 @@ public class RandomTestFixture {
             int size = rInt(1, Math.min(max, optionSize));
             List<String> allOptionIds = control.getOptions().stream().map(TextOption::getId).collect(toList());
             Collections.shuffle(allOptionIds);
-            List<String> result = allOptionIds.stream().limit(size).collect(toList());
+            List<String> result = allOptionIds.stream().limit(size).toList();
             optionIds.addAll(result);
         } else {
-            TextOption option = control.getOptions().get(nextInt(0, control.getOptions().size()));
+            TextOption option = control.getOptions().get(RandomUtils.secure().randomInt(0, control.getOptions().size()));
             optionIds.add(option.getId());
         }
 
@@ -1581,14 +1579,14 @@ public class RandomTestFixture {
     }
 
     public static FMultiLevelSelectionControl.FMultiLevelSelectionControlBuilder<?, ?> defaultMultiLevelSelectionControlBuilder() {
-        String titleText = randomAlphanumeric(10) + "/" + randomAlphanumeric(10) + "/" + randomAlphanumeric(10);
+        String titleText = RandomStringUtils.secure().nextAlphabetic(10) + "/" + RandomStringUtils.secure().nextAlphabetic(10) + "/" + RandomStringUtils.secure().nextAlphabetic(10);
 
         String optionText = IntStream.range(0, rInt(3, 5)).mapToObj(firstLevel -> {
-            String firstLevelName = randomAlphanumeric(6);
+            String firstLevelName = RandomStringUtils.secure().nextAlphabetic(6);
             return IntStream.range(0, rInt(3, 10)).mapToObj(secondLevel -> {
-                String secondLevelName = randomAlphanumeric(6);
+                String secondLevelName = RandomStringUtils.secure().nextAlphabetic(6);
                 return IntStream.range(0, rInt(3, 5)).mapToObj(value -> {
-                    String thirdLevelName = randomAlphanumeric(6);
+                    String thirdLevelName = RandomStringUtils.secure().nextAlphabetic(6);
                     return firstLevelName + "/" + secondLevelName + "/" + thirdLevelName;
                 });
             });
@@ -1628,16 +1626,16 @@ public class RandomTestFixture {
         MultiLevelOption option = control.getOption();
         List<MultiLevelOption> firstLevelOptions = option.getOptions();
         if (isNotEmpty(firstLevelOptions)) {
-            MultiLevelOption firstLevel = firstLevelOptions.get(nextInt(0, firstLevelOptions.size()));
+            MultiLevelOption firstLevel = firstLevelOptions.get(RandomUtils.secure().randomInt(0, firstLevelOptions.size()));
             level1Name = firstLevel.getName();
 
             List<MultiLevelOption> secondLevelOptions = firstLevel.getOptions();
             if (isNotEmpty(secondLevelOptions)) {
-                MultiLevelOption secondLevel = secondLevelOptions.get(nextInt(0, secondLevelOptions.size()));
+                MultiLevelOption secondLevel = secondLevelOptions.get(RandomUtils.secure().randomInt(0, secondLevelOptions.size()));
                 level2Name = secondLevel.getName();
                 List<MultiLevelOption> thirdLevelOptions = secondLevel.getOptions();
                 if (isNotEmpty(thirdLevelOptions)) {
-                    MultiLevelOption thirdLevel = thirdLevelOptions.get(nextInt(0, thirdLevelOptions.size()));
+                    MultiLevelOption thirdLevel = thirdLevelOptions.get(RandomUtils.secure().randomInt(0, thirdLevelOptions.size()));
                     level3Name = thirdLevel.getName();
                 }
             }
@@ -1764,7 +1762,7 @@ public class RandomTestFixture {
     }
 
     public static NumberInputAnswer.NumberInputAnswerBuilder<?, ?> rAnswerBuilder(FNumberInputControl control) {
-        int number = nextInt(1, (int) control.getMinMaxSetting().getMax());
+        int number = RandomUtils.secure().randomInt(1, (int) control.getMinMaxSetting().getMax());
 
         return NumberInputAnswer.builder()
                 .controlId(control.getId())
@@ -1919,7 +1917,7 @@ public class RandomTestFixture {
         return IdentifierAnswer.builder()
                 .controlId(control.getId())
                 .controlType(control.getType())
-                .content(randomAlphanumeric(size));
+                .content(RandomStringUtils.secure().nextAlphabetic(size));
     }
 
     public static FPersonNameControl defaultPersonNameControl() {
@@ -2112,7 +2110,7 @@ public class RandomTestFixture {
     }
 
     public static ItemStatusAnswer.ItemStatusAnswerBuilder<?, ?> rAnswerBuilder(FItemStatusControl control) {
-        TextOption option = control.getOptions().get(nextInt(0, control.getOptions().size()));
+        TextOption option = control.getOptions().get(RandomUtils.secure().randomInt(0, control.getOptions().size()));
         return ItemStatusAnswer.builder().controlId(control.getId()).controlType(control.getType()).optionId(option.getId());
     }
 
@@ -2147,7 +2145,7 @@ public class RandomTestFixture {
     public static PointCheckAnswer.PointCheckAnswerBuilder<?, ?> rAnswerBuilder(FPointCheckControl control) {
         Map<String, PointCheckValue> checks = newHashMap();
 
-        control.getOptions().forEach(textOption -> checks.put(textOption.getId(), nextInt(0, 10) > 1 ? PointCheckValue.YES : PointCheckValue.NO));
+        control.getOptions().forEach(textOption -> checks.put(textOption.getId(), RandomUtils.secure().randomInt(0, 10) > 1 ? PointCheckValue.YES : PointCheckValue.NO));
 
         return PointCheckAnswer.builder()
                 .controlId(control.getId())
@@ -2244,11 +2242,4 @@ public class RandomTestFixture {
                 .externalUrl(null)
                 .internalPageId(null);
     }
-
-    public static void main(String[] args) {
-        IntStream.range(0, 500).forEach(value -> {
-            System.out.println();
-        });
-    }
-
 }
