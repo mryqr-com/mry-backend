@@ -5,6 +5,7 @@ import com.mryqr.common.domain.user.User;
 import com.mryqr.common.exception.MryException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,7 +14,6 @@ import static com.mryqr.common.utils.MryConstants.NO_TENANT_ID;
 import static com.mryqr.common.utils.MryConstants.VERIFICATION_COLLECTION;
 import static com.mryqr.common.utils.SnowflakeIdGenerator.newSnowflakeId;
 import static lombok.AccessLevel.PRIVATE;
-import static org.apache.commons.lang3.RandomStringUtils.randomNumeric;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Getter
@@ -29,7 +29,7 @@ public class VerificationCode extends AggregateRoot {
     public VerificationCode(String mobileOrEmail, VerificationCodeType type, String tenantId, User user) {
         super(newVerificationCodeId(), isNotBlank(tenantId) ? tenantId : NO_TENANT_ID, user);
         this.mobileOrEmail = mobileOrEmail;
-        this.code = randomNumeric(6);
+        this.code = RandomStringUtils.secure().nextNumeric(6);
         this.type = type;
         this.usedCount = 0;
     }

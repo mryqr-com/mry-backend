@@ -14,6 +14,7 @@ import com.mryqr.core.tenant.domain.Tenant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomUtils;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -30,7 +31,6 @@ import static com.mryqr.core.order.domain.PaymentType.*;
 import static com.mryqr.core.order.domain.detail.OrderDetailType.PLATE_PRINTING;
 import static java.lang.String.valueOf;
 import static lombok.AccessLevel.PRIVATE;
-import static org.apache.commons.lang3.RandomUtils.nextInt;
 
 @Slf4j
 @Getter
@@ -74,7 +74,7 @@ public class Order extends AggregateRoot {
         this.planVersion = tenant.planVersion();
 
         if (paymentType == BANK_TRANSFER) {
-            this.bankTransferCode = valueOf(nextInt(100000, 999999));
+            this.bankTransferCode = valueOf(RandomUtils.secure().randomInt(100000, 999999));
         }
 
         this.screenShots = List.of();
