@@ -15,9 +15,8 @@ public class RedisConfiguration {
 
     @Bean
     public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        StringRedisTemplate template = new StringRedisTemplate(redisConnectionFactory);
-        template.setEnableTransactionSupport(true);
-        return template;
+        //        template.setEnableTransactionSupport(true); // this results in error in aliyun production
+        return new StringRedisTemplate(redisConnectionFactory);
     }
 
     @Bean
