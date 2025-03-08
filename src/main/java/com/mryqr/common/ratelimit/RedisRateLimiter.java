@@ -3,18 +3,16 @@ package com.mryqr.common.ratelimit;
 import com.mryqr.common.exception.MryException;
 import com.mryqr.common.properties.CommonProperties;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static com.mryqr.common.exception.ErrorCode.TOO_MANY_REQUEST;
 import static com.mryqr.common.utils.CommonUtils.requireNonBlank;
 import static com.mryqr.common.utils.MapUtils.mapOf;
+import static com.mryqr.management.MryManageTenant.MRY_MANAGE_TENANT_ID;
 import static java.lang.Integer.parseInt;
 import static java.time.Instant.now;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -31,10 +29,14 @@ public class RedisRateLimiter implements MryRateLimiter {
         requireNonBlank(tenantId, "Tenant ID must not be blank.");
         requireNonBlank(key, "Key must not be blank.");
 
+        if (Objects.equals(tenantId, MRY_MANAGE_TENANT_ID)) {
+            return;// do not apply for mry management tenant
+        }
+
         //以5秒为周期统计
         doApply(key + ":" + tenantId + ":" + now().getEpochSecond() / 5,
                 tps * 5,
-                5,
+                10,
                 SECONDS);
     }
 
@@ -45,7 +47,7 @@ public class RedisRateLimiter implements MryRateLimiter {
         //以5秒为周期统计
         doApply(key + ":" + now().getEpochSecond() / 5,
                 tps * 5,
-                5,
+                10,
                 SECONDS);
     }
 
@@ -64,16 +66,7 @@ public class RedisRateLimiter implements MryRateLimiter {
             throw new MryException(TOO_MANY_REQUEST, "当前请求量过大。", mapOf("key", finalKey));
         }
 
-        stringRedisTemplate.execute(new SessionCallback<>() {
-            @Override
-            public <K, V> List<Object> execute(RedisOperations<K, V> operations) {
-                final StringRedisTemplate redisTemplate = (StringRedisTemplate) operations;
-                final ValueOperations<String, String> valueOperations = redisTemplate.opsForValue();
-                operations.multi();
-                valueOperations.increment(finalKey);
-                redisTemplate.expire(finalKey, expire, expireUnit);
-                return operations.exec();
-            }
-        });
+        stringRedisTemplate.opsForValue().increment(finalKey);
+        stringRedisTemplate.expire(finalKey, expire, expireUnit);
     }
 }

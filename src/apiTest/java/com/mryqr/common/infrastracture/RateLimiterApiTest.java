@@ -1,25 +1,29 @@
 package com.mryqr.common.infrastracture;
 
 import com.mryqr.BaseApiTest;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.TestPropertySource;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.IntStream;
 
-import static com.mryqr.common.exception.ErrorCode.TOO_MANY_REQUEST;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static java.util.stream.Collectors.toSet;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Slf4j
+@TestPropertySource(properties = {"mry.common.limitRate = true"})
 public class RateLimiterApiTest extends BaseApiTest {
 
     @Test
     public void should_apply_rate_limiter() {
+        Set<Integer> statusCodes = IntStream.rangeClosed(1, 100)
+                .mapToObj(index -> supplyAsync(() -> given().when().get("/about").then().extract().statusCode()))
+                .map(CompletableFuture::join)
+                .collect(toSet());
 
-        List<Integer> statuses = new ArrayList<>();
-
-        for (int i = 0; i < 111; i++) {
-            statuses.add(given().when().get("/about").then().extract().statusCode());
-        }
-
-        assertTrue(statuses.stream().anyMatch(status -> status == TOO_MANY_REQUEST.getStatus()));
+        assertEquals(Set.of(200, 429), statusCodes);
     }
 }

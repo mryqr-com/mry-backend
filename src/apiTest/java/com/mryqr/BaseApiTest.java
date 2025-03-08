@@ -9,6 +9,7 @@ import com.mryqr.common.exception.Error;
 import com.mryqr.common.exception.ErrorCode;
 import com.mryqr.common.exception.QErrorResponse;
 import com.mryqr.common.password.MryPasswordEncoder;
+import com.mryqr.common.properties.CommonProperties;
 import com.mryqr.common.security.jwt.JwtService;
 import com.mryqr.common.utils.MryObjectMapper;
 import com.mryqr.core.app.domain.AppFactory;
@@ -69,6 +70,9 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 @Execution(CONCURRENT)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 public abstract class BaseApiTest {
+
+    @Autowired
+    protected CommonProperties commonProperties;
 
     @Autowired
     protected MongoTemplate mongoTemplate;

@@ -57,7 +57,7 @@ configurations.all {
     exclude group: "org.junit.vintage", module: "junit-vintage-engine"
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.compilerArgs.add("-parameters")
 }
 

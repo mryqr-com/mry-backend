@@ -1,3 +1,7 @@
+buildTime: fakeValue
+gitRevision: fakeValue
+gitBranch: fakeValue
+
 server:
   port: 8080
 
@@ -62,7 +66,7 @@ mry:
   common:
     httpsEnabled: false
     baseDomainName: ci.mryqr.com
-    limitRate: true
+    limitRate: false
     webhookUserName: tFi7iVdAQwSQDnrhDGp7Vg
     webhookPassword: Dup7ANsTR0q6bIpbDTCl5w
     webhookAllowLocalhost: true
