@@ -20,8 +20,9 @@ public class SubmissionDeletedWebhookPayload extends WebhookPayload {
                                            String plateId,
                                            String appId,
                                            String pageId,
-                                           String eventId) {
-        super(SUBMISSION_DELETED, appId, eventId);
+                                           String eventId,
+                                           String tenantId) {
+        super(SUBMISSION_DELETED, appId, eventId, tenantId);
         this.submissionId = submissionId;
         this.qrId = qrId;
         this.plateId = plateId;

@@ -20,8 +20,9 @@ public class QrDeletedWebhookPayload extends WebhookPayload {
                                    String customId,
                                    String groupId,
                                    String appId,
-                                   String eventId) {
-        super(QR_DELETED, appId, eventId);
+                                   String eventId,
+                                   String tenantId) {
+        super(QR_DELETED, appId, eventId, tenantId);
         this.qrId = qrId;
         this.plateId = plateId;
         this.customId = customId;

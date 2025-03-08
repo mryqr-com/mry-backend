@@ -36,7 +36,7 @@ public abstract class BaseQrWebhookPayload extends WebhookPayload {
     private String createdBy;
 
     protected BaseQrWebhookPayload(WebhookPayloadType type, QR qr, String eventId) {
-        super(type, qr.getAppId(), eventId);
+        super(type, qr.getAppId(), eventId, qr.getTenantId());
         this.qrId = qr.getId();
         this.name = qr.getName();
         this.plateId = qr.getPlateId();

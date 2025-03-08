@@ -21,15 +21,7 @@ public class WebhookUrlValidator implements ConstraintValidator<WebhookUrl, Stri
         }
 
         try {
-            URL theUrl = new URL(url);
-            String host = theUrl.getHost();
-
-            //以下如果启用的话，会导致API测试失败，
-//            if(host.equals("localhost")){
-//                return false;
-//            }
-
-            return !InetAddresses.isInetAddress(host);
+            return !InetAddresses.isInetAddress(new URL(url).getHost());
         } catch (Exception exception) {
             return false;
         }

@@ -33,7 +33,7 @@ public abstract class BaseSubmissionWebhookPayload extends WebhookPayload {
     private String referenceData;
 
     protected BaseSubmissionWebhookPayload(WebhookPayloadType type, Submission submission, QR qr, String eventId) {
-        super(type, submission.getAppId(), eventId);
+        super(type, submission.getAppId(), eventId, qr.getTenantId());
         this.submissionId = submission.getId();
         this.qrId = submission.getQrId();
         this.plateId = submission.getPlateId();

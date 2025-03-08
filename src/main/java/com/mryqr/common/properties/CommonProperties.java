@@ -25,4 +25,6 @@ public class CommonProperties {
     @NotBlank
     private String webhookPassword;
 
+    private boolean webhookAllowLocalhost;
+
 }

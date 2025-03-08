@@ -38,10 +38,13 @@ public abstract class WebhookPayload {
     private String appId;
     private String eventId;
 
-    public WebhookPayload(WebhookPayloadType type, String appId, String eventId) {
+    private String tenantId;
+
+    public WebhookPayload(WebhookPayloadType type, String appId, String eventId, String tenantId) {
         this.id = newShortUuid();
         this.type = type;
         this.appId = appId;
         this.eventId = eventId;
+        this.tenantId = tenantId;
     }
 }

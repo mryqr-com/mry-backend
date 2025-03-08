@@ -1,6 +1,7 @@
 package com.mryqr.common.webhook.consume;
 
 import com.mryqr.common.email.MryEmailSender;
+import com.mryqr.common.properties.CommonProperties;
 import com.mryqr.common.utils.CommonUtils;
 import com.mryqr.common.utils.MryObjectMapper;
 import com.mryqr.common.webhook.WebhookPayload;
@@ -21,6 +22,7 @@ import java.util.stream.Stream;
 
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.mryqr.common.domain.user.User.NOUSER;
+import static com.mryqr.management.MryManageTenant.MRY_MANAGE_TENANT_ID;
 import static java.lang.Integer.parseInt;
 import static java.util.Set.copyOf;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
@@ -38,6 +40,8 @@ public class WebhookCallService {
     private final MemberRepository memberRepository;
     private final MryEmailSender mryEmailSender;
 
+    private final CommonProperties commonProperties;
+
     public void call(WebhookPayload payload, String appId, WebhookSetting setting) {
         if (!setting.isEnabled()) {
             log.warn("Webhook is not enabled, skip call webhook for: {}.", mryObjectMapper.writeValueAsString(payload));
@@ -51,6 +55,14 @@ public class WebhookCallService {
 
         if (isBlank(setting.getUrl())) {
             log.warn("Webhook URL is empty, skip call webhook for: {}.", mryObjectMapper.writeValueAsString(payload));
+            return;
+        }
+
+        if (!commonProperties.isWebhookAllowLocalhost() &&
+            !Objects.equals(payload.getTenantId(), MRY_MANAGE_TENANT_ID) &&
+            setting.getUrl().contains("localhost")) {
+            log.warn("Webhook URL cannot include localhost, skip call webhook for: {}", mryObjectMapper.writeValueAsString(payload));
+            return;
         }
 
         try {

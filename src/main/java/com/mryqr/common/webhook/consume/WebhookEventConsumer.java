@@ -62,7 +62,8 @@ public class WebhookEventConsumer {
                     theEvent.getCustomId(),
                     theEvent.getGroupId(),
                     theEvent.getAppId(),
-                    domainEvent.getId());
+                    theEvent.getId(),
+                    theEvent.getArTenantId());
             webhookCallService.call(payload, app.getId(), app.getWebhookSetting());
             return;
         }
@@ -107,7 +108,8 @@ public class WebhookEventConsumer {
                     qr.getPlateId(),
                     theEvent.getAppId(),
                     theEvent.getPageId(),
-                    domainEvent.getId()
+                    domainEvent.getId(),
+                    theEvent.getArTenantId()
             );
             webhookCallService.call(payload, app.getId(), app.getWebhookSetting());
         }
