@@ -22,7 +22,7 @@
 - 本地启动：`./local-run.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再启动Spring
   Boot主程序，启动后访问 http://localhost:8080/about
   ，如可正常访问则表示启动成功；
-- 本地构建：`./ci.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再运行单元测试，API测试以及动态代码检查等构建步骤；
+- 本地构建：`./ci-build.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再运行单元测试，API测试以及动态代码检查等构建步骤；
 
 ## 常用命令
 
@@ -34,6 +34,10 @@
 | 本地构建               | `./ci-build.sh`          | 将运行单元测试，API测试以及静态代码检查                    |
 | 单独停止docker-compose | `./gradlew composeDown`  | 将清除所有本地数据，包括MongoDB和Redis                |
 | 单独启动docker-compose | `./gradlew composeUp`    | 通过docker-compose启动MongoDB和Redis，如已经启动则跳过 |
+
+
+## IDE配置
+- 如果你是在IntelliJ中打开，那么请执行以下操作：在Intelli的设置中，找到Build, Execution, Deployment > Compiler > Java Compiler > Additional command line parameters，然后输入`-parameters`
 
 ## 软件协议
 

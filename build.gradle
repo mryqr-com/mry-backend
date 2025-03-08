@@ -57,6 +57,10 @@ configurations.all {
     exclude group: "org.junit.vintage", module: "junit-vintage-engine"
 }
 
+tasks.withType(JavaCompile) {
+    options.compilerArgs.add("-parameters")
+}
+
 tasks.withType(Test) {
     useJUnitPlatform()
 }
