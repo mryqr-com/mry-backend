@@ -46,7 +46,7 @@ public class CreateAssignmentsJob {
     public void run(LocalDateTime time) {
         LocalDateTime startTime = time.withMinute(0).withSecond(0).withNano(0);
         String timeString = MRY_DATE_TIME_FORMATTER.format(startTime);
-        log.info("Started create assignments from assignment plans for time[{}].", timeString);
+        log.debug("Started create assignments from assignment plans for time[{}].", timeString);
 
         ForkJoinPool forkJoinPool = new ForkJoinPool(10);
         String startId = newAssignmentPlanId();
@@ -73,7 +73,7 @@ public class CreateAssignmentsJob {
             forkJoinPool.shutdown();
         }
 
-        log.info("Finished create assignments from assignment plans for time[{}].", timeString);
+        log.debug("Finished create assignments from assignment plans for time[{}].", timeString);
     }
 
     private void createAssignment(AssignmentPlan assignmentPlan, LocalDateTime startTime) {

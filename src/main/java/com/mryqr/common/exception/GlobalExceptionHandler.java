@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.List;
 import java.util.Map;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
@@ -30,19 +29,12 @@ import static org.springframework.http.HttpStatus.valueOf;
 @ControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
-    private static final List<Integer> WARN_CODES = List.of(400, 401, 403, 426, 429);
     private final MryTracingService mryTracingService;
-
 
     @ResponseBody
     @ExceptionHandler(MryException.class)
     public ResponseEntity<?> handleMryException(MryException ex, HttpServletRequest request) {
-        if (WARN_CODES.contains(ex.getCode().getStatus())) {
-            log.warn("Mry warning: {}", ex.getMessage());
-        } else {
-            log.error("Mry error: {}", ex.getMessage());
-        }
-
+        log.error("Mry error: {}", ex.getMessage());
         return createErrorResponse(ex, request.getRequestURI());
     }
 

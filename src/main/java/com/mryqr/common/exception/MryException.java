@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.mryqr.common.exception.ErrorCode.*;
 import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -87,27 +88,31 @@ public final class MryException extends RuntimeException {
     }
 
     public static MryException requestValidationException(Map<String, Object> data) {
-        return new MryException(ErrorCode.REQUEST_VALIDATION_FAILED, "请求数据验证失败。", data);
+        return new MryException(REQUEST_VALIDATION_FAILED, "请求数据验证失败。", data);
     }
 
     public static MryException requestValidationException(String key, Object value) {
-        return new MryException(ErrorCode.REQUEST_VALIDATION_FAILED, "请求数据验证失败。", key, value);
+        return new MryException(REQUEST_VALIDATION_FAILED, "请求数据验证失败。", key, value);
     }
 
     public static MryException requestValidationException(String message) {
-        return new MryException(ErrorCode.REQUEST_VALIDATION_FAILED, message);
+        return new MryException(REQUEST_VALIDATION_FAILED, message);
     }
 
     public static MryException accessDeniedException() {
-        return new MryException(ErrorCode.ACCESS_DENIED, "权限不足。");
+        return new MryException(ACCESS_DENIED, "权限不足。");
     }
 
     public static MryException accessDeniedException(String userMessage) {
-        return new MryException(ErrorCode.ACCESS_DENIED, userMessage);
+        return new MryException(ACCESS_DENIED, userMessage);
     }
 
     public static MryException authenticationException() {
-        return new MryException(ErrorCode.AUTHENTICATION_FAILED, "登录失败。");
+        return new MryException(AUTHENTICATION_FAILED, "登录失败。");
+    }
+
+    public static MryException authenticationException(String userMessage, Map<String, Object> data) {
+        return new MryException(AUTHENTICATION_FAILED, userMessage, data);
     }
 
     public void addData(String key, Object value) {

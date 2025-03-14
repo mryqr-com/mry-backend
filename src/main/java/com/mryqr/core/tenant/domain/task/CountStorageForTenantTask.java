@@ -52,7 +52,7 @@ public class CountStorageForTenantTask implements RetryableTask {
                 Tenant tenant = tenantRepository.byId(tenantId);
                 tenant.setStorage(parseFloat(count), NOUSER);
                 tenantRepository.save(tenant);
-                log.info("Counted {}G storage for tenant[{}].", count, tenantId);
+                log.debug("Counted {}G storage for tenant[{}].", count, tenantId);
             } else {
                 log.error("Failed to count storage for tenant[{}]: {}.", tenantId, output);
             }
