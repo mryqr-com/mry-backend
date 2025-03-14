@@ -50,8 +50,8 @@ public class RestErrorController extends AbstractErrorController {
         String message = getMessage(status, errorAttributes);
         String path = (String) errorAttributes.get("path");
         String traceId = mryTracingService.currentTraceId();
-
-        log.error("Error access[{}]:{}.", path, message);
+        String trace = (String) errorAttributes.get("trace");
+        log.error("Error access[{}]:{}.{}", path, message, trace);
         Error errorDetail = new Error(errorCode, status.value(), message, path, traceId, null);
         return new ResponseEntity<>(errorDetail.toErrorResponse(), new HttpHeaders(), status);
     }

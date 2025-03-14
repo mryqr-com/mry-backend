@@ -27,7 +27,7 @@ public class ExpireAssignmentsJob {
     public void run(LocalDateTime givenTime) {
         Instant expireTime = givenTime.withMinute(0).withSecond(0).withNano(0).atZone(systemDefault()).toInstant();
         String timeString = MRY_DATE_TIME_FORMATTER.format(expireTime);
-        log.info("Started expire assignments job for time[{}].", timeString);
+        log.debug("Started expire assignments job for time[{}].", timeString);
 
         ForkJoinPool forkJoinPool = new ForkJoinPool(10);
         String startId = newAssignmentId();
@@ -55,7 +55,7 @@ public class ExpireAssignmentsJob {
             forkJoinPool.shutdown();
         }
 
-        log.info("Finished expire assignments for time[{}].", timeString);
+        log.debug("Finished expire assignments for time[{}].", timeString);
     }
 
 }

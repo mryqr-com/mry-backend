@@ -1,6 +1,5 @@
 package com.mryqr.core.login.domain;
 
-import com.mryqr.common.exception.MryException;
 import com.mryqr.common.password.MryPasswordEncoder;
 import com.mryqr.common.security.jwt.JwtService;
 import com.mryqr.common.wx.auth.mobile.MobileWxAuthService;
@@ -16,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import static com.mryqr.common.exception.MryException.authenticationException;
+import static com.mryqr.common.utils.CommonUtils.maskMobileOrEmail;
+import static com.mryqr.common.utils.MapUtils.mapOf;
 import static com.mryqr.core.verification.domain.VerificationCodeType.LOGIN;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -35,11 +36,11 @@ public class LoginDomainService {
                                          String password,
                                          WxIdInfo wxIdInfo) {
         Member member = memberRepository.byMobileOrEmailOptional(mobileOrEmail)
-                .orElseThrow(MryException::authenticationException);
+                .orElseThrow(() -> authenticationException("手机号或邮箱登录失败", mapOf("mobileOrEmail", maskMobileOrEmail(mobileOrEmail))));
 
         if (!mryPasswordEncoder.matches(password, member.getPassword())) {
             memberDomainService.recordMemberFailedLogin(member);
-            throw authenticationException();
+            throw authenticationException("手机号或邮箱登录失败", mapOf("mobileOrEmail", maskMobileOrEmail(mobileOrEmail)));
         }
 
         member.checkActive();
@@ -51,7 +52,7 @@ public class LoginDomainService {
                                             WxIdInfo wxIdInfo) {
         verificationCodeChecker.check(mobileOrEmail, verificationCode, LOGIN);
         Member member = memberRepository.byMobileOrEmailOptional(mobileOrEmail)
-                .orElseThrow(MryException::authenticationException);
+                .orElseThrow(() -> authenticationException("验证码登录失败", mapOf("mobileOrEmail", maskMobileOrEmail(mobileOrEmail))));
 
         member.checkActive();
         return generateJwtAndTryBindWx(member, wxIdInfo);

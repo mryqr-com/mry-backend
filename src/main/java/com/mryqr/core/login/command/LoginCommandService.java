@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static com.mryqr.common.exception.MryException.authenticationException;
 import static com.mryqr.common.utils.CommonUtils.maskMobileOrEmail;
+import static com.mryqr.common.utils.MapUtils.mapOf;
 
 @Slf4j
 @Component
@@ -39,16 +40,12 @@ public class LoginCommandService {
             log.info("User[{}] logged in using password.", maskMobileOrEmail(command.getMobileOrEmail()));
             return token;
         } catch (Throwable t) {
-            //401或409时直接抛出异常
             if (t instanceof MryException mryException &&
                 (mryException.getCode().getStatus() == 401 || mryException.getCode().getStatus() == 409)) {
-                log.warn("Password login failed for [{}].", maskMobileOrEmail(mobileOrEmail));
                 throw mryException;
             }
 
-            //其他情况直接一个笼统的异常
-            log.warn("Password login failed for [{}].", maskMobileOrEmail(mobileOrEmail), t);
-            throw authenticationException();
+            throw authenticationException("手机号或密码登录失败", mapOf("mobileOrEmail", maskMobileOrEmail(mobileOrEmail)));
         }
     }
 
@@ -66,16 +63,12 @@ public class LoginCommandService {
             log.info("User[{}] logged in using verification code.", maskMobileOrEmail(command.getMobileOrEmail()));
             return token;
         } catch (Throwable t) {
-            //401或409时直接抛出异常
             if (t instanceof MryException mryException &&
                 (mryException.getCode().getStatus() == 401 || mryException.getCode().getStatus() == 409)) {
-                log.warn("Verification code login failed for [{}].", maskMobileOrEmail(mobileOrEmail));
                 throw mryException;
             }
 
-            //其他情况直接一个笼统的异常
-            log.warn("Verification code login failed for [{}].", maskMobileOrEmail(mobileOrEmail), t);
-            throw authenticationException();
+            throw authenticationException("验证码登录失败", mapOf("mobileOrEmail", maskMobileOrEmail(mobileOrEmail)));
         }
     }
 

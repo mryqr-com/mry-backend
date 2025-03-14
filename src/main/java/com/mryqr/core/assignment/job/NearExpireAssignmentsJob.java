@@ -33,7 +33,7 @@ public class NearExpireAssignmentsJob {
     public void run(LocalDateTime givenTime) {
         Instant nearExpireTime = givenTime.withMinute(0).withSecond(0).withNano(0).atZone(systemDefault()).toInstant();
         String timeString = MRY_DATE_TIME_FORMATTER.format(nearExpireTime);
-        log.info("Started near expire assignments job for time[{}].", timeString);
+        log.debug("Started near expire assignments job for time[{}].", timeString);
 
         ForkJoinPool forkJoinPool = new ForkJoinPool(10);
         String startId = newAssignmentId();
@@ -65,7 +65,7 @@ public class NearExpireAssignmentsJob {
             forkJoinPool.shutdown();
         }
 
-        log.info("Finished near expire assignments for time[{}].", timeString);
+        log.debug("Finished near expire assignments for time[{}].", timeString);
     }
 
 }
