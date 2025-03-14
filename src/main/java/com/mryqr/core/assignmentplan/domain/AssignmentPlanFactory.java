@@ -15,8 +15,8 @@ public class AssignmentPlanFactory {
     private final AssignmentPlanRepository assignmentPlanRepository;
 
     public AssignmentPlan createAssignmentPlan(AssignmentSetting setting, App app, User user) {
-        if (assignmentPlanRepository.assignmentPlanCount(app.getId()) >= 5) {
-            throw new MryException(MAX_ASSIGNMENT_PLAN_REACHED, "一个应用最多只能创建5个任务计划。");
+        if (assignmentPlanRepository.assignmentPlanCount(app.getId()) >= 10) {
+            throw new MryException(MAX_ASSIGNMENT_PLAN_REACHED, "一个应用最多只能创建10个任务计划。");
         }
 
         checkNameDuplication(setting.getName(), app.getId());
