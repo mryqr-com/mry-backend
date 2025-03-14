@@ -10,6 +10,8 @@ buildscript {
 }
 
 plugins {
+    id 'base'
+    id 'java'
     id 'application'
     id "org.springframework.boot" version "3.4.0"
 }
@@ -27,9 +29,14 @@ application {
     applicationDefaultJvmArgs = ["-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"]
 }
 
-archivesBaseName = 'mry-backend'
-sourceCompatibility = 17
-targetCompatibility = 17
+base {
+    archivesName = "mry-backend"
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 sourceSets {
     apiTest {
