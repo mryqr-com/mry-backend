@@ -20,8 +20,11 @@ public class MdcFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String userAgent = request.getHeader(USER_AGENT);
-        MDC.put("userAgent", isNotBlank(userAgent) ? userAgent : request.getHeader(USER_AGENT.toLowerCase()));
+        MDC.put("userAgent", request.getHeader(USER_AGENT));
+
+        String remoteAddr = request.getRemoteAddr();
+        String xForwardedFor = request.getHeader("x-forwarded-for");
+        MDC.put("clientIp", isNotBlank(xForwardedFor) ? xForwardedFor : remoteAddr);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof MryAuthenticationToken token) {
