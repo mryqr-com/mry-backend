@@ -12,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpHeaders.USER_AGENT;
 
 public class MdcFilter extends OncePerRequestFilter {
@@ -20,6 +21,11 @@ public class MdcFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         MDC.put("userAgent", request.getHeader(USER_AGENT));
+
+        String remoteAddr = request.getRemoteAddr();
+        String xForwardedFor = request.getHeader("x-forwarded-for");
+        MDC.put("clientIp", isNotBlank(xForwardedFor) ? xForwardedFor : remoteAddr);
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof MryAuthenticationToken token) {
             User user = token.getUser();
