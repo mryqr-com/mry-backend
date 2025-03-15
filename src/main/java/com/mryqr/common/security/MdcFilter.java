@@ -12,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.http.HttpHeaders.USER_AGENT;
 
 public class MdcFilter extends OncePerRequestFilter {
@@ -19,7 +20,9 @@ public class MdcFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        MDC.put("userAgent", request.getHeader(USER_AGENT));
+        String userAgent = request.getHeader(USER_AGENT);
+        MDC.put("userAgent", isNotBlank(userAgent) ? userAgent : request.getHeader(USER_AGENT.toLowerCase()));
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof MryAuthenticationToken token) {
             User user = token.getUser();
