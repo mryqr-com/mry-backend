@@ -37,7 +37,7 @@ public class FontStyle {
                 .fontSize(14)
                 .bold(false)
                 .italic(false)
-                .color("#606266")
+                .color("#484a4d")
                 .build();
     }
 

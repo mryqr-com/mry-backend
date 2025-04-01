@@ -49,7 +49,7 @@ public class AppTopBar {
     public static AppTopBar defaultAppTopBar() {
         return AppTopBar.builder()
                 .height(50)
-                .textColor("#606266")
+                .textColor("#484a4d")
                 .backgroundColor("rgba(255, 255, 255, 1)")
                 .border(Border.builder().type(SOLID).width(1).sides(Set.of(BOTTOM)).color("#DCDFE6").build())
                 .shadow(noShadow())
