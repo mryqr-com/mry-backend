@@ -67,7 +67,7 @@ import static com.mryqr.core.app.domain.ui.border.BorderSide.BOTTOM;
 import static com.mryqr.core.app.domain.ui.border.BorderType.SOLID;
 import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.BorderRadiusCorner.TOP_LEFT;
 import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.BorderRadiusCorner.TOP_RIGHT;
-import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.noBorderRadius;
+import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.defaultBorderRadius;
 import static com.mryqr.management.apptemplate.MryAppTemplateManageApp.*;
 import static org.apache.commons.collections4.MapUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.deleteWhitespace;
@@ -150,7 +150,7 @@ public class AppFactory {
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
                 .border(Border.builder().color("rgba(136, 136, 136, 1)").sides(Set.of(BOTTOM)).width(2).type(SOLID).build())
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .marginTop(5)
                 .marginBottom(10)
                 .marginLeft(20)
@@ -170,7 +170,7 @@ public class AppFactory {
                 .id(newShortUuid())
                 .type(KEY_VALUE)
                 .border(noBorder())
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .marginTop(15)
                 .marginBottom(10)
                 .marginLeft(20)

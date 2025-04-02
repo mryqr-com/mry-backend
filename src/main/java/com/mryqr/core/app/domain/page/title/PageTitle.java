@@ -69,7 +69,7 @@ public class PageTitle {
                         .hPadding(0)
                         .topMargin(30)
                         .bottomMargin(20)
-                        .borderRadius(0)
+                        .borderRadius(4)
                         .build())
                 .description(null)
                 .descriptionStyle(MarkdownStyle.builder()

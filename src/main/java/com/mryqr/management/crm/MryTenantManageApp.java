@@ -936,7 +936,7 @@ public class MryTenantManageApp {
                 .pageIds(newArrayList(communicationPage.getId()))
                 .appearanceStyle(AppearanceStyle.builder()
                         .backgroundColor("rgba(255, 255, 255, 1)")
-                        .borderRadius(0)
+                        .borderRadius(4)
                         .shadow(Shadow.builder()
                                 .width(6)
                                 .color("rgba(0, 0, 0, 0.15)")

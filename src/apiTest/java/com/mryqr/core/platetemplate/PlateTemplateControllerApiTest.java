@@ -30,7 +30,7 @@ import static com.mryqr.core.app.domain.plate.PlateTextValueType.QR_ATTRIBUTE;
 import static com.mryqr.core.app.domain.plate.PlateTextValueType.QR_PROPERTY;
 import static com.mryqr.core.app.domain.plate.control.PlateControlType.SINGLE_ROW_TEXT;
 import static com.mryqr.core.app.domain.ui.align.HorizontalAlignType.CENTER;
-import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.noBorderRadius;
+import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.defaultBorderRadius;
 import static com.mryqr.management.apptemplate.MryAppTemplateManageApp.MRY_APP_TEMPLATE_MANAGE_APP_ID;
 import static com.mryqr.management.apptemplate.MryAppTemplateTenant.ADMIN_INIT_MOBILE;
 import static com.mryqr.management.apptemplate.MryAppTemplateTenant.ADMIN_INIT_PASSWORD;
@@ -64,7 +64,7 @@ class PlateTemplateControllerApiTest extends BaseApiTest {
         SingleRowTextControl singleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_PROPERTY)
@@ -100,7 +100,7 @@ class PlateTemplateControllerApiTest extends BaseApiTest {
         SingleRowTextControl singleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_ATTRIBUTE)

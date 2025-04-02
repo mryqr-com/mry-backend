@@ -14,7 +14,7 @@ import lombok.Value;
 
 import static com.mryqr.common.utils.MryConstants.*;
 import static com.mryqr.core.app.domain.ui.border.Border.noBorder;
-import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.noBorderRadius;
+import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.defaultBorderRadius;
 import static com.mryqr.core.app.domain.ui.shadow.Shadow.noShadow;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -58,7 +58,7 @@ public class ControlStyleSetting {
                 .topMargin(25)
                 .bottomMargin(25)
                 .backgroundColor(null)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .shadow(noShadow())
                 .border(noBorder())
                 .vPadding(0)

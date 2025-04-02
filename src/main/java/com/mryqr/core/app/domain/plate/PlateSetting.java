@@ -22,7 +22,7 @@ import static com.mryqr.core.app.domain.plate.PlateConfig.defaultPlateConfig;
 import static com.mryqr.core.app.domain.plate.control.PlateControlType.QR_IMAGE;
 import static com.mryqr.core.app.domain.ui.align.HorizontalAlignType.CENTER;
 import static com.mryqr.core.app.domain.ui.border.Border.noBorder;
-import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.noBorderRadius;
+import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.defaultBorderRadius;
 import static lombok.AccessLevel.PRIVATE;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
@@ -64,7 +64,7 @@ public class PlateSetting {
                     .marginLeft(10)
                     .marginRight(10)
                     .border(noBorder())
-                    .borderRadius(noBorderRadius())
+                    .borderRadius(defaultBorderRadius())
                     .setting(PlateQrImageSetting.builder()
                             .width(460)
                             .color("#000000")

@@ -59,7 +59,7 @@ public class ButtonStyle {
                 .border(Border.builder().type(SOLID).width(1).sides(Set.of(BorderSide.values())).color("rgba(220, 223, 230, 1)").build())
                 .shadow(noShadow())
                 .vPadding(10)
-                .borderRadius(0)
+                .borderRadius(4)
                 .build();
     }
 

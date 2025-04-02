@@ -89,7 +89,7 @@ public class PageHeader {
                         .hPadding(10)
                         .topMargin(0)
                         .bottomMargin(0)
-                        .borderRadius(0)
+                        .borderRadius(4)
                         .build())
                 .logoImage(null)
                 .logoHeight(20)

@@ -172,7 +172,7 @@ public class MryOffenceReportApp {
                         .border(Border.builder().type(SOLID).width(1).sides(Set.of(BorderSide.values())).color("rgba(220, 223, 230, 1)").build())
                         .shadow(noShadow())
                         .vPadding(10)
-                        .borderRadius(0)
+                        .borderRadius(4)
                         .build())
                 .build();
 
@@ -405,7 +405,7 @@ public class MryOffenceReportApp {
                 .pageIds(newArrayList(processPage.getId()))
                 .appearanceStyle(AppearanceStyle.builder()
                         .backgroundColor("rgba(255, 255, 255, 1)")
-                        .borderRadius(0)
+                        .borderRadius(4)
                         .shadow(Shadow.builder()
                                 .width(6)
                                 .color("rgba(0, 0, 0, 0.15)")

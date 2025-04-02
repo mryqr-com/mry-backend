@@ -119,7 +119,7 @@ import static com.mryqr.core.app.domain.ui.align.HorizontalAlignType.CENTER;
 import static com.mryqr.core.app.domain.ui.align.HorizontalAlignType.JUSTIFY;
 import static com.mryqr.core.app.domain.ui.align.HorizontalPositionType.RIGHT;
 import static com.mryqr.core.app.domain.ui.align.VerticalAlignType.MIDDLE;
-import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.noBorderRadius;
+import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.defaultBorderRadius;
 import static com.mryqr.core.submission.domain.ApprovalStatus.NONE;
 import static com.mryqr.utils.RandomTestFixture.*;
 import static java.lang.Integer.parseInt;
@@ -2861,7 +2861,7 @@ class QrControllerApiTest extends BaseApiTest {
         SingleRowTextControl singleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_ATTRIBUTE)
@@ -2876,7 +2876,7 @@ class QrControllerApiTest extends BaseApiTest {
         SingleRowTextControl creatorSingleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_ATTRIBUTE)
@@ -2891,7 +2891,7 @@ class QrControllerApiTest extends BaseApiTest {
         SingleRowTextControl groupSingleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_ATTRIBUTE)
@@ -2906,7 +2906,7 @@ class QrControllerApiTest extends BaseApiTest {
         SingleRowTextControl checkBoxSingleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_ATTRIBUTE)
@@ -2921,7 +2921,7 @@ class QrControllerApiTest extends BaseApiTest {
         SingleRowTextControl radioBoxSingleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_ATTRIBUTE)
@@ -2936,7 +2936,7 @@ class QrControllerApiTest extends BaseApiTest {
         KeyValueControl keyValueControl = KeyValueControl.builder()
                 .id(newShortUuid())
                 .type(KEY_VALUE)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValues(List.of(PlateNamedTextValue.builder()
                         .id(newShortUuid())
@@ -2961,7 +2961,7 @@ class QrControllerApiTest extends BaseApiTest {
         TableControl tableControl = TableControl.builder()
                 .id(newShortUuid())
                 .type(TABLE)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .headerEnabled(true)
                 .headerTextValue(PlateTextValue.builder()

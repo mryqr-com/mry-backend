@@ -377,7 +377,7 @@ public class RandomTestFixture {
                 .hPadding(0)
                 .topMargin(0)
                 .bottomMargin(0)
-                .borderRadius(0)
+                .borderRadius(4)
                 .build();
     }
 
@@ -388,7 +388,7 @@ public class RandomTestFixture {
                 .border(rBorder())
                 .shadow(rShadow())
                 .vPadding(0)
-                .borderRadius(0)
+                .borderRadius(4)
                 .build();
     }
 
@@ -408,7 +408,7 @@ public class RandomTestFixture {
     public static AppearanceStyle rAppearanceStyle() {
         return AppearanceStyle.builder()
                 .backgroundColor(rColor())
-                .borderRadius(0)
+                .borderRadius(4)
                 .shadow(rShadow())
                 .border(rBorder())
                 .vPadding(0)
@@ -646,7 +646,7 @@ public class RandomTestFixture {
                 .verticalMargin(0)
                 .border(rBorder())
                 .shadow(rShadow())
-                .borderRadius(0);
+                .borderRadius(4);
     }
 
 
@@ -670,7 +670,7 @@ public class RandomTestFixture {
 
                 //control specific settings
                 .videos(newArrayList(rVideoFile()))
-                .borderRadius(0)
+                .borderRadius(4)
                 .poster(rImageFile());
     }
 
@@ -872,14 +872,14 @@ public class RandomTestFixture {
                         .verticalMargin(0)
                         .border(rBorder())
                         .shadow(rShadow())
-                        .borderRadius(0)
+                        .borderRadius(4)
                         .build())
                 .fileAnswerStyle(PAnswerReferenceControl.FileAnswerStyle.builder()
                         .fileNameStyle(rBoxedTextStyle())
                         .appearanceStyle(rAppearanceStyle())
                         .build())
-                .videoAnswerStyle(PAnswerReferenceControl.VideoAnswerStyle.builder().showFileName(rBool()).borderRadius(0).build())
-                .audioAnswerStyle(PAnswerReferenceControl.AudioAnswerStyle.builder().showFileName(rBool()).borderRadius(0).build());
+                .videoAnswerStyle(PAnswerReferenceControl.VideoAnswerStyle.builder().showFileName(rBool()).borderRadius(4).build())
+                .audioAnswerStyle(PAnswerReferenceControl.AudioAnswerStyle.builder().showFileName(rBool()).borderRadius(4).build());
 
     }
 

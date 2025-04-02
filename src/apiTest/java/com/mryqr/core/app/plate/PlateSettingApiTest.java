@@ -27,7 +27,7 @@ import static com.mryqr.core.app.domain.ui.align.HorizontalAlignType.CENTER;
 import static com.mryqr.core.app.domain.ui.align.HorizontalAlignType.JUSTIFY;
 import static com.mryqr.core.app.domain.ui.align.HorizontalPositionType.RIGHT;
 import static com.mryqr.core.app.domain.ui.align.VerticalAlignType.MIDDLE;
-import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.noBorderRadius;
+import static com.mryqr.core.app.domain.ui.borderradius.BorderRadius.defaultBorderRadius;
 import static com.mryqr.utils.RandomTestFixture.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,7 +51,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         KeyValueControl keyValueControl = KeyValueControl.builder()
                 .id(newShortUuid())
                 .type(KEY_VALUE)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValues(List.of(PlateNamedTextValue.builder()
                         .id(newShortUuid())
@@ -76,7 +76,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         QrImageControl qrImageControl = QrImageControl.builder()
                 .id(newShortUuid())
                 .type(QR_IMAGE)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .setting(PlateQrImageSetting.builder()
                         .width(500)
@@ -87,7 +87,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         SingleRowTextControl singleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_ATTRIBUTE)
@@ -102,7 +102,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         TableControl tableControl = TableControl.builder()
                 .id(newShortUuid())
                 .type(TABLE)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .headerEnabled(true)
                 .headerTextValue(PlateTextValue.builder()
@@ -133,7 +133,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         HeaderImageControl headerImageControl = HeaderImageControl.builder()
                 .id(newShortUuid())
                 .type(HEADER_IMAGE)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .alignType(JUSTIFY)
                 .width(100)
@@ -193,7 +193,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         QrImageControl qrImageControl1 = QrImageControl.builder()
                 .id(id)
                 .type(QR_IMAGE)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .setting(PlateQrImageSetting.builder()
                         .width(500)
@@ -204,7 +204,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         QrImageControl qrImageControl2 = QrImageControl.builder()
                 .id(id)
                 .type(QR_IMAGE)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .setting(PlateQrImageSetting.builder()
                         .width(500)
@@ -229,7 +229,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         SingleRowTextControl singleRowTextControl = SingleRowTextControl.builder()
                 .id(newShortUuid())
                 .type(SINGLE_ROW_TEXT)
-                .borderRadius(noBorderRadius())
+                .borderRadius(defaultBorderRadius())
                 .border(rBorder())
                 .textValue(PlateTextValue.builder()
                         .type(QR_ATTRIBUTE)

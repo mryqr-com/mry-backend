@@ -26,8 +26,8 @@ public class BorderRadius {
     @NoNullElement
     private final Set<BorderRadiusCorner> corners;
 
-    public static BorderRadius noBorderRadius() {
-        return BorderRadius.builder().radius(0).corners(Set.of(BorderRadiusCorner.values())).build();
+    public static BorderRadius defaultBorderRadius() {
+        return BorderRadius.builder().radius(4).corners(Set.of(BorderRadiusCorner.values())).build();
     }
 
     public enum BorderRadiusCorner {

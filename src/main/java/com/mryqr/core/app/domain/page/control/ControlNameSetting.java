@@ -50,7 +50,7 @@ public class ControlNameSetting {
                         .hPadding(0)
                         .topMargin(0)
                         .bottomMargin(5)
-                        .borderRadius(0)
+                        .borderRadius(4)
                         .build())
                 .build();
     }
