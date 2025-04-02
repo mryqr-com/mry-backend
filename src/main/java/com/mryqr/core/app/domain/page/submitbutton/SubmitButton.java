@@ -46,7 +46,7 @@ public class SubmitButton {
                                 .italic(false)
                                 .color("rgba(255, 255, 255, 1)")
                                 .build())
-                        .backgroundColor("#0070BB")
+                        .backgroundColor("#1963d3")
                         .border(noBorder())
                         .shadow(noShadow())
                         .vPadding(10)
