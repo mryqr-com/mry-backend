@@ -49,7 +49,7 @@ public class SubmitButton {
                         .backgroundColor("#1963d3")
                         .border(noBorder())
                         .shadow(noShadow())
-                        .vPadding(10)
+                        .vPadding(12)
                         .borderRadius(4)
                         .build())
                 .build();
