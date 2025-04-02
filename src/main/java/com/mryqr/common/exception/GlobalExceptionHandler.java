@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(MryException.class)
     public ResponseEntity<?> handleMryException(MryException ex, HttpServletRequest request) {
-        log.error("Mry error: {}", ex.getMessage());
+        log.error("Mry error access[{}]: {}", request.getRequestURI(), ex.getMessage());
         return createErrorResponse(ex, request.getRequestURI());
     }
 
