@@ -14,12 +14,13 @@ import static java.util.Objects.requireNonNull;
 import static lombok.AccessLevel.PRIVATE;
 
 // Wrapper for DomainEvent when consuming
-// Can add more information(such as if the event is redelivered etc.) if required, but should not be coupled to a specific messaging middleware
+// Can add more context information if required (such as if the event is redelivered etc.), but should not be coupled to a specific messaging middleware
+// Normally should be created as early as when the domain event is delivered from messaging middleware, as in such case many context information is available
 @Getter
 @FieldNameConstants
 @NoArgsConstructor(access = PRIVATE)
-@Document(CONSUMING_DOMAIN_EVENT_COLLECTION)
 @TypeAlias("CONSUMING_DOMAIN_EVENT")
+@Document(CONSUMING_DOMAIN_EVENT_COLLECTION)
 public class ConsumingDomainEvent<T> {
 
     private String eventId;
@@ -38,6 +39,7 @@ public class ConsumingDomainEvent<T> {
 
         this.eventId = eventId;
         this.type = eventType;
+        this.handlerName = null;
         this.consumedAt = Instant.now();
         this.event = event;
     }
