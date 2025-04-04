@@ -1,7 +1,9 @@
 package com.mryqr.common.webhook.consume;
 
+import com.mryqr.common.event.DomainEvent;
 import com.mryqr.common.profile.NonCiProfile;
 import com.mryqr.common.properties.MryRedisProperties;
+import com.mryqr.common.utils.MryObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -28,12 +30,13 @@ import static org.springframework.data.redis.connection.stream.StreamOffset.crea
 @Configuration
 @DependsOn("redisStreamInitializer")
 @RequiredArgsConstructor
-public class RedisWebhookContainerConfiguration {
+public class RedisWebhookEventConsumeConfiguration {
     private final MryRedisProperties mryRedisProperties;
-    private final WebhookEventListener webhookEventListener;
+    private final MryObjectMapper mryObjectMapper;
+    private final WebhookEventConsumer webhookEventConsumer;
 
     @Bean
-    public StreamMessageListenerContainer<String, ObjectRecord<String, String>> webhookEventContainer(RedisConnectionFactory factory) {
+    public StreamMessageListenerContainer<String, ObjectRecord<String, String>> webhookEventListenerContainer(RedisConnectionFactory factory) {
         var options = StreamMessageListenerContainerOptions
                 .builder()
                 .batchSize(10)
@@ -49,7 +52,15 @@ public class RedisWebhookContainerConfiguration {
                 container.receiveAutoAck(
                         from(REDIS_WEBHOOK_CONSUMER_GROUP, InetAddress.getLocalHost().getHostName() + "-" + index),
                         create(mryRedisProperties.getWebhookStream(), lastConsumed()),
-                        webhookEventListener);
+                        message -> {
+                            String jsonString = message.getValue();
+                            DomainEvent domainEvent = mryObjectMapper.readValue(jsonString, DomainEvent.class);
+                            try {
+                                webhookEventConsumer.consume(domainEvent);
+                            } catch (Throwable t) {
+                                log.error("Failed to listen webhook event[{}:{}].", domainEvent.getType(), domainEvent.getId(), t);
+                            }
+                        });
             } catch (UnknownHostException e) {
                 throw new RuntimeException(e);
             }

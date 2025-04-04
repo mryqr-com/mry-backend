@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RedisNotificationDomainEventSender {
+public class RedisNotificationEventSender {
     private final MryObjectMapper mryObjectMapper;
     private final MryRedisProperties mryRedisProperties;
     private final StringRedisTemplate stringRedisTemplate;

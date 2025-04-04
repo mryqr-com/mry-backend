@@ -39,7 +39,7 @@ public class RedisDomainEventConsumeConfiguration {
     private final MryTracingService mryTracingService;
 
     @Bean
-    public StreamMessageListenerContainer<String, ObjectRecord<String, String>> domainEventContainer(RedisConnectionFactory factory) {
+    public StreamMessageListenerContainer<String, ObjectRecord<String, String>> domainEventListenerContainer(RedisConnectionFactory factory) {
         var options = StreamMessageListenerContainerOptions
                 .builder()
                 .batchSize(20)

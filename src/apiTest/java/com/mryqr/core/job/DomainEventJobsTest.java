@@ -8,7 +8,7 @@ import com.mryqr.common.event.DomainEvent;
 import com.mryqr.common.event.DomainEventJobs;
 import com.mryqr.common.event.consume.ConsumingDomainEvent;
 import com.mryqr.common.event.publish.DomainEventSender;
-import com.mryqr.common.notification.publish.RedisNotificationDomainEventSender;
+import com.mryqr.common.notification.publish.RedisNotificationEventSender;
 import com.mryqr.common.properties.MryRedisProperties;
 import com.mryqr.common.webhook.publish.RedisWebhookEventSender;
 import com.mryqr.core.app.domain.App;
@@ -49,7 +49,7 @@ public class DomainEventJobsTest extends BaseApiTest {
     private RedisWebhookEventSender redisWebhookEventSender;
 
     @Autowired
-    private RedisNotificationDomainEventSender redisNotificationDomainEventSender;
+    private RedisNotificationEventSender redisNotificationEventSender;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -137,8 +137,8 @@ public class DomainEventJobsTest extends BaseApiTest {
         QrCreatedEvent event1 = new QrCreatedEvent(QR.newQrId(), Plate.newPlateId(), Group.newGroupId(), App.newAppId(), NOUSER);
         QrCreatedEvent event2 = new QrCreatedEvent(QR.newQrId(), Plate.newPlateId(), Group.newGroupId(), App.newAppId(), NOUSER);
 
-        redisNotificationDomainEventSender.send(event1);
-        redisNotificationDomainEventSender.send(event2);
+        redisNotificationEventSender.send(event1);
+        redisNotificationEventSender.send(event2);
 
         StreamInfo.XInfoStream info = stringRedisTemplate.opsForStream().info(mryRedisProperties.getNotificationStream());
         assertTrue(info.streamLength() >= 2);
