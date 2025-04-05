@@ -1,6 +1,6 @@
 package com.mryqr.core.app.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.core.app.domain.attribute.Attribute;
 import com.mryqr.core.app.domain.event.AppPageChangedToSubmitPerInstanceEvent;
@@ -24,7 +24,7 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PageChangedToSubmitPerInstanceEventHandler extends AbstractDomainEventHandler<AppPageChangedToSubmitPerInstanceEvent> {
+public class PageChangedToSubmitPerInstanceEventHandler extends DomainEventHandler<AppPageChangedToSubmitPerInstanceEvent> {
     private final AppRepository appRepository;
     private final RemoveAllSubmissionsForPageTask removeAllSubmissionsForPageTask;
     private final CountSubmissionForAppTask countSubmissionForAppTask;
@@ -37,7 +37,7 @@ public class PageChangedToSubmitPerInstanceEventHandler extends AbstractDomainEv
     }
 
     @Override
-    protected void doHandle(AppPageChangedToSubmitPerInstanceEvent event) {
+    public void handle(AppPageChangedToSubmitPerInstanceEvent event) {
         if (event.getRaisedAt().isBefore(now().minus(10, MINUTES))) {
             log.warn("Domain event[{}:{}] is more than 10 minutes old, skip.", event.getType(), event.getId());
             return;

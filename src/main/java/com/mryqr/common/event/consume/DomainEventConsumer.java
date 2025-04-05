@@ -3,6 +3,9 @@ package com.mryqr.common.event.consume;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -19,9 +22,13 @@ import static java.util.Comparator.comparingInt;
 @Component
 @RequiredArgsConstructor
 public class DomainEventConsumer<T> {
-    private final Map<String, Class<?>> handlerEventClassMap = new ConcurrentHashMap<>();
+    private final Map<String, Class<?>> handlerToEventMap = new ConcurrentHashMap<>();
 
     private final List<DomainEventHandler<T>> handlers;
+
+    private final ConsumingDomainEventDao<T> consumingDomainEventDao;
+
+    private final TransactionTemplate transactionTemplate;
 
     public void consume(ConsumingDomainEvent<T> consumingDomainEvent) {
         log.debug("Start consume domain event[{}:{}].", consumingDomainEvent.getType(), consumingDomainEvent.getEventId());
@@ -30,7 +37,16 @@ public class DomainEventConsumer<T> {
                 .sorted(comparingInt(DomainEventHandler::priority))
                 .forEach(handler -> {
                     try {
-                        handler.handle(consumingDomainEvent);
+                        if (handler.isTransactional()) {
+                            this.transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+                                @Override
+                                protected void doInTransactionWithoutResult(TransactionStatus status) {
+                                    recordAndHandle(handler, consumingDomainEvent);
+                                }
+                            });
+                        } else {
+                            recordAndHandle(handler, consumingDomainEvent);
+                        }
                     } catch (Throwable t) {
                         log.error("Error occurred while handling domain event[{}:{}] by {}.",
                                 consumingDomainEvent.getType(), consumingDomainEvent.getEventId(), handler.getClass().getName(), t);
@@ -38,15 +54,24 @@ public class DomainEventConsumer<T> {
                 });
     }
 
+    private void recordAndHandle(DomainEventHandler<T> handler, ConsumingDomainEvent<T> consumingDomainEvent) {
+        if (handler.isIdempotent() || this.consumingDomainEventDao.recordAsConsumed(consumingDomainEvent, handler.getClass().getName())) {
+            handler.handle(consumingDomainEvent.getEvent());
+        } else {
+            log.warn("Domain event[{}:{}] has already been consumed by handler[{}], skip handling.",
+                    consumingDomainEvent.getEventId(), consumingDomainEvent.getType(), handler.getClass().getName());
+        }
+    }
+
     private boolean canHandle(DomainEventHandler<T> handler, T event) {
         String handlerClassName = handler.getClass().getName();
 
-        if (!this.handlerEventClassMap.containsKey(handlerClassName)) {
+        if (!this.handlerToEventMap.containsKey(handlerClassName)) {
             Class<?> handlerEventClass = singleParameterizedArgumentClassOf(handler.getClass());
-            this.handlerEventClassMap.put(handlerClassName, handlerEventClass);
+            this.handlerToEventMap.put(handlerClassName, handlerEventClass);
         }
 
-        Class<?> finalHandlerEventClass = this.handlerEventClassMap.get(handlerClassName);
+        Class<?> finalHandlerEventClass = this.handlerToEventMap.get(handlerClassName);
         return finalHandlerEventClass != null && finalHandlerEventClass.isAssignableFrom(event.getClass());
     }
 }

@@ -1,6 +1,6 @@
 package com.mryqr.core.qr.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.qr.domain.event.QrPlateResetEvent;
 import com.mryqr.core.qr.domain.task.SyncAttributeValuesForQrTask;
@@ -14,12 +14,12 @@ import static com.mryqr.core.app.domain.attribute.AttributeType.INSTANCE_PLATE_I
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class QrPlateResetEventHandler extends AbstractDomainEventHandler<QrPlateResetEvent> {
+public class QrPlateResetEventHandler extends DomainEventHandler<QrPlateResetEvent> {
     private final SyncSubmissionPlateFromQrTask syncSubmissionPlateFromQrTask;
     private final SyncAttributeValuesForQrTask syncAttributeValuesForQrTask;
 
     @Override
-    protected void doHandle(QrPlateResetEvent event) {
+    public void handle(QrPlateResetEvent event) {
         MryTaskRunner.run(() -> syncSubmissionPlateFromQrTask.run(event.getQrId()));
         MryTaskRunner.run(() -> syncAttributeValuesForQrTask.run(event.getQrId(), INSTANCE_PLATE_ID));
     }

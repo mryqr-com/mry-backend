@@ -1,6 +1,6 @@
 package com.mryqr.core.group.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.assignment.domain.task.RemoveAllAssignmentsUnderGroupTask;
 import com.mryqr.core.assignmentplan.domain.task.RemoveGroupFromAllAssignmentPlansTask;
@@ -22,7 +22,7 @@ import java.util.Set;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GroupDeletedEventHandler extends AbstractDomainEventHandler<GroupDeletedEvent> {
+public class GroupDeletedEventHandler extends DomainEventHandler<GroupDeletedEvent> {
     private final CountUsedPlatesForPlateBatchTask countUsedPlatesForPlateBatchTask;
     private final RemoveAllQrsUnderGroupTask removeAllQrsUnderGroupTask;
     private final RemoveAllSubmissionsForGroupTask removeAllSubmissionsForGroupTask;
@@ -35,7 +35,7 @@ public class GroupDeletedEventHandler extends AbstractDomainEventHandler<GroupDe
     private final CountQrForAppTask countQrForAppTask;
 
     @Override
-    protected void doHandle(GroupDeletedEvent event) {
+    public void handle(GroupDeletedEvent event) {
         String groupId = event.getGroupId();
 
         Set<String> affectedPlateBatchIds = plateRepository.allPlateBatchIdsReferencingGroup(groupId);

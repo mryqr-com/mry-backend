@@ -1,6 +1,6 @@
 package com.mryqr.core.app.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.app.domain.event.AppControlOptionsDeletedEvent;
 import com.mryqr.core.app.domain.event.DeletedTextOptionInfo;
@@ -15,12 +15,12 @@ import java.util.Set;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AppControlOptionsDeletedEventHandler extends AbstractDomainEventHandler<AppControlOptionsDeletedEvent> {
+public class AppControlOptionsDeletedEventHandler extends DomainEventHandler<AppControlOptionsDeletedEvent> {
     private final RemoveSubmissionIndexedOptionForAppTask removeSubmissionIndexedOptionForAppTask;
     private final RemoveIndexedOptionUnderAllQrsTask removeIndexedOptionUnderAllQrsTask;
 
     @Override
-    protected void doHandle(AppControlOptionsDeletedEvent event) {
+    public void handle(AppControlOptionsDeletedEvent event) {
         String appId = event.getAppId();
         Set<DeletedTextOptionInfo> options = event.getControlOptions();
         options.forEach(option ->

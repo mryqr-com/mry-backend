@@ -1,6 +1,6 @@
 package com.mryqr.core.department.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.department.domain.event.DepartmentRenamedEvent;
 import com.mryqr.core.group.domain.task.SyncDepartmentToGroupTask;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DepartmentRenamedEventHandler extends AbstractDomainEventHandler<DepartmentRenamedEvent> {
+public class DepartmentRenamedEventHandler extends DomainEventHandler<DepartmentRenamedEvent> {
     private final SyncDepartmentToGroupTask syncDepartmentToGroupTask;
 
     @Override
-    protected void doHandle(DepartmentRenamedEvent event) {
+    public void handle(DepartmentRenamedEvent event) {
         MryTaskRunner.run(() -> syncDepartmentToGroupTask.run(event.getDepartmentId()));
     }
 

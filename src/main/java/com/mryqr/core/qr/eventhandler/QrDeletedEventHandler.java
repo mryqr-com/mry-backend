@@ -1,6 +1,6 @@
 package com.mryqr.core.qr.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.plate.domain.Plate;
 import com.mryqr.core.plate.domain.PlateRepository;
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class QrDeletedEventHandler extends AbstractDomainEventHandler<QrDeletedEvent> {
+public class QrDeletedEventHandler extends DomainEventHandler<QrDeletedEvent> {
     private final CountQrForAppTask countQrForAppTask;
     private final PlateRepository plateRepository;
     private final CountUsedPlatesForPlateBatchTask countUsedPlatesForPlateBatchTask;
@@ -26,7 +26,7 @@ public class QrDeletedEventHandler extends AbstractDomainEventHandler<QrDeletedE
     private final CountSubmissionForAppTask countSubmissionForAppTask;
 
     @Override
-    protected void doHandle(QrDeletedEvent event) {
+    public void handle(QrDeletedEvent event) {
         MryTaskRunner.run(() -> unbindPlateFromQrTask.run(event.getQrId()));
         MryTaskRunner.run(() -> removeAllSubmissionsForQrTask.run(event.getQrId()));
         MryTaskRunner.run(() -> countSubmissionForAppTask.run(event.getAppId(), event.getArTenantId()));

@@ -1,6 +1,6 @@
 package com.mryqr.core.member.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.group.domain.task.SyncDepartmentMembersToGroupTask;
 import com.mryqr.core.member.domain.event.MemberRemovedFromDepartmentEvent;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MemberRemovedFromDepartmentEventHandler extends AbstractDomainEventHandler<MemberRemovedFromDepartmentEvent> {
+public class MemberRemovedFromDepartmentEventHandler extends DomainEventHandler<MemberRemovedFromDepartmentEvent> {
     private final SyncDepartmentMembersToGroupTask syncDepartmentMembersToGroupTask;
 
     @Override
-    protected void doHandle(MemberRemovedFromDepartmentEvent event) {
+    public void handle(MemberRemovedFromDepartmentEvent event) {
         MryTaskRunner.run(() -> syncDepartmentMembersToGroupTask.run(event.getDepartmentId()));
 
     }

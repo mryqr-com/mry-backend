@@ -1,6 +1,6 @@
 package com.mryqr.core.member.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.member.domain.event.MemberNameChangedEvent;
 import com.mryqr.core.member.domain.task.SyncMemberNameToAggregateRootsTask;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MemberNameChangedEventHandler extends AbstractDomainEventHandler<MemberNameChangedEvent> {
+public class MemberNameChangedEventHandler extends DomainEventHandler<MemberNameChangedEvent> {
     private final SyncMemberNameToAggregateRootsTask syncMemberNameToAggregateRootsTask;
 
     @Override
-    protected void doHandle(MemberNameChangedEvent event) {
+    public void handle(MemberNameChangedEvent event) {
         MryTaskRunner.run(() -> syncMemberNameToAggregateRootsTask.run(event.getMemberId()));
     }
 

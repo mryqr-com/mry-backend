@@ -1,6 +1,6 @@
 package com.mryqr.core.member.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.member.domain.event.MemberCreatedEvent;
 import com.mryqr.core.tenant.domain.task.CountMembersForTenantTask;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MemberCreatedEventHandler extends AbstractDomainEventHandler<MemberCreatedEvent> {
+public class MemberCreatedEventHandler extends DomainEventHandler<MemberCreatedEvent> {
     private final CountMembersForTenantTask countMembersForTenantTask;
 
     @Override
-    protected void doHandle(MemberCreatedEvent event) {
+    public void handle(MemberCreatedEvent event) {
         MryTaskRunner.run(() -> countMembersForTenantTask.run(event.getArTenantId()));
     }
 

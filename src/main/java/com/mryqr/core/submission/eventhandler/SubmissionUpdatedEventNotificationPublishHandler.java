@@ -1,6 +1,6 @@
 package com.mryqr.core.submission.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.notification.publish.NotificationEventPublisher;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.core.submission.domain.event.SubmissionUpdatedEvent;
@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SubmissionUpdatedEventNotificationPublishHandler extends AbstractDomainEventHandler<SubmissionUpdatedEvent> {
+public class SubmissionUpdatedEventNotificationPublishHandler extends DomainEventHandler<SubmissionUpdatedEvent> {
     private final AppRepository appRepository;
     private final TenantRepository tenantRepository;
     private final NotificationEventPublisher notificationEventPublisher;
 
     @Override
-    protected void doHandle(SubmissionUpdatedEvent event) {
+    public void handle(SubmissionUpdatedEvent event) {
         tenantRepository.cachedByIdOptional(event.getArTenantId()).ifPresent(tenant -> {
             if (!tenant.isSubmissionNotifyAllowed()) {
                 return;

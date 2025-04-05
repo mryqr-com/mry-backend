@@ -11,7 +11,8 @@ import org.springframework.data.mongodb.MongoManagedTypes;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.transaction.TransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static com.mongodb.ReadPreference.secondaryPreferred;
 import static com.mongodb.WriteConcern.MAJORITY;
@@ -26,8 +27,13 @@ public class MongoConfiguration {
     }
 
     @Bean
-    public TransactionManager transactionManager(MongoDatabaseFactory mongoDatabaseFactory) {
+    public PlatformTransactionManager transactionManager(MongoDatabaseFactory mongoDatabaseFactory) {
         return new MongoTransactionManager(mongoDatabaseFactory);
+    }
+
+    @Bean
+    public TransactionTemplate transactionTemplate(PlatformTransactionManager transactionManager) {
+        return new TransactionTemplate(transactionManager);
     }
 
     @Bean

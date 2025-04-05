@@ -1,6 +1,6 @@
 package com.mryqr.core.qr.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.plate.domain.task.SyncPlateGroupFromQrTask;
 import com.mryqr.core.qr.domain.event.QrGroupChangedEvent;
@@ -16,14 +16,14 @@ import static com.mryqr.core.app.domain.attribute.AttributeType.*;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class QrGroupChangedEventHandler extends AbstractDomainEventHandler<QrGroupChangedEvent> {
+public class QrGroupChangedEventHandler extends DomainEventHandler<QrGroupChangedEvent> {
     private final SyncSubmissionGroupFromQrTask syncSubmissionGroupFromQrTask;
     private final SyncPlateGroupFromQrTask syncPlateGroupFromQrTask;
     private final SyncAttributeValuesForQrTask syncAttributeValuesForQrTask;
     private final SyncGroupActiveStatusToQrTask syncGroupActiveStatusToQrTask;
 
     @Override
-    protected void doHandle(QrGroupChangedEvent event) {
+    public void handle(QrGroupChangedEvent event) {
         MryTaskRunner.run(() -> syncSubmissionGroupFromQrTask.run(event.getQrId()));
         MryTaskRunner.run(() -> syncGroupActiveStatusToQrTask.run(event.getQrId()));
         MryTaskRunner.run(() -> syncPlateGroupFromQrTask.run(event.getQrId()));

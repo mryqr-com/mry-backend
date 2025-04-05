@@ -1,6 +1,6 @@
 package com.mryqr.core.plate.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.plate.domain.Plate;
 import com.mryqr.core.plate.domain.PlateRepository;
@@ -13,12 +13,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PlateUnboundEventHandler extends AbstractDomainEventHandler<PlateUnboundEvent> {
+public class PlateUnboundEventHandler extends DomainEventHandler<PlateUnboundEvent> {
     private final PlateRepository plateRepository;
     private final CountUsedPlatesForPlateBatchTask countUsedPlatesForPlateBatchTask;
 
     @Override
-    protected void doHandle(PlateUnboundEvent event) {
+    public void handle(PlateUnboundEvent event) {
         plateRepository.byIdOptional(event.getPlateId())
                 .filter(Plate::isBatched)
                 .ifPresent(plate -> MryTaskRunner.run(() -> countUsedPlatesForPlateBatchTask.run(plate.getBatchId())));

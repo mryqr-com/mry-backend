@@ -1,6 +1,6 @@
 package com.mryqr.core.tenant.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.tenant.domain.event.TenantCreatedEvent;
 import com.mryqr.core.tenant.domain.task.SyncTenantToManagedQrTask;
@@ -11,11 +11,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TenantCreatedEventHandler extends AbstractDomainEventHandler<TenantCreatedEvent> {
+public class TenantCreatedEventHandler extends DomainEventHandler<TenantCreatedEvent> {
     private final SyncTenantToManagedQrTask syncTenantToManagedQrTask;
 
     @Override
-    protected void doHandle(TenantCreatedEvent event) {
+    public void handle(TenantCreatedEvent event) {
         MryTaskRunner.run(() -> syncTenantToManagedQrTask.sync(event.getTenantId()));
     }
 

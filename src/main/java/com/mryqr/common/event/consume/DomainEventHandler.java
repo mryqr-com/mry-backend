@@ -1,14 +1,18 @@
 package com.mryqr.common.event.consume;
 
-public interface DomainEventHandler<T> {
+public abstract class DomainEventHandler<T> {
 
-    default boolean isIdempotent() {
+    public boolean isIdempotent() {
         return false; // By default, all handlers are assumed to be not idempotent
     }
 
-    default int priority() {
+    public boolean isTransactional() {
+        return false;
+    }
+
+    public int priority() {
         return 0; // Smaller value means higher priority
     }
 
-    void handle(ConsumingDomainEvent<T> consumingDomainEvent);
+    public abstract void handle(T domainEvent);
 }

@@ -1,6 +1,6 @@
 package com.mryqr.core.submission.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.core.app.domain.App;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.core.qr.domain.QR;
@@ -17,7 +17,7 @@ import static com.mryqr.common.domain.user.User.NOUSER;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UpdateCirculationSubmissionCreatedEventHandler extends AbstractDomainEventHandler<SubmissionCreatedEvent> {
+public class UpdateCirculationSubmissionCreatedEventHandler extends DomainEventHandler<SubmissionCreatedEvent> {
     private final AppRepository appRepository;
     private final QrRepository qrRepository;
 
@@ -27,7 +27,7 @@ public class UpdateCirculationSubmissionCreatedEventHandler extends AbstractDoma
     }
 
     @Override
-    protected void doHandle(SubmissionCreatedEvent event) {
+    public void handle(SubmissionCreatedEvent event) {
         App app = appRepository.cachedById(event.getAppId());
         Optional<String> optionIdOptional = app.circulationStatusAfterSubmission(event.getPageId());
         optionIdOptional.ifPresent(optionId -> {

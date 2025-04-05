@@ -1,6 +1,6 @@
 package com.mryqr.core.submission.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.assignment.domain.task.FinishQrForAssignmentsTask;
 import com.mryqr.core.qr.domain.task.SyncSubmissionAwareAttributeValuesForQrTask;
@@ -13,13 +13,13 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SubmissionCreatedEventHandler extends AbstractDomainEventHandler<SubmissionCreatedEvent> {
+public class SubmissionCreatedEventHandler extends DomainEventHandler<SubmissionCreatedEvent> {
     private final SyncSubmissionAwareAttributeValuesForQrTask syncSubmissionAwareAttributesTask;
     private final CountSubmissionForAppTask countSubmissionForAppTask;
     private final FinishQrForAssignmentsTask finishQrForAssignmentsTask;
 
     @Override
-    protected void doHandle(SubmissionCreatedEvent event) {
+    public void handle(SubmissionCreatedEvent event) {
         MryTaskRunner.run(() -> syncSubmissionAwareAttributesTask.run(event.getQrId(), event.getPageId()));
         MryTaskRunner.run(() -> countSubmissionForAppTask.run(event.getAppId(), event.getArTenantId()));
         MryTaskRunner.run(() -> finishQrForAssignmentsTask.run(event.getQrId(),

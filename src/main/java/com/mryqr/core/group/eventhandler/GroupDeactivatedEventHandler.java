@@ -1,6 +1,6 @@
 package com.mryqr.core.group.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.group.domain.event.GroupDeactivatedEvent;
 import com.mryqr.core.qr.domain.task.SyncGroupActiveStatusToQrsTask;
@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class GroupDeactivatedEventHandler extends AbstractDomainEventHandler<GroupDeactivatedEvent> {
+public class GroupDeactivatedEventHandler extends DomainEventHandler<GroupDeactivatedEvent> {
     private final SyncGroupActiveStatusToQrsTask syncGroupActiveStatusToQrsTask;
 
     @Override
-    protected void doHandle(GroupDeactivatedEvent event) {
+    public void handle(GroupDeactivatedEvent event) {
         MryTaskRunner.run(() -> syncGroupActiveStatusToQrsTask.run(event.getGroupId()));
     }
 

@@ -1,6 +1,6 @@
 package com.mryqr.core.qr.eventhandler;
 
-import com.mryqr.common.event.consume.AbstractDomainEventHandler;
+import com.mryqr.common.event.consume.DomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.common.webhook.publish.MryWebhookEventPublisher;
 import com.mryqr.core.app.domain.AppRepository;
@@ -15,7 +15,7 @@ import static com.mryqr.core.app.domain.QrWebhookType.ON_CREATE;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class QrCreatedEventWebhookPublishHandler extends AbstractDomainEventHandler<QrCreatedEvent> {
+public class QrCreatedEventWebhookPublishHandler extends DomainEventHandler<QrCreatedEvent> {
     private final TenantRepository tenantRepository;
     private final AppRepository appRepository;
     private final MryWebhookEventPublisher webhookEventPublisher;
@@ -31,7 +31,7 @@ public class QrCreatedEventWebhookPublishHandler extends AbstractDomainEventHand
     }
 
     @Override
-    protected void doHandle(QrCreatedEvent event) {
+    public void handle(QrCreatedEvent event) {
         MryTaskRunner.run(() -> publishWebhookEvent(event));
     }
 
