@@ -7,7 +7,7 @@ public abstract class AbstractDomainEventHandler<T> {
     }
 
     public boolean isTransactional() {
-        return false;
+        return false; // By default, all handlers are assumed to be not transactional
     }
 
     public int priority() {
