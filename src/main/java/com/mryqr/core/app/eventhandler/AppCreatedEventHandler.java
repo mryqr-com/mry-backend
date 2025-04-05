@@ -1,6 +1,6 @@
 package com.mryqr.core.app.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.app.domain.event.AppCreatedEvent;
 import com.mryqr.core.tenant.domain.task.CountAppForTenantTask;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AppCreatedEventHandler extends DomainEventHandler<AppCreatedEvent> {
+public class AppCreatedEventHandler extends AbstractDomainEventHandler<AppCreatedEvent> {
     private final CountAppForTenantTask countAppForTenantTask;
 
     @Override

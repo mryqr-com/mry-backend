@@ -1,6 +1,6 @@
 package com.mryqr.core.app.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.app.domain.event.AppPagesDeletedEvent;
 import com.mryqr.core.assignment.domain.task.RemoveAllAssignmentsForPageTask;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AppPagesDeletedEventHandler extends DomainEventHandler<AppPagesDeletedEvent> {
+public class AppPagesDeletedEventHandler extends AbstractDomainEventHandler<AppPagesDeletedEvent> {
     private final RemoveAllSubmissionsForPageTask removeAllSubmissionsForPageTask;
     private final CountSubmissionForAppTask countSubmissionForAppTask;
     private final RemoveAllAssignmentPlansForPageTask removeAllAssignmentPlansForPageTask;

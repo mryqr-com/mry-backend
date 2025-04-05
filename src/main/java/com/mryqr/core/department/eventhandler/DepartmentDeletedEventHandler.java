@@ -1,6 +1,6 @@
 package com.mryqr.core.department.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.department.domain.event.DepartmentDeletedEvent;
 import com.mryqr.core.department.domain.task.CountDepartmentForTenantTask;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DepartmentDeletedEventHandler extends DomainEventHandler<DepartmentDeletedEvent> {
+public class DepartmentDeletedEventHandler extends AbstractDomainEventHandler<DepartmentDeletedEvent> {
     private final CountDepartmentForTenantTask countDepartmentForTenantTask;
     private final RemoveDepartmentFromAllMembersTask removeDepartmentFromAllMembersTask;
 

@@ -1,6 +1,6 @@
 package com.mryqr.core.app.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.core.app.domain.event.AppControlsDeletedEvent;
@@ -19,7 +19,7 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AppControlsDeletedEventHandler extends DomainEventHandler<AppControlsDeletedEvent> {
+public class AppControlsDeletedEventHandler extends AbstractDomainEventHandler<AppControlsDeletedEvent> {
     private final AppRepository appRepository;
     private final RemoveAnswersForControlsFromAllSubmissionsTask removeAnswersForControlsFromAllSubmissionsTask;
     private final RemoveIndexedValueFromAllSubmissionsTask removeIndexedValueFromAllSubmissionsTask;

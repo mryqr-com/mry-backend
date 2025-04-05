@@ -1,6 +1,6 @@
 package com.mryqr.core.submission.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.notification.publish.NotificationEventPublisher;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.core.submission.domain.event.SubmissionCreatedEvent;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SubmissionCreatedEventNotificationPublishHandler extends DomainEventHandler<SubmissionCreatedEvent> {
+public class SubmissionCreatedEventNotificationPublishHandler extends AbstractDomainEventHandler<SubmissionCreatedEvent> {
     private final AppRepository appRepository;
     private final TenantRepository tenantRepository;
     private final NotificationEventPublisher notificationEventPublisher;

@@ -1,6 +1,6 @@
 package com.mryqr.common.event.consume;
 
-public abstract class DomainEventHandler<T> {
+public abstract class AbstractDomainEventHandler<T> {
 
     public boolean isIdempotent() {
         return false; // By default, all handlers are assumed to be not idempotent

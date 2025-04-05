@@ -1,6 +1,6 @@
 package com.mryqr.core.app.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.app.domain.event.AppCreatedFromTemplateEvent;
 import com.mryqr.core.appmanual.domain.task.CloneAppManualTask;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AppCreatedFromTemplateEventHandler extends DomainEventHandler<AppCreatedFromTemplateEvent> {
+public class AppCreatedFromTemplateEventHandler extends AbstractDomainEventHandler<AppCreatedFromTemplateEvent> {
     private final CountAppTemplateAppliedTask countAppTemplateAppliedTask;
     private final CloneAppManualTask cloneAppManualTask;
 

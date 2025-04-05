@@ -1,6 +1,6 @@
 package com.mryqr.core.app.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.core.app.domain.attribute.Attribute;
 import com.mryqr.core.app.domain.event.AppPageChangedToSubmitPerMemberEvent;
@@ -24,7 +24,7 @@ import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PageChangedToSubmitPerMemberEventHandler extends DomainEventHandler<AppPageChangedToSubmitPerMemberEvent> {
+public class PageChangedToSubmitPerMemberEventHandler extends AbstractDomainEventHandler<AppPageChangedToSubmitPerMemberEvent> {
     private final AppRepository appRepository;
     private final RemoveAllSubmissionsForPageTask removeAllSubmissionsForPageTask;
     private final CountSubmissionForAppTask countSubmissionForAppTask;

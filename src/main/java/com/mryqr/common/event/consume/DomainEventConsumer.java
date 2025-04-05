@@ -24,7 +24,7 @@ import static java.util.Comparator.comparingInt;
 public class DomainEventConsumer<T> {
     private final Map<String, Class<?>> handlerToEventMap = new ConcurrentHashMap<>();
 
-    private final List<DomainEventHandler<T>> handlers;
+    private final List<AbstractDomainEventHandler<T>> handlers;
 
     private final ConsumingDomainEventDao<T> consumingDomainEventDao;
 
@@ -34,7 +34,7 @@ public class DomainEventConsumer<T> {
         log.debug("Start consume domain event[{}:{}].", consumingDomainEvent.getType(), consumingDomainEvent.getEventId());
         this.handlers.stream()
                 .filter(handler -> canHandle(handler, consumingDomainEvent.getEvent()))
-                .sorted(comparingInt(DomainEventHandler::priority))
+                .sorted(comparingInt(AbstractDomainEventHandler::priority))
                 .forEach(handler -> {
                     try {
                         if (handler.isTransactional()) {
@@ -54,7 +54,7 @@ public class DomainEventConsumer<T> {
                 });
     }
 
-    private void recordAndHandle(DomainEventHandler<T> handler, ConsumingDomainEvent<T> consumingDomainEvent) {
+    private void recordAndHandle(AbstractDomainEventHandler<T> handler, ConsumingDomainEvent<T> consumingDomainEvent) {
         if (handler.isIdempotent() || this.consumingDomainEventDao.recordAsConsumed(consumingDomainEvent, handler.getClass().getName())) {
             handler.handle(consumingDomainEvent.getEvent());
         } else {
@@ -63,7 +63,7 @@ public class DomainEventConsumer<T> {
         }
     }
 
-    private boolean canHandle(DomainEventHandler<T> handler, T event) {
+    private boolean canHandle(AbstractDomainEventHandler<T> handler, T event) {
         String handlerClassName = handler.getClass().getName();
 
         if (!this.handlerToEventMap.containsKey(handlerClassName)) {

@@ -1,7 +1,7 @@
 package com.mryqr.core.departmenthierarchy.eventhandler;
 
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.core.app.domain.TenantCachedApp;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class DepartmentHierarchyChangedEventHandler extends DomainEventHandler<DepartmentHierarchyChangedEvent> {
+public class DepartmentHierarchyChangedEventHandler extends AbstractDomainEventHandler<DepartmentHierarchyChangedEvent> {
     private final SyncAllDepartmentsToGroupTask syncAllDepartmentsToGroupTask;
     private final AppRepository appRepository;
 

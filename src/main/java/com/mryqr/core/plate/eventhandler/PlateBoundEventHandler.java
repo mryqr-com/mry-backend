@@ -1,6 +1,6 @@
 package com.mryqr.core.plate.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.plate.domain.Plate;
 import com.mryqr.core.plate.domain.PlateRepository;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PlateBoundEventHandler extends DomainEventHandler<PlateBoundEvent> {
+public class PlateBoundEventHandler extends AbstractDomainEventHandler<PlateBoundEvent> {
     private final PlateRepository plateRepository;
     private final CountUsedPlatesForPlateBatchTask countUsedPlatesForPlateBatchTask;
 

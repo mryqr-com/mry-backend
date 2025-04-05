@@ -1,6 +1,6 @@
 package com.mryqr.core.tenant.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.tenant.domain.event.TenantUpdatedEvent;
 import com.mryqr.core.tenant.domain.task.SyncTenantToManagedQrTask;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TenantUpdateEventHandler extends DomainEventHandler<TenantUpdatedEvent> {
+public class TenantUpdateEventHandler extends AbstractDomainEventHandler<TenantUpdatedEvent> {
     private final SyncTenantToManagedQrTask syncTenantToManagedQrTask;
 
     @Override

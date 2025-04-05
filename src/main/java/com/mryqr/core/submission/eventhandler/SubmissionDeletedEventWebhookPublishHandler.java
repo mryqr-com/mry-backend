@@ -1,6 +1,6 @@
 package com.mryqr.core.submission.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.common.webhook.publish.MryWebhookEventPublisher;
 import com.mryqr.core.app.domain.AppRepository;
@@ -15,7 +15,7 @@ import static com.mryqr.core.app.domain.page.setting.SubmissionWebhookType.ON_DE
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class SubmissionDeletedEventWebhookPublishHandler extends DomainEventHandler<SubmissionDeletedEvent> {
+public class SubmissionDeletedEventWebhookPublishHandler extends AbstractDomainEventHandler<SubmissionDeletedEvent> {
     private final AppRepository appRepository;
     private final TenantRepository tenantRepository;
     private final MryWebhookEventPublisher webhookEventPublisher;

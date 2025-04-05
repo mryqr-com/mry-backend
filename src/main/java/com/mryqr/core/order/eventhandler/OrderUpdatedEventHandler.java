@@ -1,6 +1,6 @@
 package com.mryqr.core.order.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.order.domain.event.OrderUpdatedEvent;
 import com.mryqr.core.order.domain.task.SyncOrderToManagedQrTask;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class OrderUpdatedEventHandler extends DomainEventHandler<OrderUpdatedEvent> {
+public class OrderUpdatedEventHandler extends AbstractDomainEventHandler<OrderUpdatedEvent> {
     private final SyncOrderToManagedQrTask syncOrderToManagedQrTask;
 
     @Override

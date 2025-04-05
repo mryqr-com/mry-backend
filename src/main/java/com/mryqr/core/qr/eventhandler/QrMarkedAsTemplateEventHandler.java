@@ -1,6 +1,6 @@
 package com.mryqr.core.qr.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.qr.domain.QrRepository;
 import com.mryqr.core.qr.domain.event.QrMarkedAsTemplateEvent;
@@ -17,7 +17,7 @@ import static com.mryqr.core.app.domain.attribute.AttributeType.INSTANCE_TEMPLAT
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class QrMarkedAsTemplateEventHandler extends DomainEventHandler<QrMarkedAsTemplateEvent> {
+public class QrMarkedAsTemplateEventHandler extends AbstractDomainEventHandler<QrMarkedAsTemplateEvent> {
     private final QrRepository qrRepository;
     private final RemoveAllSubmissionsForQrTask removeAllSubmissionsForQrTask;
     private final SyncSubmissionAwareAttributeValuesForQrTask syncSubmissionAwareAttributeValuesForQrTask;

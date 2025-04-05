@@ -1,6 +1,6 @@
 package com.mryqr.core.tenant.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.member.domain.task.SyncTenantActiveStatusToMembersTask;
 import com.mryqr.core.tenant.domain.event.TenantDeactivatedEvent;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class TenantDeactivatedEventHandler extends DomainEventHandler<TenantDeactivatedEvent> {
+public class TenantDeactivatedEventHandler extends AbstractDomainEventHandler<TenantDeactivatedEvent> {
     private final SyncTenantActiveStatusToMembersTask syncTenantActiveStatusToMembersTask;
 
     @Override

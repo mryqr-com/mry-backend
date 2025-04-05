@@ -1,6 +1,6 @@
 package com.mryqr.core.member.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.app.domain.task.RemoveManagerFromAllAppsTask;
 import com.mryqr.core.assignment.domain.task.RemoveOperatorFromAllAssignmentsTask;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MemberDeletedEventHandler extends DomainEventHandler<MemberDeletedEvent> {
+public class MemberDeletedEventHandler extends AbstractDomainEventHandler<MemberDeletedEvent> {
     private final RemoveMemberFromAllGroupsTask removeMemberFromAllGroupsTask;
     private final RemoveManagerFromAllAppsTask removeManagerFromAllAppsTask;
     private final RemoveOperatorFromAllAssignmentsTask removeOperatorFromAllAssignmentsTask;

@@ -1,6 +1,6 @@
 package com.mryqr.core.app.eventhandler;
 
-import com.mryqr.common.event.consume.DomainEventHandler;
+import com.mryqr.common.event.consume.AbstractDomainEventHandler;
 import com.mryqr.common.utils.MryTaskRunner;
 import com.mryqr.core.app.domain.event.AppDeletedEvent;
 import com.mryqr.core.appmanual.domain.task.RemoveManualForAppTask;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AppDeletedEventHandler extends DomainEventHandler<AppDeletedEvent> {
+public class AppDeletedEventHandler extends AbstractDomainEventHandler<AppDeletedEvent> {
     private final RemoveAllSubmissionsForAppTask removeAllSubmissionsForAppTask;
     private final RemoveAllQrsUnderAppTask removeAllQrsUnderAppTask;
     private final RemoveAllPlatesUnderAppTask removeAllPlatesUnderAppTask;
