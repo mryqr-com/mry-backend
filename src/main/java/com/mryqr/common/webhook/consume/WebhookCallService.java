@@ -67,7 +67,7 @@ public class WebhookCallService {
 
         try {
             webhookCaller.call(payload, setting);//将重试3次
-            log.info("Called app[{}] webhook[{}] with payload:{}.", appId, setting.getUrl(), mryObjectMapper.writeValueAsString(payload));
+            log.debug("Called app[{}] webhook[{}] with payload:{}.", appId, setting.getUrl(), mryObjectMapper.writeValueAsString(payload));
             resetFailureCountFor(appId);//只要成功即清空，让后续webhook可正常访问
         } catch (RestClientException ex) {
             log.error("Error while call app[{}] webhook[{}] with payload:{}.",

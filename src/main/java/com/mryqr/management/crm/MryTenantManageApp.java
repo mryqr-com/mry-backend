@@ -158,6 +158,10 @@ public class MryTenantManageApp {
     public static final String SEND_EVENT_ALL_TENANT_NO_OPTION_ID = "xxNPYbaRTIatJO9gp-qmig";
     public static final String SEND_EVENT_APP_CONTROL_ID = "c_zYiWeo_jQhusdcRo5MTKXw";
 
+    public static final String RESET_MEMBER_PASSWORD_PAGE_ID = "p_9YxXpwvArHuR4M63JdEmjS";
+    public static final String RESET_MEMBER_PASSWORD_MOBILE_OR_EMAIL_CONTROL_ID = "c_5VFTp4RCQVonxhi6fq62kA";
+    public static final String RESET_MEMBER_PASSWORD_PASSWORD_CONTROL_ID = "c_8AyrpSFLdYEeaLw6vetwr9";
+
     public static final String TENANT_CREATE_TIME_ATTR_ID = "a_imD9er3lSjG_vsTG1kijyw";
     public static final String RECENT_ACTIVE_DATE_ATTR_ID = "a_vh9xXK53XrxruGxQ89ZgR1";
     public static final String CURRENT_PACKAGE_ATTR_ID = "a_cYHZAsQPftgesEDRLw4kCH";
@@ -905,6 +909,45 @@ public class MryTenantManageApp {
                         .build())
                 .build();
 
+        FSingleLineTextControl resetMemberPasswordMobileOrEmailControl = FSingleLineTextControl.builder()
+                .type(SINGLE_LINE_TEXT)
+                .id(RESET_MEMBER_PASSWORD_MOBILE_OR_EMAIL_CONTROL_ID)
+                .name("成员手机号或邮箱")
+                .nameSetting(defaultControlNameSetting())
+                .descriptionStyle(defaultControlDescriptionStyle())
+                .styleSetting(defaultControlStyleSetting())
+                .fillableSetting(defaultControlFillableSettingBuilder().mandatory(true).build())
+                .permission(CAN_MANAGE_APP)
+                .minMaxSetting(minMaxOf(0, 100))
+                .build();
+
+
+        FSingleLineTextControl resetMemberPasswordPasswordControl = FSingleLineTextControl.builder()
+                .type(SINGLE_LINE_TEXT)
+                .id(RESET_MEMBER_PASSWORD_PASSWORD_CONTROL_ID)
+                .name("密码")
+                .nameSetting(defaultControlNameSetting())
+                .descriptionStyle(defaultControlDescriptionStyle())
+                .styleSetting(defaultControlStyleSetting())
+                .fillableSetting(defaultControlFillableSettingBuilder().submissionSummaryEligible(false).mandatory(true).build())
+                .permission(CAN_MANAGE_APP)
+                .minMaxSetting(minMaxOf(8, 20))
+                .build();
+
+
+        Page resetMemberPasswordPage = Page.builder()
+                .id(RESET_MEMBER_PASSWORD_PAGE_ID)
+                .header(defaultPageHeaderBuilder().type(INHERITED).build())
+                .title(defaultPageTitleBuilder().text("重置成员密码").build())
+                .controls(List.of(resetMemberPasswordMobileOrEmailControl, resetMemberPasswordPasswordControl))
+                .submitButton(defaultSubmitButton())
+                .setting(defaultPageSettingBuilder()
+                        .submitType(NEW)
+                        .pageName("重置成员密码")
+                        .submissionWebhookTypes(List.of(ON_CREATE))
+                        .build())
+                .build();
+
         PSubmissionReferenceControl tenantDetailControl = PSubmissionReferenceControl.builder()
                 .type(SUBMISSION_REFERENCE)
                 .id(TENANT_DETAIL_CONTROL_ID)
@@ -1139,6 +1182,12 @@ public class MryTenantManageApp {
                                 .name("发送事件")
                                 .type(PAGE)
                                 .pageId(sendEventPage.getId())
+                                .build(),
+                        PageLink.builder()
+                                .id(newShortUuid())
+                                .name("重置成员密码")
+                                .type(PAGE)
+                                .pageId(resetMemberPasswordPage.getId())
                                 .build()
                 ))
                 .showBasedOnPermission(true).build();
@@ -1156,7 +1205,7 @@ public class MryTenantManageApp {
                         .build())
                 .appTopBar(defaultAppTopBar())
                 .pages(List.of(homePage, syncPage, communicationPage, statusSettingPage, packageSettingPage, limitSettingPage,
-                        triggerSyncPage, clearSubdomainPage, updateSubdomainReadyPage, clearCachePage, sendEventPage))
+                        triggerSyncPage, clearSubdomainPage, updateSubdomainReadyPage, clearCachePage, sendEventPage, resetMemberPasswordPage))
                 .menu(menu)
                 .attributes(List.of(currentPackageAttribute, packageExpireAttribute, packageStatusAttribute, tenantRegisterTimeAttribute,
                         recentActiveDateAttribute, appUsageAttribute, qrUsageAttribute, submissionUsageAttribute, memberUsageAttribute,
