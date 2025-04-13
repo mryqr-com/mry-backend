@@ -109,6 +109,7 @@ public class App extends AggregateRoot {
     }
 
     private void init(String name, AppSetting setting, ReportSetting reportSetting, User user) {
+        this.version = increaseVersion();
         this.name = name;
         this.active = true;
         this.locked = false;
@@ -130,6 +131,8 @@ public class App extends AggregateRoot {
         if (!Objects.equals(this.getVersion(), version)) {
             throw new MryException(APP_ALREADY_UPDATED, "更新失败，应用已经在别处被更新，请刷新页面后重新编辑。", mapOf("appId", this.getId()));
         }
+
+        this.version = increaseVersion();
 
         if (this.locked) {
             throw new MryException(APP_ALREADY_LOCKED, "应用已经锁定，无法编辑，请解除锁定后再编辑。", mapOf("appId", this.getId()));
@@ -163,7 +166,6 @@ public class App extends AggregateRoot {
 
     private void doUpdateSetting(AppSetting setting) {
         this.setting = setting;
-        this.version = increaseVersion();
         this.icon = this.setting.getConfig().getIcon();
         this.permission = this.setting.minPagePermission();//影响单个QR的查看和提交权限，采用最小有限原则
         this.operationPermission = maxPermission(this.setting.getConfig().getOperationPermission(), permission);//运营端权限，采用最大优先原则
@@ -283,12 +285,12 @@ public class App extends AggregateRoot {
     private void checkPageSubmitTypeChanges(AppSettingContext oldContext, AppSettingContext newContext, User user) {
         Set<String> changedToPerInstancePageIds = oldContext.calculateSubmitTypeChanges(newContext, ONCE_PER_INSTANCE);
         if (isNotEmpty(changedToPerInstancePageIds)) {
-            raiseEvent(new AppPageChangedToSubmitPerInstanceEvent(this.getId(), changedToPerInstancePageIds, user));
+            raiseEvent(new AppPageChangedToSubmitPerInstanceEvent(this.getId(), changedToPerInstancePageIds, this.getVersion(), user));
         }
 
         Set<String> changedToPerMemberPageIds = oldContext.calculateSubmitTypeChanges(newContext, ONCE_PER_MEMBER);
         if (isNotEmpty(changedToPerMemberPageIds)) {
-            raiseEvent(new AppPageChangedToSubmitPerMemberEvent(this.getId(), changedToPerMemberPageIds, user));
+            raiseEvent(new AppPageChangedToSubmitPerMemberEvent(this.getId(), changedToPerMemberPageIds, this.getVersion(), user));
         }
     }
 

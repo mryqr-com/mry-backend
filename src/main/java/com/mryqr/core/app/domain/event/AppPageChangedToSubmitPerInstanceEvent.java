@@ -16,8 +16,11 @@ import static lombok.AccessLevel.PRIVATE;
 public class AppPageChangedToSubmitPerInstanceEvent extends AppAwareDomainEvent {
     private Set<String> pageIds;
 
-    public AppPageChangedToSubmitPerInstanceEvent(String appId, Set<String> pageIds, User user) {
+    private String appVersion;
+
+    public AppPageChangedToSubmitPerInstanceEvent(String appId, Set<String> pageIds, String appVersion, User user) {
         super(APP_PAGE_CHANGED_TO_SUBMIT_PER_INSTANCE, appId, user);
         this.pageIds = pageIds;
+        this.appVersion = appVersion;
     }
 }

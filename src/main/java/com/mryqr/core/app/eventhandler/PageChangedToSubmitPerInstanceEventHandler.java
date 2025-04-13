@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
@@ -43,24 +44,32 @@ public class PageChangedToSubmitPerInstanceEventHandler extends AbstractDomainEv
             return;
         }
 
-        appRepository.byIdOptional(event.getAppId()).ifPresent(app -> event.getPageIds().stream()
-                .flatMap(pageId -> app.pageByIdOptional(pageId).stream())
-                .filter(Page::isOncePerInstanceSubmitType)
-                .forEach(page -> {
-                    removeAllSubmissionsForPageTask.run(page.getId(), event.getAppId());
-                    List<Attribute> tobeValueDeletedAttributes = app.allPageSubmissionAwareAttributes(page.getId());
-                    if (isNotEmpty(tobeValueDeletedAttributes)) {
-                        Set<String> tobeValueDeletedAttributeIds = tobeValueDeletedAttributes.stream()
-                                .map(Attribute::getId)
-                                .collect(toImmutableSet());
+        appRepository.byIdOptional(event.getAppId()).ifPresent(app -> {
+            if (!Objects.equals(event.getAppVersion(), app.getVersion())) {
+                log.warn("App version[{}] does not match the app version[{}] of domain event[{}:{}], skip.",
+                        app.getVersion(), event.getAppVersion(), event.getType(), event.getId());
+                return;
+            }
 
-                        removeAttributeValuesForAllQrsUnderAppTask.run(tobeValueDeletedAttributeIds, app.getId());
-                        tobeValueDeletedAttributes.stream()
-                                .filter(attribute -> attribute.getValueType().isIndexable())
-                                .forEach(attribute -> app.indexedFieldForAttributeOptional(attribute.getId())
-                                        .ifPresent(indexedField -> removeIndexedValueUnderAllQrsTask.run(indexedField, app.getId())));
-                    }
-                }));
+            event.getPageIds().stream()
+                    .flatMap(pageId -> app.pageByIdOptional(pageId).stream())
+                    .filter(Page::isOncePerInstanceSubmitType)
+                    .forEach(page -> {
+                        removeAllSubmissionsForPageTask.run(page.getId(), event.getAppId());
+                        List<Attribute> tobeValueDeletedAttributes = app.allPageSubmissionAwareAttributes(page.getId());
+                        if (isNotEmpty(tobeValueDeletedAttributes)) {
+                            Set<String> tobeValueDeletedAttributeIds = tobeValueDeletedAttributes.stream()
+                                    .map(Attribute::getId)
+                                    .collect(toImmutableSet());
+
+                            removeAttributeValuesForAllQrsUnderAppTask.run(tobeValueDeletedAttributeIds, app.getId());
+                            tobeValueDeletedAttributes.stream()
+                                    .filter(attribute -> attribute.getValueType().isIndexable())
+                                    .forEach(attribute -> app.indexedFieldForAttributeOptional(attribute.getId())
+                                            .ifPresent(indexedField -> removeIndexedValueUnderAllQrsTask.run(indexedField, app.getId())));
+                        }
+                    });
+        });
 
         countSubmissionForAppTask.run(event.getAppId(), event.getArTenantId());
     }
