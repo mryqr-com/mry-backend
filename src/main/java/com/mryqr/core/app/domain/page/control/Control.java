@@ -117,7 +117,7 @@ public abstract class Control implements Identified {
 
     @Valid
     @NotNull
-    private ControlStyleSetting styleSetting;//控件样式设置
+    private ControlStyleSetting styleSetting;//整体样式
 
     @Valid
     private ControlFillableSetting fillableSetting;//填值型控件的通用设置

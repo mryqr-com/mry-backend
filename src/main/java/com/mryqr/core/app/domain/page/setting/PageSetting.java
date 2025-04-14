@@ -25,7 +25,7 @@ import java.util.List;
 import static com.mryqr.common.domain.permission.Permission.*;
 import static com.mryqr.common.exception.ErrorCode.MODIFY_PERMISSION_NOT_ALLOWED;
 import static com.mryqr.common.utils.MapUtils.mapOf;
-import static com.mryqr.common.utils.MryConstants.MAX_SHORT_NAME_LENGTH;
+import static com.mryqr.common.utils.MryConstants.*;
 import static com.mryqr.core.app.domain.page.setting.AfterSubmitNavigationType.DEFAULT;
 import static com.mryqr.core.app.domain.page.setting.SubmitType.NEW;
 import static com.mryqr.core.app.domain.page.setting.SubmitType.ONCE_PER_MEMBER;
@@ -93,6 +93,10 @@ public class PageSetting {
 
     @Color
     private final String pageBackgroundColor;//页面背景颜色
+
+    @Min(MIN_BORDER_RADIUS)
+    @Max(MAX_BORDER_RADIUS)
+    private final int controlBorderRadius;//所有控件的圆角半径
 
     @Valid
     @NotNull
