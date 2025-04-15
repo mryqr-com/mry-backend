@@ -218,6 +218,7 @@ public class PageSetting {
                 .pageMaxWidth(650)
                 .contentMaxWidth(650)
                 .pageBackgroundColor("rgba(255, 255, 255, 1)")
+                .controlBorderRadius(4)
                 .shadow(Shadow.builder().width(6).color("rgba(0, 0, 0, .2)").build())
                 .border(noBorder())
                 .viewPortBackgroundColor(null)
