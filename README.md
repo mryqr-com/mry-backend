@@ -10,7 +10,7 @@
 
 ## 如何访问码如云在线服务
 
-- 码如云提供免费的在线SaaS服务，访问地址为：[https://www.mryqr.com](https://www.mryqr.com)。
+- 码如云提供在线SaaS服务，访问地址为：[https://www.mryqr.com](https://www.mryqr.com)。
 
 ## 为什么开发码如云
 
