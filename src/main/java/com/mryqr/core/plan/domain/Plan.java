@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
-import static com.mryqr.core.app.domain.page.control.ControlType.*;
 import static com.mryqr.core.plan.domain.PlanType.*;
 import static lombok.AccessLevel.PRIVATE;
 
@@ -21,20 +20,13 @@ import static lombok.AccessLevel.PRIVATE;
 public class Plan {
     private static final Set<ControlType> FREE_PLAN_EXCLUDES = Set.of();
 
-    private static final Set<ControlType> BASIC_PLAN_EXCLUDES = Set.of(
-            VIDEO_VIEW,
-            TIME_SEGMENT,
-            NUMBER_RANGE_SEGMENT,
-            MEMBER_SELECT,
-            ITEM_COUNT
-    );
+    private static final Set<ControlType> BASIC_PLAN_EXCLUDES = Set.of();
 
-    // 只有FREE版本套餐经过单独提权设置，进而用于码如云在线免费服务，其他类型套餐均保留商业化阶梯分布
     public static final Plan FREE_PLAN = Plan.builder()
             .type(FREE)
             .maxAppCount(3)
             .maxQrCount(1000)
-            .maxSubmissionCount(5000)
+            .maxSubmissionCount(2000)
             .maxMemberCount(5)
             .maxStorage(1)
             .maxSmsCountPerMonth(10)
@@ -71,17 +63,17 @@ public class Plan {
             .supportedControlTypes(basicPlanControlTypes())
             .customSubdomainAllowed(false)
             .customLogoAllowed(true)
-            .hideBottomMryLogo(false)
-            .hideAds(false)
-            .videoAudioAllowed(false)
+            .hideBottomMryLogo(true)
+            .hideAds(true)
+            .videoAudioAllowed(true)
             .developerAllowed(false)
-            .reportingAllowed(false)
+            .reportingAllowed(true)
             .kanbanAllowed(true)
-            .submissionNotifyAllowed(false)
+            .submissionNotifyAllowed(true)
             .batchImportQrAllowed(true)
             .batchImportMemberAllowed(true)
-            .submissionApprovalAllowed(false)
-            .assignmentAllowed(false)
+            .submissionApprovalAllowed(true)
+            .assignmentAllowed(true)
             .build();
 
     public static final Plan ADVANCED_PLAN = Plan.builder()
