@@ -388,7 +388,6 @@ public class RandomTestFixture {
                 .border(rBorder())
                 .shadow(rShadow())
                 .vPadding(0)
-                .borderRadius(4)
                 .build();
     }
 

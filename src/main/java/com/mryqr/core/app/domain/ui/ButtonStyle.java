@@ -14,7 +14,8 @@ import lombok.Value;
 
 import java.util.Set;
 
-import static com.mryqr.common.utils.MryConstants.*;
+import static com.mryqr.common.utils.MryConstants.MAX_PADDING;
+import static com.mryqr.common.utils.MryConstants.MIN_PADDING;
 import static com.mryqr.core.app.domain.ui.border.BorderType.SOLID;
 import static com.mryqr.core.app.domain.ui.shadow.Shadow.noShadow;
 import static lombok.AccessLevel.PRIVATE;
@@ -42,10 +43,6 @@ public class ButtonStyle {
     @Max(MAX_PADDING)
     private final int vPadding;//垂直内边距
 
-    @Min(MIN_BORDER_RADIUS)
-    @Max(MAX_BORDER_RADIUS)
-    private final int borderRadius;//圆角半径
-
     public static ButtonStyle defaultButtonStyle() {
         return ButtonStyle.builder()
                 .fontStyle(FontStyle.builder()
@@ -59,7 +56,6 @@ public class ButtonStyle {
                 .border(Border.builder().type(SOLID).width(1).sides(Set.of(BorderSide.values())).color("rgba(220, 223, 230, 1)").build())
                 .shadow(noShadow())
                 .vPadding(10)
-                .borderRadius(4)
                 .build();
     }
 

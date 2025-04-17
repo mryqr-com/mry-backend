@@ -50,7 +50,6 @@ public class SubmitButton {
                         .border(noBorder())
                         .shadow(noShadow())
                         .vPadding(12)
-                        .borderRadius(4)
                         .build())
                 .build();
     }
