@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!--Attention: Match must contain single Package element-->
+    <Match>
+        <Package name="com.mryqr.common.spike"/>
+    </Match>
+
+    <Match>
+        <Package name="com.mryqr.utils.apitest"/>
+    </Match>
+
+    <Match>
+        <Class name="com.mryqr.common.notification.FakeNotificationService"/>
+    </Match>
+
+    <Match>
+        <Package name="~com\.qq.*"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="URF_UNREAD_FIELD"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"/>
+    </Match>
+</FindBugsFilter>

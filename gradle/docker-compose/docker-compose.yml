@@ -1,0 +1,53 @@
+version: "2"
+services:
+  mongodb_dev:
+    restart: always
+    container_name: mry-mongodb-dev
+    image: mongo:4.2.7-bionic
+    networks:
+      - mry-net
+    environment:
+      - "MONGO_INITDB_DATABASE=mry_local_db"
+    volumes:
+      - mry-data-mongo_dev:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    command: --bind_ip_all --replSet rs0
+    ports:
+      - "27017:27017"
+  mongodb_ci:
+    restart: always
+    container_name: mry-mongodb-ci
+    image: mongo:4.2.7-bionic
+    networks:
+      - mry-net
+    environment:
+      - "MONGO_INITDB_DATABASE=mry_ci_db"
+    volumes:
+      - mry-data-mongo_ci:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    command: --bind_ip_all --replSet rs0
+    ports:
+      - "27018:27017"
+  redis:
+    restart: always
+    container_name: mry-redis
+    image: redis:6.0
+    networks:
+      - mry-net
+    volumes:
+      - mry-data-redis:/data
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass aredissecret
+
+networks:
+  mry-net:
+    driver: bridge
+
+volumes:
+  mry-data-mongo_dev:
+    driver: local
+  mry-data-mongo_ci:
+    driver: local
+  mry-data-redis:
+    driver: local

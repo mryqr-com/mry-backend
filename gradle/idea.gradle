@@ -1,0 +1,20 @@
+apply plugin: 'idea'
+
+configurations.apiTestImplementation.setCanBeResolved(true)
+configurations.apiTestRuntimeOnly.setCanBeResolved(true)
+//configurations.gatlingImplementation.setCanBeResolved(true)
+//configurations.gatlingRuntimeOnly.setCanBeResolved(true)
+
+idea {
+    module {
+        testSourceDirs += file('src/apiTest/java')
+        testSourceDirs += file('src/apiTest/resources')
+//        testSourceDirs += file('src/gatling/java')
+//        testSourceDirs += file('src/gatling/resources')
+        scopes.TEST.plus += [configurations.apiTestImplementation]
+        scopes.TEST.plus += [configurations.apiTestRuntimeOnly]
+//        scopes.TEST.plus += [configurations.gatlingImplementation]
+//        scopes.TEST.plus += [configurations.gatlingRuntimeOnly]
+    }
+}
+

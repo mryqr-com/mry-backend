@@ -1,0 +1,71 @@
+server:
+  port: 8080
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  data:
+    mongodb:
+      uri: mongodb://localhost:27018/mry_ci_db
+    redis:
+      database: 1
+      host: localhost
+      port: 6379
+      password: aredissecret
+      timeout: 10000
+  mail:
+    host: smtp.notapplicable.com
+    port: 25
+    username: notapplicable@126.com
+    password: notapplicable
+    properties:
+      mail:
+        smtp:
+          auth: true
+          from: notapplicable@126.com
+  cache:
+    type: redis
+mry:
+  aliyun:
+    ak: your-aliyun-access-key
+    aks: your-aliyun-access-key-secret
+    role: your-aliyun-ram-role
+    ossBucket: your-aliyun-oss-bucket
+    ossEndpoint: your-aliyun-oss-endpoint
+    syncSubdomain: false
+    smsSignName: notapplicable
+    smsTemplateCode: notapplicable
+    deliveryQueryAppCode: a-fake-app-code
+    ossUtilCommand: /opt/bin/ossutilmac64
+    ossUtilConfigFile: ~/.ossutilconfig
+  jwt:
+    issuer: mry-ci-issuer
+    secret: 3740243432434gegewf
+    expire: 7200
+    aheadAutoRefresh: 60
+  wx:
+    mobileWxEnabled: false
+    mobileAppId: your-wx-mobile-app-id
+    mobileAppSecret: your-wx-mobile-app-secret
+    pcAppId: your-pc-mobile-app-id
+    pcAppSecret: your-pc-mobile-app-secret
+    submissionCreatedTemplateId: notapplicable
+    submissionUpdatedTemplateId: notapplicable
+    submissionApprovedTemplateId: notapplicable
+    assignmentNearExpireTemplateId: notapplicable
+  pay:
+    wxMerchantId: notapplicable
+    wxMerchantSerialNumber: notapplicable
+    wxApiV3Key: notapplicable
+  common:
+    httpsEnabled: false
+    baseDomainName: ci.mryqr.com
+    limitRate: false
+    webhookUserName: tFi7iVdAQwSQDnrhDGp7Vg
+    webhookPassword: Dup7ANsTR0q6bIpbDTCl5w
+  redis:
+    domainEventStream: DomainEvent.CI
+    notificationStream: Notification.CI
+    webhookStream: Webhook.CI
