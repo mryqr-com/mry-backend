@@ -1,0 +1,27 @@
+target
+*.iml
+*.ipr
+*.iws
+build
+out
+.gradle
+tmp.json
+tmp.xml
+tmp.md
+tmp.js
+tmp.txt
+*.log
+.shelf
+*.retry
+.ideaDataSources
+.DS_Store
+.idea
+
+#Below are files used for prod deployment
+prod-deploy.sh
+prod-deploy2.sh
+src/main/resources/application-prod.yml
+src/main/resources/application-prod2.yml
+src/main/resources/logback-spring.xml
+src/main/resources/fullchain.pem
+src/main/resources/privkey.pem
