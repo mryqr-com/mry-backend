@@ -1,0 +1,35 @@
+buildTime: ${buildTime}
+gitRevision: ${gitRevision}
+gitBranch: ${gitBranch}
+
+spring:
+  application:
+    name: mry-backend
+  profiles:
+    active: local # default profile
+  banner:
+    location: classpath:banner.txt
+  task:
+    scheduling:
+      pool:
+        size: 5
+
+server:
+  shutdown: graceful
+  tomcat:
+    accept-count: 100
+    max-swallow-size: 50
+    max-keep-alive-requests: 200
+    threads:
+      max: 500
+
+logging:
+  pattern:
+    level: "%5p [mry-backend,%X{traceId:-},%X{spanId:-}]"
+  level:
+    org:
+      ansj: WARN
+
+  tracing:
+    sampling:
+      probability: 1.0

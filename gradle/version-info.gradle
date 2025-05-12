@@ -1,0 +1,33 @@
+import java.time.ZoneId
+import java.time.ZonedDateTime
+
+def gitRevision = "git rev-parse HEAD".execute().text.trim()
+def gitBranch = "git rev-parse --abbrev-ref HEAD".execute().text.trim()
+def javaVersion = System.getProperties().getProperty("java.version").trim()
+def buildDate = (ZonedDateTime.now((ZoneId.of("Asia/Shanghai")))).toString()
+
+
+jar {
+    archiveBaseName = group
+    archiveVersion = rootProject.version
+    manifest {
+        attributes(
+                "Git-Revision": gitRevision,
+                "Git-Branch": gitBranch,
+                "Build-Date": buildDate,
+                "X-Compile-Source-JDK": javaVersion,
+                "X-Compile-Target-JDK": javaVersion
+        )
+    }
+}
+
+processResources {
+    filesMatching("**/application.yml") {
+        expand([
+                "gitRevision": gitRevision,
+                "gitBranch"  : gitBranch,
+                "buildTime"  : buildDate
+        ])
+    }
+}
+

@@ -1,0 +1,13 @@
+apply plugin: 'com.avast.gradle.docker-compose'
+
+//dockerCompose.isRequiredBy(apiTest)
+
+dockerCompose {
+    useComposeFiles = ['gradle/docker-compose/docker-compose.yml']
+    // stopContainers = false
+//     removeContainers = false
+//     removeVolumes = false
+}
+
+bootRun.dependsOn composeUp //与isRequiredBy不同的是：使用dependsOn在关闭bootRun后MongoDB不会停止，因此本地开发不用反复启动MongoDB
+apiTest.dependsOn composeUp
