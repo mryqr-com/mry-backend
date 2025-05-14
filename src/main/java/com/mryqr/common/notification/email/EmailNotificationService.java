@@ -1,6 +1,7 @@
 package com.mryqr.common.notification.email;
 
 import com.mryqr.common.notification.NotificationService;
+import com.mryqr.common.profile.ProdProfile;
 import com.mryqr.common.properties.PropertyService;
 import com.mryqr.core.app.domain.App;
 import com.mryqr.core.app.domain.page.Page;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +34,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Slf4j
+@Component
+@ProdProfile
 @RequiredArgsConstructor
 public class EmailNotificationService implements NotificationService {
     private final MemberRepository memberRepository;
