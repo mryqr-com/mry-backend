@@ -46,7 +46,8 @@ public class NearExpireAssignmentsJob {
                 forkJoinPool.submit(() -> assignments.parallelStream().forEach(assignment -> {
                     try {
                         assignment.calculateStatus(NO_USER);
-                        log.info("Set assignment[{}] status to {}.", assignment.getId(), assignment.getStatus());
+                        log.info("Set assignment[{}] of tenant[{}] status to {}.",
+                                assignment.getId(), assignment.getTenantId(), assignment.getStatus());
                         assignmentRepository.save(assignment);
                     } catch (Throwable t) {
                         log.error("Failed to try near expire assignment[{}].", assignment.getId(), t);

@@ -36,7 +36,7 @@ public class FinishQrForAssignmentsTask implements RetryableTask {
                     .build();
             boolean success = assignment.finishQr(finishedQr, NO_USER);
             if (success) {
-                log.info("Finished QR[{}] for assignment[{}].", qrId, assignment.getId());
+                log.info("Finished QR[{}] for assignment[{}] of tenant[{}].", qrId, assignment.getId(), assignment.getTenantId());
                 assignmentRepository.save(assignment);
             }
         });
