@@ -23,7 +23,7 @@ public class RegisterCommand implements Command {
     @MobileOrEmail
     private final String mobileOrEmail;
 
-    @NotBlank
+//    @NotBlank
     @VerificationCode
     private final String verification;
 

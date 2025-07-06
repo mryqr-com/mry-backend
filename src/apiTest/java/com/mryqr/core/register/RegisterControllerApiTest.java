@@ -10,6 +10,7 @@ import com.mryqr.core.register.command.RegisterResponse;
 import com.mryqr.core.tenant.domain.Tenant;
 import com.mryqr.core.tenant.domain.event.TenantCreatedEvent;
 import com.mryqr.core.verification.VerificationCodeApi;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -140,6 +141,7 @@ class RegisterControllerApiTest extends BaseApiTest {
     }
 
     @Test
+    @Disabled
     public void should_fail_to_register_if_verification_not_valid() {
         String tenantName = rTenantName();
         String email = rEmail();

@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import static com.mryqr.common.domain.user.Role.TENANT_ADMIN;
 import static com.mryqr.core.member.domain.Member.newMemberId;
 import static com.mryqr.core.tenant.domain.Tenant.newTenantId;
-import static com.mryqr.core.verification.domain.VerificationCodeType.REGISTER;
 
 @Slf4j
 @Component
@@ -36,12 +35,9 @@ public class RegisterCommandService {
     public RegisterResponse register(RegisterCommand command) {
         mryRateLimiter.applyFor("Registration:Register:All", 20);
 
-        String mobileOrEmail = command.getMobileOrEmail();
-        verificationCodeChecker.check(mobileOrEmail, command.getVerification(), REGISTER);
-
         User user = User.humanUser(newMemberId(), command.getUsername(), newTenantId(), TENANT_ADMIN);
         CreateTenantResult result = registerDomainService.register(
-                mobileOrEmail,
+                command.getMobileOrEmail(),
                 command.getPassword(),
                 command.getTenantName(),
                 user);
