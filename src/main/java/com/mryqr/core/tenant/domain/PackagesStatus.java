@@ -326,11 +326,11 @@ public final class PackagesStatus {
         if (currentSubmissionCount >= maxAllowedSubmissionCount) {
             if (isExpired()) {
                 throw new MryException(SUBMISSION_COUNT_LIMIT_REACHED,
-                        "提交失败，当前套餐(" + currentPlanName() + ")已过期，有效套餐已降为免费版，且提交量已达本月上限，请联系系统管理员及时续费或升级。",
+                        "提交失败，当前套餐(" + currentPlanName() + ")已过期，有效套餐已降为免费版，且提交量已达上限，请联系系统管理员及时续费或升级。",
                         mapOf("tenantId", tenantId()));
             }
             throw new MryException(SUBMISSION_COUNT_LIMIT_REACHED,
-                    "提交失败，本月提交已达当前套餐(" + currentPlanName() + ")上限(" + maxAllowedSubmissionCount + ")，请联系系统管理员及时升级。",
+                    "提交失败，提交量已达当前套餐(" + currentPlanName() + ")上限(" + maxAllowedSubmissionCount + ")，请联系系统管理员及时升级。",
                     mapOf("tenantId", tenantId()));
         }
     }
