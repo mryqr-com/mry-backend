@@ -232,7 +232,7 @@ public class SyncTenantToManagedQrTask implements RetryableTask {
                                       "存储容量：" + storageCount + " / " + currentPlan.getMaxStorage() + " G\n" +
                                       "部门总量：" + departmentCount + " / " + currentPlan.getMaxDepartmentCount() + "个\n" +
                                       "成员数量：" + memberCount + " / " + currentPlan.getMaxMemberCount() + " 名\n" +
-                                      "每月短信量：" + smsCount + " / " + currentPlan.getMaxSmsCountPerMonth() + " 条\n" +
+//                                      "每月短信量：" + smsCount + " / " + currentPlan.getMaxSmsCountPerMonth() + " 条\n" +
                                       "应用分组数：" + currentPlan.getMaxGroupCountPerApp() + "个\n" +
                                       "开发功能：" + currentPlan.isDeveloperAllowed() + "\n" +
                                       "任务功能：" + currentPlan.isAssignmentAllowed() + "\n" +
