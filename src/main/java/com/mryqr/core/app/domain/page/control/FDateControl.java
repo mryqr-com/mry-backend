@@ -12,6 +12,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 import static com.mryqr.common.utils.MryConstants.MAX_PLACEHOLDER_LENGTH;
 import static java.time.format.DateTimeFormatter.ofPattern;
@@ -24,7 +25,10 @@ import static lombok.AccessLevel.PRIVATE;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = PRIVATE)
 public class FDateControl extends Control {
-    private static final DateTimeFormatter FORMATTER = ofPattern("u-M-d");
+    private static final DateTimeFormatter FROM_STRING_FORMATTER = new DateTimeFormatterBuilder()
+            .appendOptional(ofPattern("u-M-d"))
+            .appendOptional(ofPattern("u/M/d"))
+            .toFormatter();
 
     @Size(max = MAX_PLACEHOLDER_LENGTH)
     private String placeholder;//占位符
@@ -41,7 +45,7 @@ public class FDateControl extends Control {
 
     @Override
     protected Answer doCreateAnswerFrom(String value) {
-        String parsed = LocalDate.parse(value, FORMATTER).toString();
+        String parsed = LocalDate.parse(value, FROM_STRING_FORMATTER).toString();
         return DateAnswer.answerBuilder(this).date(parsed).build();
     }
 
