@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.TypeAlias;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import static java.time.format.DateTimeFormatter.ofPattern;
 import static lombok.AccessLevel.PRIVATE;
 
 
+@Slf4j
 @Getter
 @SuperBuilder
 @TypeAlias("DATE_CONTROL")
@@ -45,8 +47,13 @@ public class FDateControl extends Control {
 
     @Override
     protected Answer doCreateAnswerFrom(String value) {
-        String parsed = LocalDate.parse(value, FROM_STRING_FORMATTER).toString();
-        return DateAnswer.answerBuilder(this).date(parsed).build();
+        try {
+            String parsed = LocalDate.parse(value, FROM_STRING_FORMATTER).toString();
+            return DateAnswer.answerBuilder(this).date(parsed).build();
+        } catch (Exception e) {
+            log.warn("Can't parse date: {}, will skip it.", value, e);
+            return null;
+        }
     }
 
     public DateAnswer check(DateAnswer answer) {

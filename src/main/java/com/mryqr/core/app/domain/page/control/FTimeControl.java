@@ -8,18 +8,27 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.TypeAlias;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 import static com.mryqr.common.utils.MryConstants.MAX_PLACEHOLDER_LENGTH;
 import static lombok.AccessLevel.PRIVATE;
 
-
+@Slf4j
 @Getter
 @SuperBuilder
 @TypeAlias("TIME_CONTROL")
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = PRIVATE)
 public class FTimeControl extends Control {
+    private static final DateTimeFormatter FROM_STRING_FORMATTER = new DateTimeFormatterBuilder()
+            .appendOptional(DateTimeFormatter.ofPattern("H:m"))
+            .toFormatter();
+
     @Size(max = MAX_PLACEHOLDER_LENGTH)
     private String placeholder;//占位符
 
@@ -35,7 +44,13 @@ public class FTimeControl extends Control {
 
     @Override
     protected Answer doCreateAnswerFrom(String value) {
-        return TimeAnswer.answerBuilder(this).time(value).build();
+        try {
+            String parsed = LocalTime.parse(value, FROM_STRING_FORMATTER).toString();
+            return TimeAnswer.answerBuilder(this).time(parsed).build();
+        } catch (Exception e) {
+            log.warn("Can't parse time: {}, will skip it.", value, e);
+            return null;
+        }
     }
 
     public TimeAnswer check(TimeAnswer answer) {
