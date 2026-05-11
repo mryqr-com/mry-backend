@@ -110,7 +110,7 @@ public class IntegrationSubmissionCommandService {
                     referenceData,
                     memberUser
             );
-            submissionRepository.houseKeepSave(result.getSubmission(), app);
+            submissionRepository.houseKeepSave(result.getSubmission(), qr, app);
             qrRepository.save(result.getQr());
             plateRepository.save(result.getPlate());
             return result.getSubmission().getId();
@@ -125,7 +125,7 @@ public class IntegrationSubmissionCommandService {
                     memberUser
             );
 
-            submissionRepository.houseKeepSave(submission, app);
+            submissionRepository.houseKeepSave(submission, qr, app);
             return submission.getId();
         }
     }
@@ -156,7 +156,7 @@ public class IntegrationSubmissionCommandService {
         User finalUser = deriveUser(user, command.getMemberId(), command.getMemberCustomId());
         Set<String> submittedControlIds = answers.stream().map(Answer::getControlId).collect(toImmutableSet());
         submission.update(submittedControlIds, checkedAnswers, finalUser);
-        submissionRepository.houseKeepSave(submission, app);
+        submissionRepository.houseKeepSave(submission, qr, app);
         log.info("Integration updated submission[{}].", submissionId);
     }
 

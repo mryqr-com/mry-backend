@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface SubmissionRepository {
-    void houseKeepSave(Submission submission, App app);
+    void houseKeepSave(Submission submission, QR qr, App app);
 
     Optional<Submission> lastMemberSubmission(String memberId, String qrId, String pageId);
 

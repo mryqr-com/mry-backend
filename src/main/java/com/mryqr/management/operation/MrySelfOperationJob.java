@@ -115,7 +115,7 @@ public class MrySelfOperationJob {
                 null,
                 NO_USER
         );
-        submissionRepository.houseKeepSave(submission, app);
+        submissionRepository.houseKeepSave(submission, qr, app);
         log.info("Synced mry operation delta statistics to managed QR.");
     }
 
@@ -178,7 +178,7 @@ public class MrySelfOperationJob {
                 null,
                 NO_USER
         );
-        submissionRepository.houseKeepSave(submission, app);
+        submissionRepository.houseKeepSave(submission, qr, app);
         log.info("Synced mry operation total statistics to managed QR.");
     }
 

@@ -55,8 +55,8 @@ public class MongoSubmissionRepository extends MongoBaseRepository<Submission> i
     //重新计算过滤值和排序值后再保存，一般如果新建或更新了answer，则需要调用该方法
     @Override
     @Transactional
-    public void houseKeepSave(Submission submission, App app) {
-        submissionHouseKeeper.perform(submission, app);
+    public void houseKeepSave(Submission submission, QR qr, App app) {
+        submissionHouseKeeper.perform(submission, qr, app);
         save(submission);
     }
 

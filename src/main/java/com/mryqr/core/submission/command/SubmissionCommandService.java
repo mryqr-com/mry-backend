@@ -82,7 +82,7 @@ public class SubmissionCommandService {
                     user
             );
 
-            submissionRepository.houseKeepSave(result.getSubmission(), app);
+            submissionRepository.houseKeepSave(result.getSubmission(), qr, app);
             qrRepository.save(result.getQr());
             plateRepository.save(result.getPlate());
             return result.getSubmission().getId();
@@ -97,7 +97,7 @@ public class SubmissionCommandService {
                     user
             );
 
-            submissionRepository.houseKeepSave(submission, app);
+            submissionRepository.houseKeepSave(submission, qr, app);
             log.info("Created submission[{}] for app[{}].", submission.getId(), app.getId());
 
             return submission.getId();
@@ -128,7 +128,7 @@ public class SubmissionCommandService {
                 user
         );
 
-        submissionRepository.houseKeepSave(submission, app);
+        submissionRepository.houseKeepSave(submission, qr, app);
         log.info("Updated submission[{}] for app[{}].", submissionId, app.getId());
     }
 
@@ -150,7 +150,7 @@ public class SubmissionCommandService {
         submissionPermissions.checkCanApproveSubmission(submission, page, app);
 
         submission.approve(command.isPassed(), command.getNote(), page, user);
-        submissionRepository.houseKeepSave(submission, app);
+        submissionRepository.houseKeepSave(submission, qr, app);
         log.info("Approved submission[{}] for app[{}].", submissionId, app.getId());
     }
 

@@ -98,7 +98,7 @@ public class SyncOrderToManagedQrTask implements RetryableTask {
                             null,
                             NO_USER
                     );
-                    submissionRepository.houseKeepSave(submission, app);
+                    submissionRepository.houseKeepSave(submission, qr, app);
                     log.info("Synced order[{}] to managed QR.", orderId);
                     syncAttributeValuesForQrTask.run(qr.getId());//及时计算属性值，不过兜底机制也会计算，只是有时延
                 });

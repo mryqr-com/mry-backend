@@ -80,7 +80,7 @@ public class SyncOffenceInfoWebhookHandler implements OffenceWebhookHandler {
                         null,
                         NO_USER
                 );
-                submissionRepository.houseKeepSave(submission, offenceApp);
+                submissionRepository.houseKeepSave(submission, offenceQr, offenceApp);
                 log.info("Synced offence target QR[{}] to managed offence QR.", targetQr.getId());
             });
         });
