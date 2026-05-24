@@ -17,6 +17,10 @@ tmp.txt
 .DS_Store
 .idea
 
+target/
+tmp/
+.mvn/wrapper/maven-wrapper.jar
+
 #Below are files used for prod deployment
 prod-deploy.sh
 prod-deploy2.sh

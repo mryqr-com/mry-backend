@@ -1,7 +1,3 @@
-buildTime: ${buildTime}
-gitRevision: ${gitRevision}
-gitBranch: ${gitBranch}
-
 spring:
   application:
     name: mry-backend

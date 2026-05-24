@@ -24,17 +24,12 @@ public class AboutController {
     @GetMapping(value = "/about")
     public QAboutInfo about() {
         mryRateLimiter.applyFor("About", 5);
-        String buildTime = environment.getProperty("buildTime");
-        String gitRevision = environment.getProperty("gitRevision");
-        String gitBranch = environment.getProperty("gitBranch");
+
         String environment = this.environment.getActiveProfiles()[0];
         String deployTime = this.deployTime.toString();
 
         return QAboutInfo.builder()
-                .buildTime(buildTime)
                 .deployTime(deployTime)
-                .gitRevision(gitRevision)
-                .gitBranch(gitBranch)
                 .environment(environment)
                 .build();
     }

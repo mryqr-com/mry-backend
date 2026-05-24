@@ -1,7 +1,3 @@
-buildTime: fakeValue
-gitRevision: fakeValue
-gitBranch: fakeValue
-
 server:
   port: 8080
 

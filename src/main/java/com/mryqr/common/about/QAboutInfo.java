@@ -11,9 +11,6 @@ import static lombok.AccessLevel.PRIVATE;
 @Builder
 @AllArgsConstructor(access = PRIVATE)
 public class QAboutInfo {
-    private final String buildTime;
     private final String deployTime;
-    private final String gitRevision;
-    private final String gitBranch;
     private final String environment;
 }
