@@ -1,0 +1,69 @@
+services:
+  mry-mongodb_local:
+    image: mongo:8
+    ports:
+      - "27017:27017"
+    environment:
+      - "MONGO_INITDB_DATABASE=mry_local_db"
+    volumes:
+      - mry-data-mongo_local:/data/db
+    command: mongod --replSet rs0
+    healthcheck:
+      test: |
+        mongosh --eval "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] }).ok }"
+      start_period: 0s
+      interval: 2s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mry-net
+    restart: always
+
+  mry-mongodb_ci:
+    image: mongo:8
+    ports:
+      - "27018:27017"
+    environment:
+      - "MONGO_INITDB_DATABASE=mry_ci_db"
+    volumes:
+      - mry-data-mongo_ci:/data/db
+    command: mongod --replSet rs0
+    healthcheck:
+      test: |
+        mongosh --eval "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] }).ok }"
+      start_period: 0s
+      interval: 2s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mry-net
+    restart: always
+
+  mry-redis:
+    image: redis:7.4.2
+    ports:
+      - "6379:6379"
+    volumes:
+      - mry-data-redis:/data
+    command: redis-server --requirepass aredissecret
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "aredissecret", "ping" ]
+      start_period: 2s
+      interval: 2s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mry-net
+    restart: always
+
+networks:
+  mry-net:
+    driver: bridge
+
+volumes:
+  mry-data-mongo_local:
+    driver: local
+  mry-data-mongo_ci:
+    driver: local
+  mry-data-redis:
+    driver: local
