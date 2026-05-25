@@ -20,14 +20,13 @@
 
 ## 常用命令
 
-| 功能                 | 命令                       | 说明                                       |
-|--------------------|--------------------------|------------------------------------------|
-| 在IntelliJ中打开工程     | `./idea.sh`              | 将自动启动IntelliJ，无需另行在IntelliJ中做导入操作        |
-| 本地启动               | `./local-run.sh`         | API端口：8080, 调试端口：5005                    |
-| 清空所有本地数据后再启动       | `clear-and-local-run.sh` | API端口：8080, 调试端口：5005                    |
-| 本地构建               | `./ci-build.sh`          | 将运行单元测试，API测试以及静态代码检查                    |
-| 单独停止docker-compose | `./gradlew composeDown`  | 将清除所有本地数据，包括MongoDB和Redis                |
-| 单独启动docker-compose | `./gradlew composeUp`    | 通过docker-compose启动MongoDB和Redis，如已经启动则跳过 |
+| 功能                 | 命令                      | 说明                                         |
+|--------------------|-------------------------|--------------------------------------------|
+| 本地启动               | `./local-run.sh`        | API端口：8080, 调试端口：5005                      |
+| 清空所有本地数据后再启动       | `clear-and-local-run.sh` | API端口：8080, 调试端口：5005                      |
+| 本地构建               | `./ci-build.sh`         | 将运行单元测试，API测试以及静态代码检查                      |
+| 单独启动docker-compose | `./start-docker-compose` | 通过`docker compose`启动MongoDB和Redis，如已经启动则跳过 |
+| 单独停止docker-compose | `./stop-docker-compose` | 将清除`docker compose`的所有本地数据，包括MongoDB和Redis |
 
 
 ## IDE配置

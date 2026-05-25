@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 
-./gradlew composeDown
-
+./stop-docker-compose.sh
 ./local-run.sh
