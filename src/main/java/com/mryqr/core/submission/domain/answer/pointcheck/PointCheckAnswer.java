@@ -38,6 +38,10 @@ public class PointCheckAnswer extends Answer {
     @Size(max = MAX_OPTION_SIZE)
     private Map<@NotBlank String, @NotNull PointCheckValue> checks;//optionId -> value
 
+    public static PointCheckAnswer.PointCheckAnswerBuilder<?, ?> answerBuilder(FPointCheckControl control) {
+        return PointCheckAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -92,10 +96,6 @@ public class PointCheckAnswer extends Answer {
 
     public boolean isPassed() {
         return checks.values().stream().allMatch(value -> value == YES);
-    }
-
-    public static PointCheckAnswer.PointCheckAnswerBuilder<?, ?> answerBuilder(FPointCheckControl control) {
-        return PointCheckAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

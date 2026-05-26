@@ -42,6 +42,10 @@ public class DropdownAnswer extends Answer {
     @Size(max = FDropdownControl.MAX_OPTION_SIZE)
     private List<@ShortUuid String> optionIds;
 
+    public static DropdownAnswer.DropdownAnswerBuilder<?, ?> answerBuilder(FDropdownControl control) {
+        return DropdownAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -92,10 +96,6 @@ public class DropdownAnswer extends Answer {
     protected Double doCalculateNumericalValue(Control control) {
         FDropdownControl theControl = (FDropdownControl) control;
         return theControl.numericalValueFor(optionIds);
-    }
-
-    public static DropdownAnswer.DropdownAnswerBuilder<?, ?> answerBuilder(FDropdownControl control) {
-        return DropdownAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

@@ -3,8 +3,8 @@ package com.mryqr.common.exception;
 import com.mryqr.common.tracing.MryTracingService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.web.servlet.error.AbstractErrorController;
-import org.springframework.boot.web.servlet.error.ErrorAttributes;
+import org.springframework.boot.webmvc.autoconfigure.error.AbstractErrorController;
+import org.springframework.boot.webmvc.error.ErrorAttributes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +20,6 @@ import static org.springframework.boot.web.error.ErrorAttributeOptions.defaults;
 @Slf4j
 @RestController
 public class RestErrorController extends AbstractErrorController {
-    private final MryTracingService mryTracingService;
-
     private static final Map<HttpStatus, String> GENERIC_MESSAGES = Map.of(
             HttpStatus.UNAUTHORIZED, "Authentication failed",
             HttpStatus.FORBIDDEN, "Access denied",
@@ -36,6 +34,7 @@ public class RestErrorController extends AbstractErrorController {
             HttpStatus.NOT_FOUND, ErrorCode.NOT_FOUND,
             HttpStatus.METHOD_NOT_ALLOWED, ErrorCode.METHOD_NOT_ALLOWED,
             HttpStatus.CONFLICT, ErrorCode.CONFLICT);
+    private final MryTracingService mryTracingService;
 
     public RestErrorController(ErrorAttributes errorAttributes, MryTracingService mryTracingService) {
         super(errorAttributes);

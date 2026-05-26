@@ -31,18 +31,16 @@ import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 @EqualsAndHashCode
 @AllArgsConstructor(access = PRIVATE)
 public class PlateSetting {
+    @EqualsAndHashCode.Exclude
+    protected boolean complete;
     @Valid
     @NotNull
     private PlateConfig config;
-
     @Valid
     @NotNull
     @NoNullElement
     @Size(max = 10)
     private List<PlateControl> controls;
-
-    @EqualsAndHashCode.Exclude
-    protected boolean complete;
 
     public static PlateSetting create() {
         return PlateSetting.builder()

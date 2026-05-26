@@ -28,6 +28,10 @@ import static lombok.AccessLevel.PRIVATE;
 public class NumberInputAnswer extends Answer {
     private Double number;
 
+    public static NumberInputAnswer.NumberInputAnswerBuilder<?, ?> answerBuilder(FNumberInputControl control) {
+        return NumberInputAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -75,11 +79,6 @@ public class NumberInputAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return number;
-    }
-
-
-    public static NumberInputAnswer.NumberInputAnswerBuilder<?, ?> answerBuilder(FNumberInputControl control) {
-        return NumberInputAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

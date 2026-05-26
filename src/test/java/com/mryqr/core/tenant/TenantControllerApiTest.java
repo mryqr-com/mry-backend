@@ -8,6 +8,7 @@ import com.mryqr.core.tenant.command.*;
 import com.mryqr.core.tenant.domain.Tenant;
 import com.mryqr.core.tenant.query.*;
 import com.mryqr.management.apptemplate.MryAppTemplateTenant;
+import com.mryqr.support.PollingAssertion;
 import com.mryqr.utils.LoginResponse;
 import com.mryqr.utils.PreparedQrResponse;
 import org.junit.jupiter.api.Test;
@@ -74,8 +75,8 @@ class TenantControllerApiTest extends BaseApiTest {
         UploadedFile loginBackground = rImageFile();
         UpdateTenantBaseSettingCommand command = UpdateTenantBaseSettingCommand.builder().name(tenantName).loginBackground(loginBackground)
                 .build();
-        TenantApi.updateBaseSetting(response.getJwt(), command);
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        TenantApi.updateBaseSetting(response.jwt(), command);
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(tenantName, tenant.getName());
         assertEquals(loginBackground, tenant.getLoginBackground());
     }
@@ -84,30 +85,30 @@ class TenantControllerApiTest extends BaseApiTest {
     public void should_update_logo() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
         UploadedFile logo = rImageFile();
-        TenantApi.updateLogo(response.getJwt(), UpdateTenantLogoCommand.builder().logo(logo).build());
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        TenantApi.updateLogo(response.jwt(), UpdateTenantLogoCommand.builder().logo(logo).build());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(logo, tenant.getLogo());
     }
 
     @Test
     public void should_not_update_logo_if_packages_not_allowed() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        Tenant theTenant = tenantRepository.byId(response.getTenantId());
+        Tenant theTenant = tenantRepository.byId(response.tenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withCustomLogoAllowed(false));
 
         UpdateTenantLogoCommand command = UpdateTenantLogoCommand.builder().logo(rImageFile()).build();
-        assertError(() -> TenantApi.updateLogoRaw(response.getJwt(), command), UPDATE_LOGO_NOT_ALLOWED);
+        assertError(() -> TenantApi.updateLogoRaw(response.jwt(), command), UPDATE_LOGO_NOT_ALLOWED);
     }
 
     @Test
     public void should_refresh_api_secret() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        Tenant theTenant = tenantRepository.byId(response.getTenantId());
+        Tenant theTenant = tenantRepository.byId(response.tenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withDeveloperAllowed(true));
 
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
-        String newApiSecret = TenantApi.refreshApiSecret(response.getJwt());
-        Tenant updatedTenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
+        String newApiSecret = TenantApi.refreshApiSecret(response.jwt());
+        Tenant updatedTenant = tenantRepository.byId(response.tenantId());
 
         assertNotEquals(tenant.getApiSetting().getApiSecret(), newApiSecret);
         assertEquals(updatedTenant.getApiSetting().getApiSecret(), newApiSecret);
@@ -116,18 +117,18 @@ class TenantControllerApiTest extends BaseApiTest {
     @Test
     public void should_not_refresh_api_secret_if_plan_not_allowed() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        Tenant theTenant = tenantRepository.byId(response.getTenantId());
+        Tenant theTenant = tenantRepository.byId(response.tenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withDeveloperAllowed(false));
-        assertError(() -> TenantApi.refreshApiSecretRaw(response.getJwt()), REFRESH_API_SECRET_NOT_ALLOWED);
+        assertError(() -> TenantApi.refreshApiSecretRaw(response.jwt()), REFRESH_API_SECRET_NOT_ALLOWED);
     }
 
     @Test
     public void should_fetch_tenant_info() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
 
-        QTenantInfo baseInfo = TenantApi.fetchTenantInfo(response.getJwt());
-        assertEquals(response.getTenantId(), baseInfo.getTenantId());
+        QTenantInfo baseInfo = TenantApi.fetchTenantInfo(response.jwt());
+        assertEquals(response.tenantId(), baseInfo.getTenantId());
         assertEquals(tenant.getCreatedAt(), baseInfo.getCreatedAt());
         assertEquals(tenant.getCreatedBy(), baseInfo.getCreatedBy());
         assertEquals(tenant.getName(), baseInfo.getName());
@@ -142,8 +143,8 @@ class TenantControllerApiTest extends BaseApiTest {
     @Test
     public void should_fetch_base_setting() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        QTenantBaseSetting baseSetting = TenantApi.fetchBaseSetting(response.getJwt());
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        QTenantBaseSetting baseSetting = TenantApi.fetchBaseSetting(response.jwt());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(tenant.getId(), baseSetting.getId());
         assertEquals(tenant.getName(), baseSetting.getName());
     }
@@ -152,17 +153,17 @@ class TenantControllerApiTest extends BaseApiTest {
     public void should_fetch_logo() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
         UploadedFile logo = rImageFile();
-        TenantApi.updateLogo(response.getJwt(), UpdateTenantLogoCommand.builder().logo(logo).build());
-        QTenantLogo qLogo = TenantApi.fetchLogo(response.getJwt());
+        TenantApi.updateLogo(response.jwt(), UpdateTenantLogoCommand.builder().logo(logo).build());
+        QTenantLogo qLogo = TenantApi.fetchLogo(response.jwt());
         assertEquals(logo, qLogo.getLogo());
     }
 
     @Test
     public void should_fetch_tenant_api_setting() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        QTenantApiSetting qTenantApiSetting = TenantApi.fetchApiSetting(response.getJwt());
+        QTenantApiSetting qTenantApiSetting = TenantApi.fetchApiSetting(response.jwt());
 
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(qTenantApiSetting.getApiSetting(), tenant.getApiSetting());
     }
 
@@ -180,12 +181,12 @@ class TenantControllerApiTest extends BaseApiTest {
                         .phone("028-12342345")
                         .build())
                 .build();
-        TenantApi.updateInvoiceTitle(response.getJwt(), command);
+        TenantApi.updateInvoiceTitle(response.jwt(), command);
 
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(tenant.getInvoiceTitle(), command.getTitle());
 
-        QTenantInvoiceTitle qInvoiceTitle = TenantApi.fetchInvoiceTitle(response.getJwt());
+        QTenantInvoiceTitle qInvoiceTitle = TenantApi.fetchInvoiceTitle(response.jwt());
         assertEquals(tenant.getInvoiceTitle(), qInvoiceTitle.getTitle());
     }
 
@@ -200,11 +201,11 @@ class TenantControllerApiTest extends BaseApiTest {
                 .address(rAddress())
                 .build();
 
-        TenantApi.addConsignee(response.getJwt(), AddConsigneeCommand.builder()
+        TenantApi.addConsignee(response.jwt(), AddConsigneeCommand.builder()
                 .consignee(consignee)
                 .build());
 
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(1, tenant.getConsignees().size());
         assertEquals(consignee, tenant.getConsignees().get(0));
     }
@@ -213,7 +214,7 @@ class TenantControllerApiTest extends BaseApiTest {
     public void should_fail_add_consignee_if_max_size_reached() {
         LoginResponse response = setupApi.registerWithLogin();
 
-        IntStream.range(0, 5).forEach(value -> TenantApi.addConsignee(response.getJwt(), AddConsigneeCommand.builder()
+        IntStream.range(0, 5).forEach(value -> TenantApi.addConsignee(response.jwt(), AddConsigneeCommand.builder()
                 .consignee(Consignee.builder()
                         .id(newShortUuid())
                         .name(rMemberName())
@@ -222,7 +223,7 @@ class TenantControllerApiTest extends BaseApiTest {
                         .build())
                 .build()));
 
-        assertError(() -> TenantApi.addConsigneeRaw(response.getJwt(), AddConsigneeCommand.builder()
+        assertError(() -> TenantApi.addConsigneeRaw(response.jwt(), AddConsigneeCommand.builder()
                 .consignee(Consignee.builder()
                         .id(newShortUuid())
                         .name(rMemberName())
@@ -243,11 +244,11 @@ class TenantControllerApiTest extends BaseApiTest {
                 .address(rAddress())
                 .build();
 
-        TenantApi.addConsignee(response.getJwt(), AddConsigneeCommand.builder()
+        TenantApi.addConsignee(response.jwt(), AddConsigneeCommand.builder()
                 .consignee(consignee)
                 .build());
 
-        assertError(() -> TenantApi.addConsigneeRaw(response.getJwt(), AddConsigneeCommand.builder()
+        assertError(() -> TenantApi.addConsigneeRaw(response.jwt(), AddConsigneeCommand.builder()
                 .consignee(consignee)
                 .build()), CONSIGNEE_ID_DUPLICATED);
     }
@@ -263,7 +264,7 @@ class TenantControllerApiTest extends BaseApiTest {
                 .address(rAddress())
                 .build();
 
-        TenantApi.addConsignee(response.getJwt(), AddConsigneeCommand.builder()
+        TenantApi.addConsignee(response.jwt(), AddConsigneeCommand.builder()
                 .consignee(consignee)
                 .build());
 
@@ -274,11 +275,11 @@ class TenantControllerApiTest extends BaseApiTest {
                 .address(rAddress())
                 .build();
 
-        TenantApi.updateConsignee(response.getJwt(), UpdateConsigneeCommand.builder()
+        TenantApi.updateConsignee(response.jwt(), UpdateConsigneeCommand.builder()
                 .consignee(updateConsignee)
                 .build());
 
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(1, tenant.getConsignees().size());
         assertEquals(updateConsignee, tenant.getConsignees().get(0));
     }
@@ -294,20 +295,20 @@ class TenantControllerApiTest extends BaseApiTest {
                 .address(rAddress())
                 .build();
 
-        TenantApi.addConsignee(response.getJwt(), AddConsigneeCommand.builder()
+        TenantApi.addConsignee(response.jwt(), AddConsigneeCommand.builder()
                 .consignee(consignee)
                 .build());
-        assertEquals(1, tenantRepository.byId(response.getTenantId()).getConsignees().size());
+        assertEquals(1, tenantRepository.byId(response.tenantId()).getConsignees().size());
 
-        TenantApi.deleteConsignee(response.getJwt(), consignee.getId());
-        assertEquals(0, tenantRepository.byId(response.getTenantId()).getConsignees().size());
+        TenantApi.deleteConsignee(response.jwt(), consignee.getId());
+        assertEquals(0, tenantRepository.byId(response.tenantId()).getConsignees().size());
     }
 
     @Test
     public void should_list_consignees() {
         LoginResponse response = setupApi.registerWithLogin();
 
-        IntStream.range(0, 5).forEach(value -> TenantApi.addConsignee(response.getJwt(), AddConsigneeCommand.builder()
+        IntStream.range(0, 5).forEach(value -> TenantApi.addConsignee(response.jwt(), AddConsigneeCommand.builder()
                 .consignee(Consignee.builder()
                         .id(newShortUuid())
                         .name(rMemberName())
@@ -316,35 +317,35 @@ class TenantControllerApiTest extends BaseApiTest {
                         .build())
                 .build()));
 
-        List<Consignee> consignees = TenantApi.listConsignees(response.getJwt());
+        List<Consignee> consignees = TenantApi.listConsignees(response.jwt());
         assertEquals(5, consignees.size());
     }
 
     @Test
     public void should_cache_tenant() {
         LoginResponse response = setupApi.registerWithLogin();
-        String key = "Cache:TENANT::" + response.getTenantId();
-        assertNotEquals(TRUE, stringRedisTemplate.hasKey(key));
-        Tenant tenant = tenantRepository.cachedById(response.getTenantId());
-        assertEquals(TRUE, stringRedisTemplate.hasKey(key));
+        String key = "Cache:TENANT::" + response.tenantId();
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        Tenant tenant = tenantRepository.cachedById(response.tenantId());
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         tenantRepository.save(tenant);
-        assertNotEquals(TRUE, stringRedisTemplate.hasKey(key));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
     public void should_cache_api_tenant() {
         LoginResponse response = setupApi.registerWithLogin();
-        Tenant tenant = tenantRepository.cachedById(response.getTenantId());
+        Tenant tenant = tenantRepository.cachedById(response.tenantId());
         String apiKey = tenant.getApiSetting().getApiKey();
 
         String key = "Cache:API_TENANT::" + apiKey;
-        assertNotEquals(TRUE, stringRedisTemplate.hasKey(key));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         tenantRepository.cachedByApiKey(apiKey);
-        assertEquals(TRUE, stringRedisTemplate.hasKey(key));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         tenantRepository.save(tenant);
-        assertNotEquals(TRUE, stringRedisTemplate.hasKey(key));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 }

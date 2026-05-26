@@ -40,10 +40,10 @@ public class PresentationQueryService {
 
     public QControlPresentation fetchPresentation(String qrId, String pageId, String controlId, User user) {
         AppedQr appedQr = qrRepository.appedQrById(qrId);
-        App app = appedQr.getApp();
+        App app = appedQr.app();
         mryRateLimiter.applyFor(app.getTenantId(), "Presentation:Fetch", 20);
 
-        QR qr = appedQr.getQr();
+        QR qr = appedQr.qr();
         Page page = app.pageById(pageId);
         Control control = page.controlById(controlId);
 

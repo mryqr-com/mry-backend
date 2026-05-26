@@ -7,8 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import static com.mryqr.common.utils.MryConstants.CONSUMING_DOMAIN_EVENT_COLLECTION;
@@ -25,7 +24,7 @@ public class DomainEventJobs {
     private final StringRedisTemplate stringRedisTemplate;
     private final MryRedisProperties mryRedisProperties;
 
-    @Retryable(backoff = @Backoff(delay = 1000, multiplier = 3))
+    @Retryable(delay = 1000, multiplier = 3)
     public void removeOldPublishingDomainEventsFromMongo(int days) {
         log.info("Start remove old publishing domain events from mongodb.");
         Query query = Query.query(where("raisedAt").lt(now().minus(days, DAYS)));
@@ -33,7 +32,7 @@ public class DomainEventJobs {
         log.info("Removed {} old publishing domain events from mongodb which are more than 100 days old.", result.getDeletedCount());
     }
 
-    @Retryable(backoff = @Backoff(delay = 1000, multiplier = 3))
+    @Retryable(delay = 1000, multiplier = 3)
     public void removeOldConsumingDomainEventsFromMongo(int days) {
         log.info("Start remove old consuming domain events from mongodb.");
         Query query = Query.query(where("consumedAt").lt(now().minus(days, DAYS)));
@@ -41,7 +40,7 @@ public class DomainEventJobs {
         log.info("Removed {} old consuming domain events from mongodb which are more than 100 days old.", result.getDeletedCount());
     }
 
-    @Retryable(backoff = @Backoff(delay = 1000, multiplier = 3))
+    @Retryable(delay = 1000, multiplier = 3)
     public void removeOldDomainEventsFromRedis(int count, boolean approximate) {
         log.info("Start remove old domain events from redis stream.");
         mryRedisProperties.allDomainEventStreams().forEach(stream -> {
@@ -52,7 +51,7 @@ public class DomainEventJobs {
         });
     }
 
-    @Retryable(backoff = @Backoff(delay = 1000, multiplier = 3))
+    @Retryable(delay = 1000, multiplier = 3)
     public void removeOldWebhookEventsFromRedis(int count, boolean approximate) {
         log.info("Start remove old webhook events from redis stream.");
         Long webhookEventCount = stringRedisTemplate.opsForStream().trim(mryRedisProperties.getWebhookStream(), count, approximate);
@@ -61,7 +60,7 @@ public class DomainEventJobs {
         }
     }
 
-    @Retryable(backoff = @Backoff(delay = 1000, multiplier = 3))
+    @Retryable(delay = 1000, multiplier = 3)
     public void removeOldNotificationEventsFromRedis(int count, boolean approximate) {
         log.info("Start remove old notification events from redis stream.");
         Long notificationEventCount = stringRedisTemplate.opsForStream().trim(mryRedisProperties.getNotificationStream(), count, approximate);

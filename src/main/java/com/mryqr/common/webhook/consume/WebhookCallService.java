@@ -3,7 +3,6 @@ package com.mryqr.common.webhook.consume;
 import com.mryqr.common.email.MryEmailSender;
 import com.mryqr.common.properties.CommonProperties;
 import com.mryqr.common.utils.CommonUtils;
-import com.mryqr.common.utils.MryObjectMapper;
 import com.mryqr.common.webhook.WebhookPayload;
 import com.mryqr.core.app.domain.App;
 import com.mryqr.core.app.domain.AppRepository;
@@ -15,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +34,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 public class WebhookCallService {
     private static final int MAX_ALLOWED_FAILURE_COUNT = 500;
     private final WebhookCaller webhookCaller;
-    private final MryObjectMapper mryObjectMapper;
+    private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final AppRepository appRepository;
     private final MemberRepository memberRepository;
@@ -44,34 +44,34 @@ public class WebhookCallService {
 
     public void call(WebhookPayload payload, String appId, WebhookSetting setting) {
         if (!setting.isEnabled()) {
-            log.warn("Webhook is not enabled, skip call webhook for: {}.", mryObjectMapper.writeValueAsString(payload));
+            log.warn("Webhook is not enabled, skip call webhook for: {}.", objectMapper.writeValueAsString(payload));
             return;
         }
 
         if (setting.isNotAccessible()) {
-            log.warn("Webhook is marked as not accessible, skip call webhook for: {}.", mryObjectMapper.writeValueAsString(payload));
+            log.warn("Webhook is marked as not accessible, skip call webhook for: {}.", objectMapper.writeValueAsString(payload));
             return;
         }
 
         if (isBlank(setting.getUrl())) {
-            log.warn("Webhook URL is empty, skip call webhook for: {}.", mryObjectMapper.writeValueAsString(payload));
+            log.warn("Webhook URL is empty, skip call webhook for: {}.", objectMapper.writeValueAsString(payload));
             return;
         }
 
         if (!commonProperties.isWebhookAllowLocalhost() &&
             !Objects.equals(payload.getTenantId(), MRY_MANAGE_TENANT_ID) &&
             setting.getUrl().contains("localhost")) {
-            log.warn("Webhook URL cannot include localhost, skip call webhook for: {}", mryObjectMapper.writeValueAsString(payload));
+            log.warn("Webhook URL cannot include localhost, skip call webhook for: {}", objectMapper.writeValueAsString(payload));
             return;
         }
 
         try {
             webhookCaller.call(payload, setting);//将重试3次
-            log.debug("Called app[{}] webhook[{}] with payload:{}.", appId, setting.getUrl(), mryObjectMapper.writeValueAsString(payload));
+            log.debug("Called app[{}] webhook[{}] with payload:{}.", appId, setting.getUrl(), objectMapper.writeValueAsString(payload));
             resetFailureCountFor(appId);//只要成功即清空，让后续webhook可正常访问
         } catch (RestClientException ex) {
             log.error("Error while call app[{}] webhook[{}] with payload:{}.",
-                    appId, setting.getUrl(), mryObjectMapper.writeValueAsString(payload), ex);
+                    appId, setting.getUrl(), objectMapper.writeValueAsString(payload), ex);
 
             stringRedisTemplate.opsForValue().increment(failureCountKey(appId));
             String countString = stringRedisTemplate.opsForValue().get(failureCountKey(appId));

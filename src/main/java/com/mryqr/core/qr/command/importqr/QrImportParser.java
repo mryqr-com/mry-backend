@@ -13,10 +13,8 @@ import com.mryqr.core.qr.domain.attribute.TextAttributeValue;
 import com.mryqr.core.submission.domain.answer.Answer;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -37,7 +35,6 @@ import static jakarta.validation.Validation.buildDefaultValidatorFactory;
 import static java.lang.Double.parseDouble;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static lombok.AccessLevel.PRIVATE;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -134,8 +131,8 @@ public class QrImportParser {
     }
 
     private List<QrImportRecord> buildImportedRecords(RawResult rawResult, App app) {
-        Map<String, Integer> headers = rawResult.getHeaders();
-        List<RawRecord> records = rawResult.getRecords();
+        Map<String, Integer> headers = rawResult.headers();
+        List<RawRecord> records = rawResult.records();
 
         Integer nameIndex = headers.get(app.qrImportNameFieldName());
         Integer customIdIndex = headers.get(app.qrImportCustomIdFieldName());
@@ -147,8 +144,8 @@ public class QrImportParser {
         return records.stream()
                 .map(record -> {
                     QrImportRecord qrImportRecord = new QrImportRecord();
-                    Map<Integer, String> recordData = record.getData();
-                    qrImportRecord.setRowIndex(record.getRowIndex());
+                    Map<Integer, String> recordData = record.data();
+                    qrImportRecord.setRowIndex(record.rowIndex());
 
                     String name = recordData.get(nameIndex);
                     if (isBlank(name)) {
@@ -219,42 +216,30 @@ public class QrImportParser {
     }
 
     private Set<String> existingCustomIds(RawResult rawResult, App app) {
-        List<RawRecord> records = rawResult.getRecords();
-        Map<String, Integer> headers = rawResult.getHeaders();
+        List<RawRecord> records = rawResult.records();
+        Map<String, Integer> headers = rawResult.headers();
         Integer customIdIndex = headers.get(app.qrImportCustomIdFieldName());
 
         Set<String> allCustomIds = records.stream()
-                .map(record -> record.getData().get(customIdIndex))
+                .map(record -> record.data().get(customIdIndex))
                 .filter(Objects::nonNull)
                 .collect(toImmutableSet());
 
         Query query = Query.query(where("appId").is(app.getId()).and("customId").in(allCustomIds));
         query.fields().include("customId");
         List<ExistingQr> existingQrs = mongoTemplate.find(query, ExistingQr.class, QR_COLLECTION);
-        return existingQrs.stream().map(ExistingQr::getCustomId).collect(toImmutableSet());
+        return existingQrs.stream().map(ExistingQr::customId).collect(toImmutableSet());
     }
 
-    @Value
     @Builder
-    @AllArgsConstructor(access = PRIVATE)
-    private static class RawResult {
-        private final Map<String, Integer> headers;
-        private final List<RawRecord> records;
+    private record RawResult(Map<String, Integer> headers, List<RawRecord> records) {
     }
 
-    @Value
     @Builder
-    @AllArgsConstructor(access = PRIVATE)
-    private static class RawRecord {
-        private final int rowIndex;
-        private final Map<Integer, String> data;
+    private record RawRecord(int rowIndex, Map<Integer, String> data) {
     }
 
-    @Value
     @Builder
-    @AllArgsConstructor(access = PRIVATE)
-    private static class ExistingQr {
-        private String id;
-        private String customId;
+    private record ExistingQr(String id, String customId) {
     }
 }

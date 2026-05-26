@@ -18,7 +18,7 @@ import com.mryqr.core.group.domain.GroupRepository;
 import com.mryqr.core.grouphierarchy.domain.GroupHierarchyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

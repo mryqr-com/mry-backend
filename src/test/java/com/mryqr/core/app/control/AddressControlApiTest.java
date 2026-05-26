@@ -38,9 +38,9 @@ public class AddressControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FAddressControl control = defaultAddressControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -49,14 +49,14 @@ public class AddressControlApiTest extends BaseApiTest {
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(4).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         AddressAnswer answer = rAnswer(control);
         Address address = answer.getAddress();
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        App app = appRepository.byId(response.getAppId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
+        App app = appRepository.byId(response.appId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         AddressAnswer updatedAnswer = (AddressAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -72,10 +72,10 @@ public class AddressControlApiTest extends BaseApiTest {
     public void should_answer_with_extra_address_field_for_precision_1() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(1).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         AddressAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         AddressAnswer loadedAnswer = (AddressAnswer) submission.allAnswers().get(control.getId());
@@ -89,10 +89,10 @@ public class AddressControlApiTest extends BaseApiTest {
     public void should_answer_with_extra_address_field_for_precision_2() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(2).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         AddressAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         AddressAnswer loadedAnswer = (AddressAnswer) submission.allAnswers().get(control.getId());
@@ -106,10 +106,10 @@ public class AddressControlApiTest extends BaseApiTest {
     public void should_answer_with_extra_address_field_for_precision_3() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         AddressAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         AddressAnswer loadedAnswer = (AddressAnswer) submission.allAnswers().get(control.getId());
@@ -123,47 +123,47 @@ public class AddressControlApiTest extends BaseApiTest {
     public void should_fail_answer_for_incomplete_province_no_matter_mandatory_or_not() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(4).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         AddressAnswer answer = rAnswerBuilder(control).address(Address.builder().city(rAddress().getCity()).build()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), PROVINCE_NOT_PROVIDED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), PROVINCE_NOT_PROVIDED);
     }
 
     @Test
     public void should_fail_answer_for_incomplete_city_no_matter_mandatory_or_not() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(4).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         AddressAnswer answer = rAnswerBuilder(control).address(Address.builder().province(rAddress().getProvince()).build()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), CITY_NOT_PROVIDED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), CITY_NOT_PROVIDED);
     }
 
     @Test
     public void should_fail_answer_for_incomplete_district_no_matter_mandatory_or_not() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(4).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         Address address = rAddress();
         AddressAnswer answer = rAnswerBuilder(control).address(Address.builder()
                 .province(address.getProvince())
                 .city(address.getCity())
                 .build()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), DISTRICT_NOT_PROVIDED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), DISTRICT_NOT_PROVIDED);
     }
 
     @Test
     public void should_fail_answer_for_incomplete_detailed_address_no_matter_mandatory_or_not() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(4).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         Address address = rAddress();
         AddressAnswer answer = rAnswerBuilder(control).address(Address.builder()
@@ -171,39 +171,39 @@ public class AddressControlApiTest extends BaseApiTest {
                 .city(address.getCity())
                 .district(address.getDistrict())
                 .build()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), DETAIL_ADDRESS_NOT_PROVIDED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), DETAIL_ADDRESS_NOT_PROVIDED);
     }
 
     @Test
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).precision(2).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         AddressAnswer answer = rAnswerBuilder(control).address(Address.builder().build()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         AddressAnswer answer = rAnswer(control);
         Address address = answer.getAddress();
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         AddressAttributeValue attributeValue = (AddressAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(address, attributeValue.getAddress());
         Set<String> textValues = qr.getIndexedValues().valueOf(indexedField).getTv();
@@ -216,18 +216,18 @@ public class AddressControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FAddressControl control = defaultAddressControlBuilder().precision(4).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         AddressAnswer answer = rAnswer(control);
         Address address = answer.getAddress();
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         AddressAttributeValue attributeValue = (AddressAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(address, attributeValue.getAddress());
         Set<String> textValues = qr.getIndexedValues().valueOf(indexedField).getTv();

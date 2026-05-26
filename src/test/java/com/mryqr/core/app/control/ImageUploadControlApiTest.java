@@ -35,9 +35,9 @@ public class ImageUploadControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FImageUploadControl control = defaultImageUploadControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -46,10 +46,10 @@ public class ImageUploadControlApiTest extends BaseApiTest {
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FImageUploadControl control = defaultImageUploadControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         ImageUploadAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         ImageUploadAnswer updatedAnswer = (ImageUploadAnswer) submission.allAnswers().get(control.getId());
@@ -61,52 +61,52 @@ public class ImageUploadControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_files_size_greater_than_max() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FImageUploadControl control = defaultImageUploadControlBuilder().max(1).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         ImageUploadAnswer answer = rAnswerBuilder(control).images(newArrayList(rImageFile(), rImageFile())).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MAX_IMAGE_NUMBER_REACHED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MAX_IMAGE_NUMBER_REACHED);
     }
 
     @Test
     public void should_fail_answer_if_image_id_duplicated() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FImageUploadControl control = defaultImageUploadControlBuilder().max(2).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         UploadedFile imageFile = rImageFile();
         ImageUploadAnswer answer = rAnswerBuilder(control).images(newArrayList(imageFile, imageFile)).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), UPLOAD_IMAGE_ID_DUPLICATED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), UPLOAD_IMAGE_ID_DUPLICATED);
     }
 
     @Test
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FImageUploadControl control = defaultImageUploadControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         ImageUploadAnswer answer = rAnswerBuilder(control).images(newArrayList()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FImageUploadControl control = defaultImageUploadControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         ImageUploadAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         ImagesAttributeValue attributeValue = (ImagesAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getImages(), attributeValue.getImages());
         assertNull(qr.getIndexedValues());
@@ -117,15 +117,15 @@ public class ImageUploadControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FImageUploadControl control = defaultImageUploadControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         ImageUploadAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         ImagesAttributeValue attributeValue = (ImagesAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getImages(), attributeValue.getImages());
         assertNull(qr.getIndexedValues());

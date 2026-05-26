@@ -31,19 +31,14 @@ public class TrendItem implements Identified {
     @NotNull
     @ShortUuid
     private final String id;
-
-    @NotNull
-    private SubmissionTimeBasedType basedType;
-
     @PageId
     private final String pageId;
-
-    @ControlId
-    private String basedControlId;
-
     @ControlId
     private final String targetControlId;
-
+    @NotNull
+    private SubmissionTimeBasedType basedType;
+    @ControlId
+    private String basedControlId;
     @Size(max = MAX_SHORT_NAME_LENGTH)
     private String name;
 

@@ -38,17 +38,15 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = PRIVATE)
 public class FNumberInputControl extends Control {
+    public static final double MIN_NUMBER = -1000000000;
+    public static final double MAX_NUMBER = 1000000000;
+    public static final int MIN_PRECISION = 0;
+    public static final int MAX_PRECISION = 3;
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#");
 
     static {
         DECIMAL_FORMAT.setMaximumFractionDigits(3);
     }
-
-    public static final double MIN_NUMBER = -1000000000;
-    public static final double MAX_NUMBER = 1000000000;
-
-    public static final int MIN_PRECISION = 0;
-    public static final int MAX_PRECISION = 3;
 
     @Size(max = MAX_PLACEHOLDER_LENGTH)
     private String placeholder;//占位符
@@ -77,8 +75,8 @@ public class FNumberInputControl extends Control {
     @Override
     protected void doCorrect(AppSettingContext context) {
         if (autoCalculateEnabled) {
-            setAutoFill(false);
-            setMandatory(false);
+            configAutoFill(false);
+            configMandatory(false);
             this.shouldAutoCalculate = autoCalculateSetting.shouldAutoCalculate();
         } else {
             this.shouldAutoCalculate = false;

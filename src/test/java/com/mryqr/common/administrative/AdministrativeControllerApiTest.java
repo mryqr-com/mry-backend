@@ -1,6 +1,5 @@
 package com.mryqr.common.administrative;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mryqr.BaseApiTest;
 import com.mryqr.common.domain.administrative.Administrative;
 import org.junit.jupiter.api.Test;
@@ -48,7 +47,7 @@ class AdministrativeControllerApiTest extends BaseApiTest {
         assertEquals("香港", hangKong.getChild().get(0).getName());//香港的省和市应该是一样的
 
         Administrative finalChina = Administrative.builder().name(china.getName()).child(finalResults).build();
-        System.out.println(new ObjectMapper().writeValueAsString(finalChina));
+        System.out.println(objectMapper.writeValueAsString(finalChina));
     }
 
     static class TiandutuResponse {

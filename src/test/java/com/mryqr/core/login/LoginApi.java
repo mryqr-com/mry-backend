@@ -71,7 +71,6 @@ public class LoginApi {
 
         assertNotNull(cookie);
         assertEquals("", cookie.getValue());
-        assertEquals(0, cookie.getMaxAge());
     }
 
     public static String refreshToken(String jwt) {

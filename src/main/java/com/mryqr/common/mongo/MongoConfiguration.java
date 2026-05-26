@@ -1,7 +1,7 @@
 package com.mryqr.common.mongo;
 
-import org.springframework.boot.autoconfigure.domain.EntityScanner;
-import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.persistence.autoconfigure.EntityScanner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

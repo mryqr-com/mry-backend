@@ -18,9 +18,9 @@ public class VideoViewControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PVideoViewControl control = defaultVideoViewControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }

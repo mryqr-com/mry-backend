@@ -39,16 +39,16 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(TENANT_EDIT)
-                .tenantId(response.getTenantId())
+                .tenantId(response.tenantId())
                 .build();
 
-        QOssToken token = OssTokenApi.getOssToken(response.getJwt(), command);
+        QOssToken token = OssTokenApi.getOssToken(response.jwt(), command);
 
         assertNotNull(token.getAccessKeyId());
         assertNotNull(token.getAccessKeySecret());
         assertNotNull(token.getBucket());
         assertNotNull(token.getFolder());
-        assertEquals(response.getTenantId() + "/_TENANT_EDIT/" + LocalDate.now(), token.getFolder());
+        assertEquals(response.tenantId() + "/_TENANT_EDIT/" + LocalDate.now(), token.getFolder());
         assertNotNull(token.getEndpoint());
         assertNotNull(token.getSecurityToken());
         assertNotNull(token.getExpiration());
@@ -57,11 +57,11 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void normal_member_should_not_fetch_oss_token_for_tenant_edit() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        CreateMemberResponse member = MemberApi.createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse member = MemberApi.createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(TENANT_EDIT)
-                .tenantId(loginResponse.getTenantId())
+                .tenantId(loginResponse.tenantId())
                 .build();
 
         assertError(() -> OssTokenApi.getOssTokenRaw(member.getJwt(), command), ACCESS_DENIED);
@@ -73,7 +73,7 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(TENANT_EDIT)
-                .tenantId(loginResponse.getTenantId())
+                .tenantId(loginResponse.tenantId())
                 .build();
 
         assertError(() -> OssTokenApi.getOssTokenRaw(null, command), AUTHENTICATION_FAILED);
@@ -85,16 +85,16 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(TENANT_ORDER)
-                .tenantId(response.getTenantId())
+                .tenantId(response.tenantId())
                 .build();
 
-        QOssToken token = OssTokenApi.getOssToken(response.getJwt(), command);
+        QOssToken token = OssTokenApi.getOssToken(response.jwt(), command);
 
         assertNotNull(token.getAccessKeyId());
         assertNotNull(token.getAccessKeySecret());
         assertNotNull(token.getBucket());
         assertNotNull(token.getFolder());
-        assertEquals(response.getTenantId() + "/_TENANT_ORDER/" + LocalDate.now(), token.getFolder());
+        assertEquals(response.tenantId() + "/_TENANT_ORDER/" + LocalDate.now(), token.getFolder());
         assertNotNull(token.getEndpoint());
         assertNotNull(token.getSecurityToken());
         assertNotNull(token.getExpiration());
@@ -105,17 +105,17 @@ class OssTokenControllerApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(APP_EDIT)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
                 .build();
 
-        QOssToken token = OssTokenApi.getOssToken(response.getJwt(), command);
+        QOssToken token = OssTokenApi.getOssToken(response.jwt(), command);
 
         assertNotNull(token.getAccessKeyId());
         assertNotNull(token.getAccessKeySecret());
         assertNotNull(token.getBucket());
         assertNotNull(token.getFolder());
-        assertEquals(response.getTenantId() + "/" + response.getAppId() + "/_APP_EDIT/" + LocalDate.now(), token.getFolder());
+        assertEquals(response.tenantId() + "/" + response.appId() + "/_APP_EDIT/" + LocalDate.now(), token.getFolder());
         assertNotNull(token.getEndpoint());
         assertNotNull(token.getSecurityToken());
         assertNotNull(token.getExpiration());
@@ -124,14 +124,14 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_fetch_oss_token_for_app_edit() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
 
-        AppApi.setAppManagers(response.getJwt(), response.getAppId(), SetAppManagersCommand.builder().managers(Lists.newArrayList(memberResponse.getMemberId())).build());
+        AppApi.setAppManagers(response.jwt(), response.appId(), SetAppManagersCommand.builder().managers(Lists.newArrayList(memberResponse.getMemberId())).build());
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(APP_EDIT)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
                 .build();
 
         QOssToken token = OssTokenApi.getOssToken(memberResponse.getJwt(), command);
@@ -140,7 +140,7 @@ class OssTokenControllerApiTest extends BaseApiTest {
         assertNotNull(token.getAccessKeySecret());
         assertNotNull(token.getBucket());
         assertNotNull(token.getFolder());
-        assertEquals(response.getTenantId() + "/" + response.getAppId() + "/_APP_EDIT/" + LocalDate.now(), token.getFolder());
+        assertEquals(response.tenantId() + "/" + response.appId() + "/_APP_EDIT/" + LocalDate.now(), token.getFolder());
         assertNotNull(token.getEndpoint());
         assertNotNull(token.getSecurityToken());
         assertNotNull(token.getExpiration());
@@ -149,11 +149,11 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void normal_member_should_not_fetch_oss_token_for_app_edit() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(APP_EDIT)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
                 .build();
 
         assertError(() -> OssTokenApi.getOssTokenRaw(memberResponse.getJwt(), command), ACCESS_DENIED);
@@ -165,8 +165,8 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(APP_EDIT)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
                 .build();
 
         assertError(() -> OssTokenApi.getOssTokenRaw(null, command), AUTHENTICATION_FAILED);
@@ -178,18 +178,18 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(QR_MANAGE)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
-                .qrId(response.getQrId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
+                .qrId(response.qrId())
                 .build();
 
-        QOssToken token = OssTokenApi.getOssToken(response.getJwt(), command);
+        QOssToken token = OssTokenApi.getOssToken(response.jwt(), command);
 
         assertNotNull(token.getAccessKeyId());
         assertNotNull(token.getAccessKeySecret());
         assertNotNull(token.getBucket());
         assertNotNull(token.getFolder());
-        assertEquals(response.getTenantId() + "/" + response.getAppId() + "/" + response.getQrId() + "/_QR_MANAGE/" + LocalDate.now(), token.getFolder());
+        assertEquals(response.tenantId() + "/" + response.appId() + "/" + response.qrId() + "/_QR_MANAGE/" + LocalDate.now(), token.getFolder());
         assertNotNull(token.getEndpoint());
         assertNotNull(token.getSecurityToken());
         assertNotNull(token.getExpiration());
@@ -198,15 +198,15 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_fetch_oss_token_for_qr_manage() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
 
-        AppApi.setAppManagers(response.getJwt(), response.getAppId(), SetAppManagersCommand.builder().managers(Lists.newArrayList(memberResponse.getMemberId())).build());
+        AppApi.setAppManagers(response.jwt(), response.appId(), SetAppManagersCommand.builder().managers(Lists.newArrayList(memberResponse.getMemberId())).build());
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(QR_MANAGE)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
-                .qrId(response.getQrId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
+                .qrId(response.qrId())
                 .build();
 
         QOssToken token = OssTokenApi.getOssToken(memberResponse.getJwt(), command);
@@ -227,28 +227,28 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(QR_MANAGE)
-                .tenantId(response.getTenantId())
-                .appId(anotherApp.getAppId())
-                .qrId(response.getQrId())
+                .tenantId(response.tenantId())
+                .appId(anotherApp.appId())
+                .qrId(response.qrId())
                 .build();
 
-        assertError(() -> OssTokenApi.getOssTokenRaw(response.getJwt(), command), QR_NOT_BELONG_TO_APP);
+        assertError(() -> OssTokenApi.getOssTokenRaw(response.jwt(), command), QR_NOT_BELONG_TO_APP);
     }
 
     @Test
     public void group_manager_should_fetch_oss_token_for_qr_manage() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
 
         String memberId = memberResponse.getMemberId();
-        GroupApi.addGroupMembers(response.getJwt(), response.getDefaultGroupId(), memberId);
-        GroupApi.addGroupManager(response.getJwt(), response.getDefaultGroupId(), memberId);
+        GroupApi.addGroupMembers(response.jwt(), response.defaultGroupId(), memberId);
+        GroupApi.addGroupManager(response.jwt(), response.defaultGroupId(), memberId);
 
         RequestOssTokenCommand ossCommand = RequestOssTokenCommand.builder()
                 .type(QR_MANAGE)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
-                .qrId(response.getQrId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
+                .qrId(response.qrId())
                 .build();
 
         QOssToken token = OssTokenApi.getOssToken(memberResponse.getJwt(), ossCommand);
@@ -265,13 +265,13 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void normal_member_should_not_fetch_oss_token_for_qr_manage() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(QR_MANAGE)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
-                .qrId(response.getQrId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
+                .qrId(response.qrId())
                 .build();
 
         assertError(() -> OssTokenApi.getOssTokenRaw(memberResponse.getJwt(), command), ACCESS_DENIED);
@@ -283,9 +283,9 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(QR_MANAGE)
-                .tenantId(response.getTenantId())
-                .appId(response.getAppId())
-                .qrId(response.getQrId())
+                .tenantId(response.tenantId())
+                .appId(response.appId())
+                .qrId(response.qrId())
                 .build();
 
         assertError(() -> OssTokenApi.getOssTokenRaw(null, command), AUTHENTICATION_FAILED);
@@ -294,13 +294,13 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void member_should_fetch_oss_token_for_permissioned_app() {
         LoginResponse admin = setupApi.registerWithLogin(rMobile(), rPassword());
-        CreateAppResponse app = AppApi.createApp(admin.getJwt(), AS_TENANT_MEMBER);
-        CreateQrResponse qr = QrApi.createQr(admin.getJwt(), rQrName(), app.getDefaultGroupId());
-        CreateMemberResponse member = MemberApi.createMemberAndLogin(admin.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateAppResponse app = AppApi.createApp(admin.jwt(), AS_TENANT_MEMBER);
+        CreateQrResponse qr = QrApi.createQr(admin.jwt(), rQrName(), app.getDefaultGroupId());
+        CreateMemberResponse member = MemberApi.createMemberAndLogin(admin.jwt(), rMemberName(), rMobile(), rPassword());
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(SUBMISSION)
-                .tenantId(admin.getTenantId())
+                .tenantId(admin.tenantId())
                 .appId(app.getAppId())
                 .qrId(qr.getQrId())
                 .pageId(app.getHomePageId())
@@ -312,7 +312,7 @@ class OssTokenControllerApiTest extends BaseApiTest {
         assertNotNull(token.getAccessKeySecret());
         assertNotNull(token.getBucket());
         assertNotNull(token.getFolder());
-        assertEquals(admin.getTenantId() + "/" + app.getAppId() + "/" + qr.getQrId() + "/" + app.getHomePageId() + "/_SUBMISSION/" + LocalDate.now(), token.getFolder());
+        assertEquals(admin.tenantId() + "/" + app.getAppId() + "/" + qr.getQrId() + "/" + app.getHomePageId() + "/_SUBMISSION/" + LocalDate.now(), token.getFolder());
         assertNotNull(token.getEndpoint());
         assertNotNull(token.getSecurityToken());
         assertNotNull(token.getExpiration());
@@ -321,12 +321,12 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void anonymous_member_should_not_fetch_oss_token_for_non_public_app() {
         LoginResponse admin = setupApi.registerWithLogin(rMobile(), rPassword());
-        CreateAppResponse app = AppApi.createApp(admin.getJwt(), AS_TENANT_MEMBER);
-        CreateQrResponse qr = QrApi.createQr(admin.getJwt(), rQrName(), app.getDefaultGroupId());
+        CreateAppResponse app = AppApi.createApp(admin.jwt(), AS_TENANT_MEMBER);
+        CreateQrResponse qr = QrApi.createQr(admin.jwt(), rQrName(), app.getDefaultGroupId());
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(SUBMISSION)
-                .tenantId(admin.getTenantId())
+                .tenantId(admin.tenantId())
                 .appId(app.getAppId())
                 .qrId(qr.getQrId())
                 .pageId(app.getHomePageId())
@@ -337,12 +337,12 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void anonymous_member_should_fetch_oss_token_for_public_app() {
         LoginResponse admin = setupApi.registerWithLogin(rMobile(), rPassword());
-        CreateAppResponse app = AppApi.createApp(admin.getJwt(), PUBLIC);
-        CreateQrResponse qr = QrApi.createQr(admin.getJwt(), rQrName(), app.getDefaultGroupId());
+        CreateAppResponse app = AppApi.createApp(admin.jwt(), PUBLIC);
+        CreateQrResponse qr = QrApi.createQr(admin.jwt(), rQrName(), app.getDefaultGroupId());
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(SUBMISSION)
-                .tenantId(admin.getTenantId())
+                .tenantId(admin.tenantId())
                 .appId(app.getAppId())
                 .qrId(qr.getQrId())
                 .pageId(app.getHomePageId())
@@ -354,7 +354,7 @@ class OssTokenControllerApiTest extends BaseApiTest {
         assertNotNull(token.getAccessKeySecret());
         assertNotNull(token.getBucket());
         assertNotNull(token.getFolder());
-        assertEquals(admin.getTenantId() + "/" + app.getAppId() + "/" + qr.getQrId() + "/" + app.getHomePageId() + "/_SUBMISSION/" + LocalDate.now(), token.getFolder());
+        assertEquals(admin.tenantId() + "/" + app.getAppId() + "/" + qr.getQrId() + "/" + app.getHomePageId() + "/_SUBMISSION/" + LocalDate.now(), token.getFolder());
         assertNotNull(token.getEndpoint());
         assertNotNull(token.getSecurityToken());
         assertNotNull(token.getExpiration());
@@ -367,13 +367,13 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(SUBMISSION)
-                .tenantId(response.getTenantId())
-                .appId(anotherApp.getAppId())
-                .qrId(response.getQrId())
-                .pageId(response.getHomePageId())
+                .tenantId(response.tenantId())
+                .appId(anotherApp.appId())
+                .qrId(response.qrId())
+                .pageId(response.homePageId())
                 .build();
 
-        assertError(() -> OssTokenApi.getOssTokenRaw(response.getJwt(), command), QR_NOT_BELONG_TO_APP);
+        assertError(() -> OssTokenApi.getOssTokenRaw(response.jwt(), command), QR_NOT_BELONG_TO_APP);
     }
 
     @Test
@@ -382,16 +382,16 @@ class OssTokenControllerApiTest extends BaseApiTest {
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(MEMBER_INFO)
-                .tenantId(response.getTenantId())
-                .memberId(response.getMemberId())
+                .tenantId(response.tenantId())
+                .memberId(response.memberId())
                 .build();
 
-        QOssToken token = OssTokenApi.getOssToken(response.getJwt(), command);
+        QOssToken token = OssTokenApi.getOssToken(response.jwt(), command);
         assertNotNull(token.getAccessKeyId());
         assertNotNull(token.getAccessKeySecret());
         assertNotNull(token.getBucket());
         assertNotNull(token.getFolder());
-        assertEquals(response.getTenantId() + "/_MEMBER_INFO/" + response.getMemberId() + "/" + LocalDate.now(), token.getFolder());
+        assertEquals(response.tenantId() + "/_MEMBER_INFO/" + response.memberId() + "/" + LocalDate.now(), token.getFolder());
         assertNotNull(token.getEndpoint());
         assertNotNull(token.getSecurityToken());
         assertNotNull(token.getExpiration());
@@ -400,31 +400,31 @@ class OssTokenControllerApiTest extends BaseApiTest {
     @Test
     public void one_member_should_not_fetch_member_info_oss_token_for_another() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(MEMBER_INFO)
-                .tenantId(response.getTenantId())
+                .tenantId(response.tenantId())
                 .memberId(memberResponse.getMemberId())
                 .build();
 
-        assertError(() -> OssTokenApi.getOssTokenRaw(response.getJwt(), command), USER_NOT_CURRENT_MEMBER);
+        assertError(() -> OssTokenApi.getOssTokenRaw(response.jwt(), command), USER_NOT_CURRENT_MEMBER);
     }
 
     @Test
     public void should_fail_generate_oss_token_if_max_storage_reached() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         float maxAllowedStorage = tenant.getPackages().effectiveMaxStorage();
         tenant.setStorage(maxAllowedStorage, NO_USER);
         tenantRepository.save(tenant);
 
         RequestOssTokenCommand command = RequestOssTokenCommand.builder()
                 .type(TENANT_EDIT)
-                .tenantId(response.getTenantId())
+                .tenantId(response.tenantId())
                 .build();
 
-        assertError(() -> OssTokenApi.getOssTokenRaw(response.getJwt(), command), MAX_STORAGE_REACHED);
+        assertError(() -> OssTokenApi.getOssTokenRaw(response.jwt(), command), MAX_STORAGE_REACHED);
     }
 
 }

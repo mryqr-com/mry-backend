@@ -40,9 +40,9 @@ public class NumberRankControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberRankingControl control = defaultNumberRankingControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -51,13 +51,13 @@ public class NumberRankControlApiTest extends BaseApiTest {
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FNumberRankingControl control = defaultNumberRankingControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         NumberRankingAnswer answer = RandomTestFixture.rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        App app = appRepository.byId(response.getAppId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
+        App app = appRepository.byId(response.appId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         NumberRankingAnswer updatedAnswer = (NumberRankingAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -85,9 +85,9 @@ public class NumberRankControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), dependantControl, calculatedControl);
+        AppApi.updateAppControls(response.jwt(), response.appId(), dependantControl, calculatedControl);
         NumberRankingAnswer answer = rAnswerBuilder(dependantControl).rank(9).build();
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
         Submission submission = submissionRepository.byId(submissionId);
         NumberInputAnswer updatedAnswer = (NumberInputAnswer) submission.getAnswers().get(calculatedControl.getId());
         assertEquals(18, updatedAnswer.getNumber());
@@ -97,59 +97,59 @@ public class NumberRankControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FNumberRankingControl control = defaultNumberRankingControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         NumberRankingAnswer answer = rAnswerBuilder(control).rank(0).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_fail_answer_if_number_exceeds_max() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FNumberRankingControl control = defaultNumberRankingControlBuilder().max(8).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         NumberRankingAnswer answer = rAnswerBuilder(control).rank(10).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MAX_RANK_REACHED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MAX_RANK_REACHED);
     }
 
     @Test
     public void should_calculate_submission_value_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr(rEmail(), rPassword());
         FNumberRankingControl control = defaultNumberRankingControlBuilder().max(10).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute firstAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        Attribute lastAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        Attribute maxAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_MAX).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        Attribute minAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_MIN).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        Attribute avgAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_AVERAGE).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        Attribute sumAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_SUM).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), firstAttribute, lastAttribute, maxAttribute, minAttribute, avgAttribute, sumAttribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute firstAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        Attribute lastAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        Attribute maxAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_MAX).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        Attribute minAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_MIN).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        Attribute avgAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_AVERAGE).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        Attribute sumAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_SUM).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), firstAttribute, lastAttribute, maxAttribute, minAttribute, avgAttribute, sumAttribute);
 
-        SubmissionApi.newSubmission(response.getJwt(),
-                newSubmissionCommand(response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(),
+                newSubmissionCommand(response.qrId(), response.homePageId(),
                         NumberRankingAnswer.builder().controlId(control.getId()).controlType(control.getType()).rank(2).build()));
 
-        SubmissionApi.newSubmission(response.getJwt(),
-                newSubmissionCommand(response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(),
+                newSubmissionCommand(response.qrId(), response.homePageId(),
                         NumberRankingAnswer.builder().controlId(control.getId()).controlType(control.getType()).rank(1).build()));
 
-        SubmissionApi.newSubmission(response.getJwt(),
-                newSubmissionCommand(response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(),
+                newSubmissionCommand(response.qrId(), response.homePageId(),
                         NumberRankingAnswer.builder().controlId(control.getId()).controlType(control.getType()).rank(3).build()));
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField firstIndexedField = app.indexedFieldForAttributeOptional(firstAttribute.getId()).get();
         IndexedField lastIndexedField = app.indexedFieldForAttributeOptional(lastAttribute.getId()).get();
         IndexedField maxIndexedField = app.indexedFieldForAttributeOptional(maxAttribute.getId()).get();
         IndexedField minIndexedField = app.indexedFieldForAttributeOptional(minAttribute.getId()).get();
         IndexedField avgIndexedField = app.indexedFieldForAttributeOptional(avgAttribute.getId()).get();
         IndexedField sumIndexedField = app.indexedFieldForAttributeOptional(sumAttribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
 
         assertEquals(2, ((IntegerAttributeValue) qr.getAttributeValues().get(firstAttribute.getId())).getNumber());
         assertEquals(3, ((IntegerAttributeValue) qr.getAttributeValues().get(lastAttribute.getId())).getNumber());

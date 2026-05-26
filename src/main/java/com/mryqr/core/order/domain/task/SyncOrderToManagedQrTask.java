@@ -111,8 +111,8 @@ public class SyncOrderToManagedQrTask implements RetryableTask {
             Group group = groupRepository.cachedById(ORDER_GROUP_ID);
 
             PlatedQr platedQr = qrFactory.createPlatedQr(name, group, app, order.getId(), NO_USER);
-            QR qr = platedQr.getQr();
-            Plate plate = platedQr.getPlate();
+            QR qr = platedQr.qr();
+            Plate plate = platedQr.plate();
             qrRepository.save(qr);
             plateRepository.save(plate);
         });

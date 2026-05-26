@@ -21,13 +21,10 @@ public class ControlFillableSetting {
     private final String fieldName;//字段名称
 
     private final boolean submissionSummaryEligible;//是否为摘要字段，在提交历史控件（PSubmitHistoryControl）和手机端提交列表中是否直接显示
-
-    private boolean mandatory;//是否必填
-
-    private boolean autoFill;//自动填充上次提交值
-
     @Size(max = 100)
     private final String errorTips;//错误提示
+    private boolean mandatory;//是否必填
+    private boolean autoFill;//自动填充上次提交值
 
     public static ControlFillableSetting defaultControlFillableSetting() {
         return defaultControlFillableSettingBuilder().build();

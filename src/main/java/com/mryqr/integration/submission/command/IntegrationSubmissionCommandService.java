@@ -88,8 +88,8 @@ public class IntegrationSubmissionCommandService {
                                  String memberCustomId,
                                  String referenceData,
                                  User user) {
-        App app = appedQr.getApp();
-        QR qr = appedQr.getQr();
+        App app = appedQr.app();
+        QR qr = appedQr.qr();
         app.checkActive();
         qr.checkActive(app);
 
@@ -138,8 +138,8 @@ public class IntegrationSubmissionCommandService {
 
         Submission submission = submissionRepository.byIdAndCheckTenantShip(submissionId, user);
         AppedQr appedQr = qrRepository.appedQrById(submission.getQrId());
-        App app = appedQr.getApp();
-        QR qr = appedQr.getQr();
+        App app = appedQr.app();
+        QR qr = appedQr.qr();
         app.checkActive();
         qr.checkActive(app);
 

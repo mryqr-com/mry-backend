@@ -46,6 +46,10 @@ public class MemberSelectAnswer extends Answer implements MemberAware {
     @Size(max = MAX_MEMBER_SELECTION)
     private List<@MemberId String> memberIds;
 
+    public static MemberSelectAnswer.MemberSelectAnswerBuilder<?, ?> answerBuilder(FMemberSelectControl control) {
+        return MemberSelectAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -105,10 +109,6 @@ public class MemberSelectAnswer extends Answer implements MemberAware {
     @Override
     public Set<String> awaredMemberIds() {
         return isNotEmpty(memberIds) ? Set.copyOf(memberIds) : Set.of();
-    }
-
-    public static MemberSelectAnswer.MemberSelectAnswerBuilder<?, ?> answerBuilder(FMemberSelectControl control) {
-        return MemberSelectAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

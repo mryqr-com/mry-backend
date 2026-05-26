@@ -33,9 +33,9 @@ public class DateTimeControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
         FDateTimeControl control = defaultDateTimeControl();
 
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -44,13 +44,13 @@ public class DateTimeControlApiTest extends BaseApiTest {
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDateTimeControl control = defaultDateTimeControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         DateTimeAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        App app = appRepository.byId(response.getAppId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
+        App app = appRepository.byId(response.appId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         DateTimeAnswer updatedAnswer = (DateTimeAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -63,21 +63,21 @@ public class DateTimeControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDateTimeControl control = defaultDateTimeControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(),
-                        newSubmissionCommand(response.getQrId(), response.getHomePageId(),
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(),
+                        newSubmissionCommand(response.qrId(), response.homePageId(),
                                 rAnswerBuilder(control).date(null).time(null).build())),
                 MANDATORY_ANSWER_REQUIRED);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(),
-                        newSubmissionCommand(response.getQrId(), response.getHomePageId(),
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(),
+                        newSubmissionCommand(response.qrId(), response.homePageId(),
                                 rAnswerBuilder(control).date("2021-03-12").time(null).build())),
                 MANDATORY_ANSWER_REQUIRED);
 
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(),
-                        newSubmissionCommand(response.getQrId(), response.getHomePageId(),
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(),
+                        newSubmissionCommand(response.qrId(), response.homePageId(),
                                 rAnswerBuilder(control).date(null).time("12:23").build())),
                 MANDATORY_ANSWER_REQUIRED);
     }
@@ -86,17 +86,17 @@ public class DateTimeControlApiTest extends BaseApiTest {
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDateTimeControl control = defaultDateTimeControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         DateTimeAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         TimestampAttributeValue attributeValue = (TimestampAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.toInstant(), attributeValue.getTimestamp());
         assertEquals(answer.toInstant().toEpochMilli(), qr.getIndexedValues().valueOf(indexedField).getSv());
@@ -106,17 +106,17 @@ public class DateTimeControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDateTimeControl control = defaultDateTimeControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         DateTimeAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         TimestampAttributeValue attributeValue = (TimestampAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.toInstant(), attributeValue.getTimestamp());
         assertEquals(answer.toInstant().toEpochMilli(), qr.getIndexedValues().valueOf(indexedField).getSv());

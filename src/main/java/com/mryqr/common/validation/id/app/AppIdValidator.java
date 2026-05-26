@@ -11,6 +11,10 @@ public class AppIdValidator implements ConstraintValidator<AppId, String> {
 
     private static final Pattern PATTERN = Pattern.compile("^APP[0-9]{17,19}$");
 
+    public static boolean isAppId(String appId) {
+        return PATTERN.matcher(appId).matches();
+    }
+
     @Override
     public void initialize(AppId constraintAnnotation) {
     }
@@ -22,10 +26,6 @@ public class AppIdValidator implements ConstraintValidator<AppId, String> {
         }
 
         return isAppId(appId);
-    }
-
-    public static boolean isAppId(String appId) {
-        return PATTERN.matcher(appId).matches();
     }
 
 }

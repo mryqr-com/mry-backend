@@ -29,11 +29,11 @@ public class DoughnutControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        PDoughnutControl control = defaultDoughnutControlBuilder().pageId(response.getHomePageId()).basedControlId(checkboxControl.getId())
+        PDoughnutControl control = defaultDoughnutControlBuilder().pageId(response.homePageId()).basedControlId(checkboxControl.getId())
                 .build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl, control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl, control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -44,11 +44,11 @@ public class DoughnutControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
         PDoughnutControl control = defaultDoughnutControlBuilder().basedControlId(checkboxControl.getId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -58,11 +58,11 @@ public class DoughnutControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
-        PDoughnutControl control = defaultDoughnutControlBuilder().pageId(response.getHomePageId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
+        PDoughnutControl control = defaultDoughnutControlBuilder().pageId(response.homePageId()).build();
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -72,12 +72,12 @@ public class DoughnutControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
-        PDoughnutControl control = defaultDoughnutControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
+        PDoughnutControl control = defaultDoughnutControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.homePageId())
                 .basedControlId(checkboxControl.getId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -87,13 +87,13 @@ public class DoughnutControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
         PDoughnutControl control = defaultDoughnutControlBuilder().pageId(Page.newPageId()).basedControlId(checkboxControl.getId()).build();
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 VALIDATION_PAGE_NOT_EXIST);
     }
 
@@ -102,14 +102,14 @@ public class DoughnutControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
-        PDoughnutControl control = defaultDoughnutControlBuilder().pageId(response.getHomePageId()).basedControlId(Control.newControlId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
+        PDoughnutControl control = defaultDoughnutControlBuilder().pageId(response.homePageId()).basedControlId(Control.newControlId())
                 .build();
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -118,14 +118,14 @@ public class DoughnutControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
-        PDoughnutControl control = defaultDoughnutControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
+        PDoughnutControl control = defaultDoughnutControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.homePageId())
                 .basedControlId(checkboxControl.getId()).targetControlId(Control.newControlId()).build();
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -135,14 +135,14 @@ public class DoughnutControlApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl, singleLineTextControl);
-        PDoughnutControl control = defaultDoughnutControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl, singleLineTextControl);
+        PDoughnutControl control = defaultDoughnutControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.homePageId())
                 .basedControlId(checkboxControl.getId()).targetControlId(singleLineTextControl.getId()).build();
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 NOT_SUPPORTED_TARGET_CONTROL_FOR_DOUGHNUT);
     }
 
@@ -151,14 +151,14 @@ public class DoughnutControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), singleLineTextControl);
-        PDoughnutControl control = defaultDoughnutControlBuilder().pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), singleLineTextControl);
+        PDoughnutControl control = defaultDoughnutControlBuilder().pageId(response.homePageId())
                 .basedControlId(singleLineTextControl.getId()).build();
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 NOT_SUPPORTED_BASED_CONTROL_FOR_DOUGHNUT);
     }
 
@@ -168,34 +168,34 @@ public class DoughnutControlApiTest extends BaseApiTest {
 
         FRadioControl radioControl = defaultRadioControlBuilder().options(rTextOptions(10)).build();
         PDoughnutControl control = defaultDoughnutControlBuilder()
-                .pageId(response.getHomePageId())
+                .pageId(response.homePageId())
                 .basedControlId(radioControl.getId())
                 .range(StatRange.NO_LIMIT)
                 .build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, control);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
 
         RadioAnswer radioAnswer3 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
 
         //another qr should not be counted
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), radioAnswer1);
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), radioAnswer1);
 
-        QDoughnutPresentation values = (QDoughnutPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
-                response.getHomePageId(), control.getId());
+        QDoughnutPresentation values = (QDoughnutPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
+                response.homePageId(), control.getId());
 
         assertEquals(5,
                 values.getSegments().stream().filter(count -> count.getOption().equals(radioAnswer1.getOptionId())).findFirst().get().getValue());
@@ -213,46 +213,46 @@ public class DoughnutControlApiTest extends BaseApiTest {
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
         PDoughnutControl control = defaultDoughnutControlBuilder()
                 .segmentType(CONTROL_VALUE_SUM)
-                .pageId(response.getHomePageId())
+                .pageId(response.homePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlId(numberInputControl.getId())
                 .range(StatRange.NO_LIMIT)
                 .build();
 
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, control, numberInputControl);
+        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, control, numberInputControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(4d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(5d).build());
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(4d).build());
 
         RadioAnswer radioAnswer3 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3,
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3,
                 rAnswerBuilder(numberInputControl).number(10d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
 
         //another qr should not be counted
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), radioAnswer1,
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
 
-        QDoughnutPresentation values = (QDoughnutPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
-                response.getHomePageId(), control.getId());
+        QDoughnutPresentation values = (QDoughnutPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
+                response.homePageId(), control.getId());
 
         assertEquals(15,
                 values.getSegments().stream().filter(count -> count.getOption().equals(radioAnswer1.getOptionId())).findFirst().get().getValue());

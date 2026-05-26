@@ -5,9 +5,6 @@ import com.mryqr.common.event.consume.ConsumingDomainEvent;
 import com.mryqr.common.event.consume.DomainEventConsumer;
 import com.mryqr.common.profile.NonCiProfile;
 import com.mryqr.common.properties.MryRedisProperties;
-import com.mryqr.common.tracing.MryTracingService;
-import com.mryqr.common.utils.MryObjectMapper;
-import io.micrometer.tracing.ScopedSpan;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -20,6 +17,7 @@ import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamMessageListenerContainerOptions;
 import org.springframework.util.ErrorHandler;
+import tools.jackson.databind.ObjectMapper;
 
 import static com.mryqr.common.utils.MryConstants.REDIS_DOMAIN_EVENT_CONSUMER_GROUP;
 import static org.springframework.data.redis.connection.stream.Consumer.from;
@@ -34,9 +32,8 @@ import static org.springframework.data.redis.connection.stream.StreamOffset.crea
 @ConditionalOnProperty(value = "mry.redis.domainEventStreamEnabled", havingValue = "true")
 public class RedisDomainEventConsumeConfiguration {
     private final MryRedisProperties mryRedisProperties;
-    private final MryObjectMapper mryObjectMapper;
+    private final ObjectMapper objectMapper;
     private final DomainEventConsumer<DomainEvent> domainEventConsumer;
-    private final MryTracingService mryTracingService;
 
     @Bean
     public StreamMessageListenerContainer<String, ObjectRecord<String, String>> domainEventListenerContainer(RedisConnectionFactory factory) {
@@ -55,17 +52,13 @@ public class RedisDomainEventConsumeConfiguration {
                     from(REDIS_DOMAIN_EVENT_CONSUMER_GROUP, "DomainEventRedisStreamConsumer-" + stream),
                     create(stream, lastConsumed()),
                     message -> {
-                        ScopedSpan scopedSpan = mryTracingService.startNewSpan("domain-event-listener");
-
                         String jsonString = message.getValue();
-                        DomainEvent domainEvent = mryObjectMapper.readValue(jsonString, DomainEvent.class);
+                        DomainEvent domainEvent = objectMapper.readValue(jsonString, DomainEvent.class);
                         try {
                             domainEventConsumer.consume(new ConsumingDomainEvent<>(domainEvent.getId(), domainEvent.getType().name(), domainEvent));
                         } catch (Throwable t) {
                             log.error("Failed to listen domain event[{}:{}].", domainEvent.getType(), domainEvent.getId(), t);
                         }
-
-                        scopedSpan.end();
                     });
         });
 

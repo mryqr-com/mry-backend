@@ -68,8 +68,8 @@ public class QrSubmissionQueryService {
         mryRateLimiter.applyFor(user.getTenantId(), "QR:ListSubmission", 50);
 
         AppedQr appedQr = qrRepository.appedQrByIdAndCheckTenantShip(qrId, user);
-        QR qr = appedQr.getQr();
-        App app = appedQr.getApp();
+        QR qr = appedQr.qr();
+        App app = appedQr.app();
         String pageId = queryCommand.getPageId();
 
         SubmissionPermissions submissionPermissions = submissionPermissionChecker.permissionsFor(user, appedQr);

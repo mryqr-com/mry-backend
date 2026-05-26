@@ -49,9 +49,9 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FItemCountControl control = defaultItemCountControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -64,11 +64,11 @@ public class ItemCountControlApiTest extends BaseApiTest {
         TextOption option1 = TextOption.builder().id(optionsId).name(randomAlphabetic(10) + "选项").build();
         TextOption option2 = TextOption.builder().id(optionsId).name(randomAlphabetic(10) + "选项").build();
         FItemCountControl control = defaultItemCountControlBuilder().options(newArrayList(option1, option2)).build();
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 TEXT_OPTION_ID_DUPLICATED);
     }
 
@@ -77,17 +77,17 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemCountControl control = defaultItemCountControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         ItemCountAnswer answer = RandomTestFixture.rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         ItemCountAnswer updatedAnswer = (ItemCountAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
 
-        App app = appRepository.byId(response.getAppId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
+        App app = appRepository.byId(response.appId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
         IndexedValue indexedValue = submission.getIndexedValues().valueOf(indexedField);
         assertEquals(control.getId(), indexedValue.getRid());
     }
@@ -116,7 +116,7 @@ public class ItemCountControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), dependantControl, calculatedControl);
+        AppApi.updateAppControls(response.jwt(), response.appId(), dependantControl, calculatedControl);
         ItemCountAnswer answer = rAnswerBuilder(dependantControl).items(newArrayList(
                 CountedItem.builder()
                         .id(newShortUuid())
@@ -128,7 +128,7 @@ public class ItemCountControlApiTest extends BaseApiTest {
                         .optionId(optionId2)
                         .number(1)
                         .build())).build();
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
         Submission submission = submissionRepository.byId(submissionId);
         NumberInputAnswer updatedAnswer = (NumberInputAnswer) submission.getAnswers().get(calculatedControl.getId());
         assertEquals(22, updatedAnswer.getNumber());
@@ -140,12 +140,12 @@ public class ItemCountControlApiTest extends BaseApiTest {
 
         FItemCountControl control = defaultItemCountControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build())
                 .build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         ItemCountAnswer answer = rAnswerBuilder(control).items(newArrayList()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
@@ -153,14 +153,14 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemCountControl control = defaultItemCountControlBuilder().maxItem(1).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         List<CountedItem> items = control.allOptionIds().stream()
                 .map(optionId -> CountedItem.builder().id(newShortUuid()).optionId(optionId).number(1).build()).collect(toList());
         ItemCountAnswer answer = rAnswerBuilder(control).items(items).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MAX_ITEM_NUMBER_REACHED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MAX_ITEM_NUMBER_REACHED);
     }
 
     @Test
@@ -168,15 +168,15 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemCountControl control = defaultItemCountControlBuilder().maxItem(10).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         String itemId = newShortUuid();
         List<CountedItem> items = control.allOptionIds().stream().limit(2)
                 .map(optionId -> CountedItem.builder().id(itemId).optionId(optionId).number(1).build()).collect(toList());
         ItemCountAnswer answer = rAnswerBuilder(control).items(items).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), COUNTED_ITEM_ID_DUPLICATED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), COUNTED_ITEM_ID_DUPLICATED);
     }
 
     @Test
@@ -184,15 +184,15 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemCountControl control = defaultItemCountControlBuilder().maxItem(10).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         String duplicateOptionId = control.allOptionIds().stream().findFirst().get();
         List<CountedItem> items = control.allOptionIds().stream().limit(2)
                 .map(optionId -> CountedItem.builder().id(newShortUuid()).optionId(duplicateOptionId).number(1).build()).collect(toList());
         ItemCountAnswer answer = rAnswerBuilder(control).items(items).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), ITEM_ANSWER_OPTION_DUPLICATED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), ITEM_ANSWER_OPTION_DUPLICATED);
     }
 
     @Test
@@ -200,14 +200,14 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemCountControl control = defaultItemCountControlBuilder().maxItem(10).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         List<CountedItem> items = control.allOptionIds().stream().limit(2)
                 .map(optionId -> CountedItem.builder().id(newShortUuid()).optionId(newShortUuid()).number(1).build()).collect(toList());
         ItemCountAnswer answer = rAnswerBuilder(control).items(items).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), NOT_ALL_ANSWERS_IN_OPTIONS);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), NOT_ALL_ANSWERS_IN_OPTIONS);
     }
 
     @Test
@@ -215,14 +215,14 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemCountControl control = defaultItemCountControlBuilder().maxNumberPerItem(1).maxItem(2).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         List<CountedItem> items = control.allOptionIds().stream().limit(2)
                 .map(optionId -> CountedItem.builder().id(newShortUuid()).optionId(optionId).number(2).build()).collect(toList());
         ItemCountAnswer answer = rAnswerBuilder(control).items(items).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MAX_ITEM_COUNT_REACHED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MAX_ITEM_COUNT_REACHED);
     }
 
     @Test
@@ -230,21 +230,21 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemCountControl control = defaultItemCountControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST)
-                .pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+                .pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         ItemCountAnswer answer = RandomTestFixture.rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), RandomTestFixture.rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), RandomTestFixture.rAnswer(control));
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         ItemCountAttributeValue attributeValue = (ItemCountAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getItems(), attributeValue.getItems());
         assertNotNull(qr.getIndexedValues());
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
         Set<String> textIndexValues = answer.getItems().stream().map(CountedItem::getOptionId).collect(Collectors.toSet());
         assertTrue(qr.getIndexedValues().valueOf(indexedField).getTv().containsAll(textIndexValues));
@@ -255,20 +255,20 @@ public class ItemCountControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemCountControl control = defaultItemCountControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+                .pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         ItemCountAnswer answer = RandomTestFixture.rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), RandomTestFixture.rAnswer(control));
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), RandomTestFixture.rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         ItemCountAttributeValue attributeValue = (ItemCountAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getItems(), attributeValue.getItems());
         assertNotNull(qr.getIndexedValues());
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
         Set<String> textIndexValues = answer.getItems().stream().map(CountedItem::getOptionId).collect(Collectors.toSet());
         assertTrue(qr.getIndexedValues().valueOf(indexedField).getTv().containsAll(textIndexValues));

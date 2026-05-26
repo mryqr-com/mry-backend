@@ -133,14 +133,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class QrControllerApiTest extends BaseApiTest {
 
+    private static List<TextOption> sampleTextOptions() {
+        return IntStream.range(0, 10).mapToObj(value -> TextOption.builder()
+                        .id(newShortUuid())
+                        .color(rColor())
+                        .name("选项" + value)
+                        .build())
+                .collect(toList());
+    }
+
     @Test
     public void should_create_qr() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         String qrName = rQrName();
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), qrName, response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), qrName, response.defaultGroupId());
 
-        Member member = memberRepository.byId(response.getMemberId());
+        Member member = memberRepository.byId(response.memberId());
         QR qr = qrRepository.byId(qrResponse.getQrId());
         assertEquals(qrResponse.getQrId(), qr.getId());
         assertEquals(member.getId(), qr.getCreatedBy());
@@ -159,10 +168,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void parent_group_manager_should_create_qr() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupManager(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupManager(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
 
-        String groupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
+        String groupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
         CreateQrResponse qr = QrApi.createQr(memberResponse.getJwt(), groupId);
         assertNotNull(qr);
     }
@@ -179,9 +188,9 @@ class QrControllerApiTest extends BaseApiTest {
                 .statusAfterSubmissions(List.of())
                 .statusPermissions(List.of())
                 .build();
-        AppApi.updateCirculationStatusSetting(response.getJwt(), response.getAppId(), setting);
+        AppApi.updateCirculationStatusSetting(response.jwt(), response.appId(), setting);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
         QR qr = qrRepository.byId(qrResponse.getQrId());
         assertEquals(option1.getId(), qr.getCirculationOptionId());
     }
@@ -190,17 +199,17 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_raise_event_when_create_qr() {
         PreparedAppResponse response = setupApi.registerWithApp();
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_CREATE_TIME).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
 
         QrCreatedEvent event = latestEventFor(qrResponse.getQrId(), QR_CREATED, QrCreatedEvent.class);
         assertEquals(qrResponse.getQrId(), event.getQrId());
         assertEquals(qrResponse.getAppId(), event.getAppId());
         assertEquals(qrResponse.getGroupId(), event.getGroupId());
         assertEquals(qrResponse.getPlateId(), event.getPlateId());
-        assertEquals(1, tenantRepository.byId(response.getTenantId()).getResourceUsage().getQrCountForApp(response.getAppId()));
-        assertEquals(1, tenantRepository.byId(response.getTenantId()).getResourceUsage().getPlateCount());
+        assertEquals(1, tenantRepository.byId(response.tenantId()).getResourceUsage().getQrCountForApp(response.appId()));
+        assertEquals(1, tenantRepository.byId(response.tenantId()).getResourceUsage().getPlateCount());
         QR qr = qrRepository.byId(qrResponse.getQrId());
         TimestampAttributeValue attributeValue = (TimestampAttributeValue) qr.attributeValueOf(attribute.getId());
         assertEquals(qr.getCreatedAt(), attributeValue.getTimestamp());
@@ -213,43 +222,43 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fail_create_qr_if_name_already_exist() {
         PreparedAppResponse response = setupApi.registerWithApp();
         String qrName = rQrName();
-        QrApi.createQr(response.getJwt(), qrName, response.getDefaultGroupId());
+        QrApi.createQr(response.jwt(), qrName, response.defaultGroupId());
 
-        CreateQrCommand command = CreateQrCommand.builder().name(qrName).groupId(response.getDefaultGroupId()).build();
+        CreateQrCommand command = CreateQrCommand.builder().name(qrName).groupId(response.defaultGroupId()).build();
 
-        assertError(() -> QrApi.createQrRaw(response.getJwt(), command), QR_WITH_NAME_ALREADY_EXISTS);
+        assertError(() -> QrApi.createQrRaw(response.jwt(), command), QR_WITH_NAME_ALREADY_EXISTS);
     }
 
     @Test
     public void should_fail_create_qr_if_qr_count_exceeds_packages_limit() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
-        tenant.setQrCountForApp(response.getAppId(), tenant.currentPlan().getMaxQrCount());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
+        tenant.setQrCountForApp(response.appId(), tenant.currentPlan().getMaxQrCount());
         tenantRepository.save(tenant);
 
-        CreateQrCommand command = CreateQrCommand.builder().name(rQrName()).groupId(response.getDefaultGroupId()).build();
+        CreateQrCommand command = CreateQrCommand.builder().name(rQrName()).groupId(response.defaultGroupId()).build();
 
-        assertError(() -> QrApi.createQrRaw(response.getJwt(), command), QR_COUNT_LIMIT_REACHED);
+        assertError(() -> QrApi.createQrRaw(response.jwt(), command), QR_COUNT_LIMIT_REACHED);
     }
 
     @Test
     public void should_fail_create_qr_if_plage_count_exceeds_packages_limit() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         tenant.setPlateCount(PackagesStatus.MAX_PLATE_SIZE);
         tenantRepository.save(tenant);
 
-        CreateQrCommand command = CreateQrCommand.builder().name(rQrName()).groupId(response.getDefaultGroupId()).build();
+        CreateQrCommand command = CreateQrCommand.builder().name(rQrName()).groupId(response.defaultGroupId()).build();
 
-        assertError(() -> QrApi.createQrRaw(response.getJwt(), command), PLATE_COUNT_LIMIT_REACHED);
+        assertError(() -> QrApi.createQrRaw(response.jwt(), command), PLATE_COUNT_LIMIT_REACHED);
     }
 
     @Test
     public void normal_member_should_fail_create_qr() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
 
-        CreateQrCommand command = CreateQrCommand.builder().name(rQrName()).groupId(response.getDefaultGroupId()).build();
+        CreateQrCommand command = CreateQrCommand.builder().name(rQrName()).groupId(response.defaultGroupId()).build();
 
         assertError(() -> QrApi.createQrRaw(memberResponse.getJwt(), command), ACCESS_DENIED);
     }
@@ -257,21 +266,21 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_create_qr_if_group_is_not_active() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
-        GroupApi.deactivateGroup(response.getJwt(), groupId);
+        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
+        GroupApi.deactivateGroup(response.jwt(), groupId);
 
         CreateQrCommand command = CreateQrCommand.builder().name(rQrName()).groupId(groupId).build();
 
-        assertError(() -> QrApi.createQrRaw(response.getJwt(), command), GROUP_NOT_ACTIVE);
+        assertError(() -> QrApi.createQrRaw(response.jwt(), command), GROUP_NOT_ACTIVE);
     }
 
     @Test
     public void should_create_qr_from_plate() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
 
-        CreateQrResponse createQrResponse = QrApi.createQrFromPlate(response.getJwt(), rQrName(), response.getDefaultGroupId(), plateId);
+        CreateQrResponse createQrResponse = QrApi.createQrFromPlate(response.jwt(), rQrName(), response.defaultGroupId(), plateId);
 
         QR qr = qrRepository.byId(createQrResponse.getQrId());
         assertEquals(plateId, qr.getPlateId());
@@ -284,10 +293,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_raise_event_when_create_qr_from_plate() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
 
-        CreateQrResponse qrResponse = QrApi.createQrFromPlate(response.getJwt(), rQrName(), response.getDefaultGroupId(), plateId);
+        CreateQrResponse qrResponse = QrApi.createQrFromPlate(response.jwt(), rQrName(), response.defaultGroupId(), plateId);
         QrCreatedEvent event = latestEventFor(qrResponse.getQrId(), QR_CREATED, QrCreatedEvent.class);
         assertEquals(qrResponse.getQrId(), event.getQrId());
         assertEquals(qrResponse.getAppId(), event.getAppId());
@@ -301,39 +310,39 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_create_qr_from_plate_if_group_not_with_same_app_with_plate() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateAppResponse anotherResponse = AppApi.createApp(response.getJwt());
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        CreateAppResponse anotherResponse = AppApi.createApp(response.jwt());
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
 
         CreateQrFromPlateCommand command = CreateQrFromPlateCommand.builder().plateId(plateId).name(rQrName())
                 .groupId(anotherResponse.getDefaultGroupId()).build();
 
-        assertError(() -> QrApi.createQrFromPlateRaw(response.getJwt(), command), GROUP_PLATE_NOT_IN_SAME_APP);
+        assertError(() -> QrApi.createQrFromPlateRaw(response.jwt(), command), GROUP_PLATE_NOT_IN_SAME_APP);
     }
 
     @Test
     public void should_fail_create_qr_from_plate_if_plate_already_bound() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
 
         CreateQrFromPlateCommand command = CreateQrFromPlateCommand.builder().plateId(qrResponse.getPlateId()).name(rQrName())
-                .groupId(response.getDefaultGroupId()).build();
+                .groupId(response.defaultGroupId()).build();
 
-        assertError(() -> QrApi.createQrFromPlateRaw(response.getJwt(), command), PLATE_ALREADY_BOUND);
+        assertError(() -> QrApi.createQrFromPlateRaw(response.jwt(), command), PLATE_ALREADY_BOUND);
     }
 
     @Test
     public void should_failed_create_qr_from_template_if_name_already_exists() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
         String qrName = rQrName();
-        QrApi.createQr(response.getJwt(), qrName, response.getDefaultGroupId());
+        QrApi.createQr(response.jwt(), qrName, response.defaultGroupId());
 
         CreateQrFromPlateCommand command = CreateQrFromPlateCommand.builder().plateId(plateId).name(qrName)
-                .groupId(response.getDefaultGroupId()).build();
+                .groupId(response.defaultGroupId()).build();
 
-        assertError(() -> QrApi.createQrFromPlateRaw(response.getJwt(), command), QR_WITH_NAME_ALREADY_EXISTS);
+        assertError(() -> QrApi.createQrFromPlateRaw(response.jwt(), command), QR_WITH_NAME_ALREADY_EXISTS);
     }
 
     @Test
@@ -405,25 +414,25 @@ class QrControllerApiTest extends BaseApiTest {
 
         childPage.getControls().addAll(
                 List.of(mobileNumberControl, identifierControl, personNameControl, emailControl, dateControl, timeControl, dateTimeControl, itemStatusControl));
-        AppApi.updateAppPages(response.getJwt(), response.getAppId(), homePage, childPage);
+        AppApi.updateAppPages(response.jwt(), response.appId(), homePage, childPage);
 
         Attribute directTextAttribute = Attribute.builder().id(newAttributeId()).name("直接文本属性").type(DIRECT_INPUT).valueType(TEXT_VALUE)
                 .build();
         Attribute directNumberAttribute = Attribute.builder().id(newAttributeId()).name("直接数字属性").type(DIRECT_INPUT)
                 .valueType(DOUBLE_VALUE).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(),
+        AppApi.updateAppAttributes(response.jwt(), response.appId(),
                 checkboxAttribute, radioAttribute, dropdownAttribute, singleTextAttribute, numberInputAttribute, numberRankingAttribute,
                 mobileNumberAttribute, identifierAttribute, personNameAttribute, emailAttribute, dateAttribute, timeAttribute, dateTimeAttribute, itemStatusAttribute,
                 directTextAttribute, directNumberAttribute);
 
         ClassPathResource resource = new ClassPathResource("testdata/qr/normal-qrs-import.xlsx");
-        QrImportResponse importResponse = QrApi.importQrExcel(response.getJwt(), response.getDefaultGroupId(), resource.getFile());
+        QrImportResponse importResponse = QrApi.importQrExcel(response.jwt(), response.defaultGroupId(), resource.getFile());
 
         assertEquals(6, importResponse.getReadCount());
         assertEquals(3, importResponse.getImportedCount());
         assertEquals(3, importResponse.getErrorRecords().size());
-        assertEquals(4, submissionRepository.count(response.getTenantId()));
-        assertEquals(3, qrRepository.count(response.getTenantId()));
+        assertEquals(4, submissionRepository.count(response.tenantId()));
+        assertEquals(3, qrRepository.count(response.tenantId()));
 
         QrImportResponse.QrImportErrorRecord nameEmptyErrorRecord = importResponse.getErrorRecords().get(0);
         assertTrue(nameEmptyErrorRecord.getErrors().contains("名称不能为空"));
@@ -437,7 +446,7 @@ class QrControllerApiTest extends BaseApiTest {
         assertTrue(mobileFormatErrorRecord.getErrors().contains("Mobile格式错误"));
         assertEquals(7, mobileFormatErrorRecord.getRowIndex());
 
-        QR qr = qrRepository.byCustomId(response.getAppId(), "qr-custom-id-1");
+        QR qr = qrRepository.byCustomId(response.appId(), "qr-custom-id-1");
         assertEquals("qr1", qr.getName());
         assertEquals("qr-custom-id-1", qr.getCustomId());
 
@@ -490,21 +499,12 @@ class QrControllerApiTest extends BaseApiTest {
         RadioAttributeValue radioAttributeValue = (RadioAttributeValue) qr.attributeValueOf(radioAttribute.getId());
         assertTrue(radioControl.allOptionIds().contains(radioAttributeValue.getOptionId()));
 
-        QR qr3 = qrRepository.byCustomId(response.getAppId(), "qr-custom-id-3");
+        QR qr3 = qrRepository.byCustomId(response.appId(), "qr-custom-id-3");
         assertTrue(qr3.getAttributeValues().isEmpty());
 
-        QR qr6 = qrRepository.byCustomId(response.getAppId(), "qr-custom-id-6");
+        QR qr6 = qrRepository.byCustomId(response.appId(), "qr-custom-id-6");
         assertNull(qr6.attributeValueOf(itemStatusAttribute.getId()));
         assertNotNull(qr6.attributeValueOf(radioAttribute.getId()));
-    }
-
-    private static List<TextOption> sampleTextOptions() {
-        return IntStream.range(0, 10).mapToObj(value -> TextOption.builder()
-                        .id(newShortUuid())
-                        .color(rColor())
-                        .name("选项" + value)
-                        .build())
-                .collect(toList());
     }
 
     @Test
@@ -512,8 +512,8 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         ClassPathResource resource = new ClassPathResource("testdata/qr/simple-qrs-import.xlsx");
-        QrApi.importQrExcel(response.getJwt(), response.getDefaultGroupId(), resource.getFile());
-        QrImportResponse importResponse = QrApi.importQrExcel(response.getJwt(), response.getDefaultGroupId(), resource.getFile());
+        QrApi.importQrExcel(response.jwt(), response.defaultGroupId(), resource.getFile());
+        QrImportResponse importResponse = QrApi.importQrExcel(response.jwt(), response.defaultGroupId(), resource.getFile());
         assertEquals(1, importResponse.getReadCount());
         assertEquals(0, importResponse.getImportedCount());
         assertEquals(1, importResponse.getErrorRecords().size());
@@ -523,12 +523,12 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_import_qr_excel_if_package_too_low() throws IOException {
         PreparedAppResponse response = setupApi.registerWithApp();
-        Tenant theTenant = tenantRepository.byId(response.getTenantId());
+        Tenant theTenant = tenantRepository.byId(response.tenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withBatchImportQrAllowed(false));
         ClassPathResource resource = new ClassPathResource("testdata/qr/simple-qrs-import.xlsx");
         File file = resource.getFile();
 
-        assertError(() -> QrApi.importQrExcelRaw(response.getJwt(), response.getDefaultGroupId(), file), BATCH_QR_IMPORT_NOT_ALLOWED);
+        assertError(() -> QrApi.importQrExcelRaw(response.jwt(), response.defaultGroupId(), file), BATCH_QR_IMPORT_NOT_ALLOWED);
     }
 
     @Test
@@ -537,21 +537,21 @@ class QrControllerApiTest extends BaseApiTest {
 
         ClassPathResource resource = new ClassPathResource("testdata/qr/a-text-file.txt");
         File file = resource.getFile();
-        assertError(() -> QrApi.importQrExcelRaw(response.getJwt(), response.getDefaultGroupId(), file), INVALID_QR_EXCEL);
+        assertError(() -> QrApi.importQrExcelRaw(response.jwt(), response.defaultGroupId(), file), INVALID_QR_EXCEL);
     }
 
     @Test
     public void should_fail_import_qrs_excel_if_max_qr_count_reached() throws IOException {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         ResourceUsage resourceUsage = tenant.getResourceUsage();
-        ReflectionTestUtils.setField(resourceUsage, "qrCountPerApp", Map.of(response.getAppId(), 10000000));
+        ReflectionTestUtils.setField(resourceUsage, "qrCountPerApp", Map.of(response.appId(), 10000000));
         tenantRepository.save(tenant);
 
         ClassPathResource resource = new ClassPathResource("testdata/qr/simple-qrs-import.xlsx");
         File file = resource.getFile();
-        assertError(() -> QrApi.importQrExcelRaw(response.getJwt(), response.getDefaultGroupId(), file), QR_COUNT_LIMIT_REACHED);
+        assertError(() -> QrApi.importQrExcelRaw(response.jwt(), response.defaultGroupId(), file), QR_COUNT_LIMIT_REACHED);
     }
 
     @Test
@@ -560,7 +560,7 @@ class QrControllerApiTest extends BaseApiTest {
 
         ClassPathResource resource = new ClassPathResource("testdata/qr/no-name-qrs-import.xlsx");
         File file = resource.getFile();
-        assertError(() -> QrApi.importQrExcelRaw(response.getJwt(), response.getDefaultGroupId(), file), INVALID_QR_EXCEL);
+        assertError(() -> QrApi.importQrExcelRaw(response.jwt(), response.defaultGroupId(), file), INVALID_QR_EXCEL);
     }
 
     @Test
@@ -569,7 +569,7 @@ class QrControllerApiTest extends BaseApiTest {
 
         ClassPathResource resource = new ClassPathResource("testdata/qr/no-custom-id-qrs-import.xlsx");
         File file = resource.getFile();
-        assertError(() -> QrApi.importQrExcelRaw(response.getJwt(), response.getDefaultGroupId(), file), INVALID_QR_EXCEL);
+        assertError(() -> QrApi.importQrExcelRaw(response.jwt(), response.defaultGroupId(), file), INVALID_QR_EXCEL);
     }
 
     @Test
@@ -578,7 +578,7 @@ class QrControllerApiTest extends BaseApiTest {
 
         ClassPathResource resource = new ClassPathResource("testdata/qr/no-record-qrs-import.xlsx");
         File file = resource.getFile();
-        assertError(() -> QrApi.importQrExcelRaw(response.getJwt(), response.getDefaultGroupId(), file), NO_RECORDS_FOR_QR_IMPORT);
+        assertError(() -> QrApi.importQrExcelRaw(response.jwt(), response.defaultGroupId(), file), NO_RECORDS_FOR_QR_IMPORT);
     }
 
     @Test
@@ -587,7 +587,7 @@ class QrControllerApiTest extends BaseApiTest {
 
         ClassPathResource resource = new ClassPathResource("testdata/qr/duplicated-qrs-import.xlsx");
         File file = resource.getFile();
-        assertError(() -> QrApi.importQrExcelRaw(response.getJwt(), response.getDefaultGroupId(), file), QR_IMPORT_DUPLICATED_CUSTOM_ID);
+        assertError(() -> QrApi.importQrExcelRaw(response.jwt(), response.defaultGroupId(), file), QR_IMPORT_DUPLICATED_CUSTOM_ID);
     }
 
     @Test
@@ -595,9 +595,9 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         String qrName = rQrName();
-        QrApi.renameQr(response.getJwt(), response.getQrId(), qrName);
+        QrApi.renameQr(response.jwt(), response.qrId(), qrName);
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         assertEquals(qrName, qr.getName());
     }
 
@@ -605,14 +605,14 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_raise_event_when_rename_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_NAME).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         String qrName = rQrName();
-        QrApi.renameQr(response.getJwt(), response.getQrId(), qrName);
+        QrApi.renameQr(response.jwt(), response.qrId(), qrName);
 
-        QrRenamedEvent qrRenamedEvent = latestEventFor(response.getQrId(), QR_RENAMED, QrRenamedEvent.class);
-        assertEquals(response.getQrId(), qrRenamedEvent.getQrId());
-        TextAttributeValue attributeValue = (TextAttributeValue) qrRepository.byId(response.getQrId()).attributeValueOf(attribute.getId());
+        QrRenamedEvent qrRenamedEvent = latestEventFor(response.qrId(), QR_RENAMED, QrRenamedEvent.class);
+        assertEquals(response.qrId(), qrRenamedEvent.getQrId());
+        TextAttributeValue attributeValue = (TextAttributeValue) qrRepository.byId(response.qrId()).attributeValueOf(attribute.getId());
         assertEquals(qrName, attributeValue.getText());
     }
 
@@ -620,28 +620,28 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fail_rename_qr_if_name_already_exist() {
         PreparedQrResponse response = setupApi.registerWithQr();
         String qrName = rQrName();
-        QrApi.createQr(response.getJwt(), qrName, response.getDefaultGroupId());
+        QrApi.createQr(response.jwt(), qrName, response.defaultGroupId());
 
         RenameQrCommand command = RenameQrCommand.builder().name(qrName).build();
-        assertError(() -> QrApi.renameQrRaw(response.getJwt(), response.getQrId(), command), QR_WITH_NAME_ALREADY_EXISTS);
+        assertError(() -> QrApi.renameQrRaw(response.jwt(), response.qrId(), command), QR_WITH_NAME_ALREADY_EXISTS);
     }
 
     @Test
     public void should_reset_qr_plate() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
 
-        QrApi.resetPlate(response.getJwt(), response.getQrId(), plateId);
+        QrApi.resetPlate(response.jwt(), response.qrId(), plateId);
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         assertEquals(plateId, qr.getPlateId());
-        Plate oldPlate = plateRepository.byId(response.getPlateId());
+        Plate oldPlate = plateRepository.byId(response.plateId());
         assertFalse(oldPlate.isBound());
         Plate newPlate = plateRepository.byId(plateId);
         assertTrue(newPlate.isBound());
-        assertEquals(response.getQrId(), newPlate.getQrId());
-        assertEquals(response.getDefaultGroupId(), newPlate.getGroupId());
+        assertEquals(response.qrId(), newPlate.getQrId());
+        assertEquals(response.defaultGroupId(), newPlate.getGroupId());
         PlateBatch plateBatch = plateBatchRepository.byId(plateBatchId);
         assertEquals(9, plateBatch.getAvailableCount());
     }
@@ -650,24 +650,24 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_raise_event_when_reset_qr_plate() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         SingleLineTextAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_PLATE_ID).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
-        String oldPlateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        String oldPlateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String oldPlateId = plateRepository.allPlateIdsUnderPlateBatch(oldPlateBatchId).stream().findAny().get();
-        String newPlateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        String newPlateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String newPlateId = plateRepository.allPlateIdsUnderPlateBatch(newPlateBatchId).stream().findAny().get();
-        QrApi.resetPlate(response.getJwt(), response.getQrId(), oldPlateId);
+        QrApi.resetPlate(response.jwt(), response.qrId(), oldPlateId);
 
-        QrApi.resetPlate(response.getJwt(), response.getQrId(), newPlateId);
+        QrApi.resetPlate(response.jwt(), response.qrId(), newPlateId);
 
-        QrPlateResetEvent qrPlateResetEvent = latestEventFor(response.getQrId(), QR_PLATE_RESET, QrPlateResetEvent.class);
+        QrPlateResetEvent qrPlateResetEvent = latestEventFor(response.qrId(), QR_PLATE_RESET, QrPlateResetEvent.class);
         assertEquals(newPlateId, qrPlateResetEvent.getNewPlateId());
         assertEquals(oldPlateId, qrPlateResetEvent.getOldPlateId());
         assertEquals(newPlateId, submissionRepository.byId(submissionId).getPlateId());
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         IdentifierAttributeValue attributeValue = (IdentifierAttributeValue) qr.attributeValueOf(attribute.getId());
         assertEquals(newPlateId, attributeValue.getContent());
         assertEquals(10, plateBatchRepository.byId(oldPlateBatchId).getAvailableCount());
@@ -680,19 +680,19 @@ class QrControllerApiTest extends BaseApiTest {
 
         ResetQrPlateCommand command = ResetQrPlateCommand.builder().plateId(Plate.newPlateId()).build();
 
-        assertError(() -> QrApi.resetPlateRaw(response.getJwt(), response.getQrId(), command), PLATE_NOT_EXIT_FOR_BOUND);
+        assertError(() -> QrApi.resetPlateRaw(response.jwt(), response.qrId(), command), PLATE_NOT_EXIT_FOR_BOUND);
     }
 
     @Test
     public void should_fail_reset_plate_if_plate_belongs_to_another_app() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateAppResponse appResponse = AppApi.createApp(response.getJwt());
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), appResponse.getAppId(), 10);
+        CreateAppResponse appResponse = AppApi.createApp(response.jwt());
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), appResponse.getAppId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
 
         ResetQrPlateCommand command = ResetQrPlateCommand.builder().plateId(plateId).build();
 
-        assertError(() -> QrApi.resetPlateRaw(response.getJwt(), response.getQrId(), command), PLATE_NOT_FOR_APP);
+        assertError(() -> QrApi.resetPlateRaw(response.jwt(), response.qrId(), command), PLATE_NOT_FOR_APP);
     }
 
     @Test
@@ -706,13 +706,13 @@ class QrControllerApiTest extends BaseApiTest {
                 .statusAfterSubmissions(List.of())
                 .statusPermissions(List.of())
                 .build();
-        AppApi.updateCirculationStatusSetting(response.getJwt(), response.getAppId(), setting);
+        AppApi.updateCirculationStatusSetting(response.jwt(), response.appId(), setting);
 
-        assertNull(qrRepository.byId(response.getQrId()).getCirculationOptionId());
-        QrApi.resetCirculationStatus(response.getJwt(), response.getQrId(), option1.getId());
-        assertEquals(option1.getId(), qrRepository.byId(response.getQrId()).getCirculationOptionId());
+        assertNull(qrRepository.byId(response.qrId()).getCirculationOptionId());
+        QrApi.resetCirculationStatus(response.jwt(), response.qrId(), option1.getId());
+        assertEquals(option1.getId(), qrRepository.byId(response.qrId()).getCirculationOptionId());
 
-        assertError(() -> QrApi.resetCirculationStatusRaw(response.getJwt(), response.getQrId(), newShortUuid()),
+        assertError(() -> QrApi.resetCirculationStatusRaw(response.jwt(), response.qrId(), newShortUuid()),
                 CIRCULATION_OPTION_NOT_EXISTS);
     }
 
@@ -727,18 +727,18 @@ class QrControllerApiTest extends BaseApiTest {
                 .statusAfterSubmissions(List.of())
                 .statusPermissions(List.of())
                 .build();
-        AppApi.updateCirculationStatusSetting(response.getJwt(), response.getAppId(), setting);
+        AppApi.updateCirculationStatusSetting(response.jwt(), response.appId(), setting);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CIRCULATION_STATUS).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
-        QrApi.resetCirculationStatus(response.getJwt(), response.getQrId(), option1.getId());
-        QrCirculationStatusChangedEvent theEvent = latestEventFor(response.getQrId(), QR_CIRCULATION_STATUS_CHANGED,
+        QrApi.resetCirculationStatus(response.jwt(), response.qrId(), option1.getId());
+        QrCirculationStatusChangedEvent theEvent = latestEventFor(response.qrId(), QR_CIRCULATION_STATUS_CHANGED,
                 QrCirculationStatusChangedEvent.class);
-        assertEquals(response.getQrId(), theEvent.getQrId());
+        assertEquals(response.qrId(), theEvent.getQrId());
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         CirculationStatusAttributeValue attributeValue = (CirculationStatusAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_CIRCULATION_STATUS, attributeValue.getAttributeType());
@@ -750,41 +750,41 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_delete_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        QrApi.deleteQr(response.getJwt(), response.getQrId());
+        QrApi.deleteQr(response.jwt(), response.qrId());
 
-        assertFalse(qrRepository.byIdOptional(response.getQrId()).isPresent());
+        assertFalse(qrRepository.byIdOptional(response.qrId()).isPresent());
     }
 
     @Test
     public void should_raise_event_when_delete_qr() {
         PreparedAppResponse response = setupApi.registerWithApp();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
-        CreateQrResponse qrResponse = QrApi.createQrFromPlate(response.getJwt(), rQrName(), response.getDefaultGroupId(), plateId);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), rAnswer(control));
+        CreateQrResponse qrResponse = QrApi.createQrFromPlate(response.jwt(), rQrName(), response.defaultGroupId(), plateId);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), rAnswer(control));
 
-        QrApi.deleteQr(response.getJwt(), qrResponse.getQrId());
+        QrApi.deleteQr(response.jwt(), qrResponse.getQrId());
 
         QrDeletedEvent qrDeletedEvent = latestEventFor(qrResponse.getQrId(), QR_DELETED, QrDeletedEvent.class);
         assertEquals(qrResponse.getQrId(), qrDeletedEvent.getQrId());
-        assertEquals(response.getAppId(), qrDeletedEvent.getAppId());
+        assertEquals(response.appId(), qrDeletedEvent.getAppId());
         assertEquals(qrResponse.getPlateId(), qrDeletedEvent.getPlateId());
         assertEquals(qrResponse.getGroupId(), qrDeletedEvent.getGroupId());
         assertFalse(submissionRepository.byIdOptional(submissionId).isPresent());
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
-        assertEquals(0, tenant.getResourceUsage().getQrCountForApp(response.getAppId()));
-        assertEquals(0, tenant.getResourceUsage().getSubmissionCountForApp(response.getAppId()));
+        Tenant tenant = tenantRepository.byId(response.tenantId());
+        assertEquals(0, tenant.getResourceUsage().getQrCountForApp(response.appId()));
+        assertEquals(0, tenant.getResourceUsage().getSubmissionCountForApp(response.appId()));
     }
 
     @Test
     public void should_batch_delete_qrs() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(response.jwt(), response.defaultGroupId());
 
-        QrApi.deleteQrs(response.getJwt(), qrResponse1.getQrId(), qrResponse2.getQrId());
+        QrApi.deleteQrs(response.jwt(), qrResponse1.getQrId(), qrResponse2.getQrId());
 
         assertFalse(qrRepository.byIdOptional(qrResponse1.getQrId()).isPresent());
         assertFalse(qrRepository.byIdOptional(qrResponse2.getQrId()).isPresent());
@@ -793,23 +793,23 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_batch_delete_qrs_if_qrs_not_under_same_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateAppResponse appResponse = AppApi.createApp(response.getJwt());
-        CreateQrResponse qrResponse2 = QrApi.createQr(response.getJwt(), appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateAppResponse appResponse = AppApi.createApp(response.jwt());
+        CreateQrResponse qrResponse2 = QrApi.createQr(response.jwt(), appResponse.getDefaultGroupId());
 
         DeleteQrsCommand command = DeleteQrsCommand.builder().qrIds(newHashSet(qrResponse1.getQrId(), qrResponse2.getQrId())).build();
 
-        assertError(() -> QrApi.deleteQrsRaw(response.getJwt(), command), QRS_SHOULD_IN_ONE_APP);
+        assertError(() -> QrApi.deleteQrsRaw(response.jwt(), command), QRS_SHOULD_IN_ONE_APP);
     }
 
     @Test
     public void should_change_group() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId(), rGroupName());
+        CreateQrResponse qrResponse1 = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        String groupId = GroupApi.createGroup(response.jwt(), response.appId(), rGroupName());
 
-        QrApi.changeQrsGroup(response.getJwt(), groupId, qrResponse1.getQrId(), qrResponse2.getQrId());
+        QrApi.changeQrsGroup(response.jwt(), groupId, qrResponse1.getQrId(), qrResponse2.getQrId());
 
         assertEquals(groupId, qrRepository.byId(qrResponse1.getQrId()).getGroupId());
         assertEquals(groupId, qrRepository.byId(qrResponse2.getQrId()).getGroupId());
@@ -819,21 +819,21 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_raise_event_when_change_group() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_GROUP).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId(), rGroupName());
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        String groupId = GroupApi.createGroup(response.jwt(), response.appId(), rGroupName());
 
-        QrApi.changeQrsGroup(response.getJwt(), groupId, response.getQrId());
+        QrApi.changeQrsGroup(response.jwt(), groupId, response.qrId());
 
-        QrGroupChangedEvent qrGroupChangedEvent = latestEventFor(response.getQrId(), QR_GROUP_CHANGED, QrGroupChangedEvent.class);
-        assertEquals(response.getQrId(), qrGroupChangedEvent.getQrId());
-        assertEquals(response.getDefaultGroupId(), qrGroupChangedEvent.getOldGroupId());
+        QrGroupChangedEvent qrGroupChangedEvent = latestEventFor(response.qrId(), QR_GROUP_CHANGED, QrGroupChangedEvent.class);
+        assertEquals(response.qrId(), qrGroupChangedEvent.getQrId());
+        assertEquals(response.defaultGroupId(), qrGroupChangedEvent.getOldGroupId());
         assertEquals(groupId, qrGroupChangedEvent.getNewGroupId());
         assertEquals(groupId, submissionRepository.byId(submissionId).getGroupId());
-        assertEquals(groupId, plateRepository.byId(response.getPlateId()).getGroupId());
-        GroupAttributeValue attributeValue = (GroupAttributeValue) qrRepository.byId(response.getQrId()).attributeValueOf(attribute.getId());
+        assertEquals(groupId, plateRepository.byId(response.plateId()).getGroupId());
+        GroupAttributeValue attributeValue = (GroupAttributeValue) qrRepository.byId(response.qrId()).attributeValueOf(attribute.getId());
         assertEquals(groupId, attributeValue.getGroupId());
     }
 
@@ -841,94 +841,94 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fail_change_group_if_qrs_not_in_same_app() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        CreateAppResponse appResponse1 = AppApi.createApp(response.getJwt());
-        CreateQrResponse qrResponse1 = QrApi.createQr(response.getJwt(), appResponse1.getDefaultGroupId());
-        CreateAppResponse appResponse2 = AppApi.createApp(response.getJwt());
-        CreateQrResponse qrResponse2 = QrApi.createQr(response.getJwt(), appResponse2.getDefaultGroupId());
+        CreateAppResponse appResponse1 = AppApi.createApp(response.jwt());
+        CreateQrResponse qrResponse1 = QrApi.createQr(response.jwt(), appResponse1.getDefaultGroupId());
+        CreateAppResponse appResponse2 = AppApi.createApp(response.jwt());
+        CreateQrResponse qrResponse2 = QrApi.createQr(response.jwt(), appResponse2.getDefaultGroupId());
 
-        ChangeQrsGroupCommand command = ChangeQrsGroupCommand.builder().groupId(response.getDefaultGroupId())
+        ChangeQrsGroupCommand command = ChangeQrsGroupCommand.builder().groupId(response.defaultGroupId())
                 .qrIds(newHashSet(qrResponse1.getQrId(), qrResponse2.getQrId())).build();
 
-        assertError(() -> QrApi.changeQrsGroupRaw(response.getJwt(), command), QRS_SHOULD_IN_ONE_APP);
+        assertError(() -> QrApi.changeQrsGroupRaw(response.jwt(), command), QRS_SHOULD_IN_ONE_APP);
     }
 
     @Test
     public void should_fail_change_group_if_qr_group_not_in_same_app() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateAppResponse appResponse = AppApi.createApp(response.getJwt());
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), appResponse.getDefaultGroupId());
+        CreateAppResponse appResponse = AppApi.createApp(response.jwt());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), appResponse.getDefaultGroupId());
 
-        ChangeQrsGroupCommand command = ChangeQrsGroupCommand.builder().groupId(response.getDefaultGroupId())
+        ChangeQrsGroupCommand command = ChangeQrsGroupCommand.builder().groupId(response.defaultGroupId())
                 .qrIds(newHashSet(qrResponse.getQrId())).build();
 
-        assertError(() -> QrApi.changeQrsGroupRaw(response.getJwt(), command), GROUP_QR_NOT_SAME_APP);
+        assertError(() -> QrApi.changeQrsGroupRaw(response.jwt(), command), GROUP_QR_NOT_SAME_APP);
     }
 
     @Test
     public void should_mark_qr_as_template() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        QrApi.markTemplate(response.getJwt(), response.getQrId());
+        QrApi.markTemplate(response.jwt(), response.qrId());
 
-        assertTrue(qrRepository.byId(response.getQrId()).isTemplate());
+        assertTrue(qrRepository.byId(response.qrId()).isTemplate());
     }
 
     @Test
     public void should_raise_event_when_mark_as_template() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
 
-        QrApi.markTemplate(response.getJwt(), response.getQrId());
+        QrApi.markTemplate(response.jwt(), response.qrId());
 
-        QrMarkedAsTemplateEvent qrMarkedAsTemplateEvent = latestEventFor(response.getQrId(), QR_MARKED_AS_TEMPLATE,
+        QrMarkedAsTemplateEvent qrMarkedAsTemplateEvent = latestEventFor(response.qrId(), QR_MARKED_AS_TEMPLATE,
                 QrMarkedAsTemplateEvent.class);
-        assertEquals(response.getQrId(), qrMarkedAsTemplateEvent.getQrId());
+        assertEquals(response.qrId(), qrMarkedAsTemplateEvent.getQrId());
         assertFalse(submissionRepository.byIdOptional(submissionId).isPresent());
-        assertEquals(0, tenantRepository.byId(response.getTenantId()).getResourceUsage().getSubmissionCountForApp(response.getAppId()));
+        assertEquals(0, tenantRepository.byId(response.tenantId()).getResourceUsage().getSubmissionCountForApp(response.appId()));
     }
 
     @Test
     public void should_unmark_qr_as_template() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        QrApi.markTemplate(response.getJwt(), response.getQrId());
+        QrApi.markTemplate(response.jwt(), response.qrId());
 
-        QrApi.unmarkTemplate(response.getJwt(), response.getQrId());
+        QrApi.unmarkTemplate(response.jwt(), response.qrId());
 
-        assertFalse(qrRepository.byId(response.getQrId()).isTemplate());
-        QrUnMarkedAsTemplateEvent event = latestEventFor(response.getQrId(), QR_UNMARKED_AS_TEMPLATE, QrUnMarkedAsTemplateEvent.class);
-        assertEquals(response.getQrId(), event.getQrId());
+        assertFalse(qrRepository.byId(response.qrId()).isTemplate());
+        QrUnMarkedAsTemplateEvent event = latestEventFor(response.qrId(), QR_UNMARKED_AS_TEMPLATE, QrUnMarkedAsTemplateEvent.class);
+        assertEquals(response.qrId(), event.getQrId());
     }
 
     @Test
     public void should_deactivate_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        QrApi.deactivate(response.getJwt(), response.getQrId());
+        QrApi.deactivate(response.jwt(), response.qrId());
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         assertFalse(qr.isActive());
-        QrDeactivatedEvent event = latestEventFor(response.getQrId(), QR_DEACTIVATED, QrDeactivatedEvent.class);
-        assertEquals(response.getQrId(), event.getQrId());
+        QrDeactivatedEvent event = latestEventFor(response.qrId(), QR_DEACTIVATED, QrDeactivatedEvent.class);
+        assertEquals(response.qrId(), event.getQrId());
     }
 
     @Test
     public void should_activate_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        QrApi.deactivate(response.getJwt(), response.getQrId());
-        assertFalse(qrRepository.byId(response.getQrId()).isActive());
+        QrApi.deactivate(response.jwt(), response.qrId());
+        assertFalse(qrRepository.byId(response.qrId()).isActive());
 
-        QrApi.activate(response.getJwt(), response.getQrId());
-        assertTrue(qrRepository.byId(response.getQrId()).isActive());
-        QrActivatedEvent event = latestEventFor(response.getQrId(), QR_ACTIVATED, QrActivatedEvent.class);
-        assertEquals(response.getQrId(), event.getQrId());
+        QrApi.activate(response.jwt(), response.qrId());
+        assertTrue(qrRepository.byId(response.qrId()).isActive());
+        QrActivatedEvent event = latestEventFor(response.qrId(), QR_ACTIVATED, QrActivatedEvent.class);
+        assertEquals(response.qrId(), event.getQrId());
     }
 
     @Test
     public void should_update_qr_base_setting() {
         PreparedQrResponse response = setupApi.registerWithQr();
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(DIRECT_INPUT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         UpdateQrBaseSettingCommand command = UpdateQrBaseSettingCommand.builder()
                 .name(rQrName())
@@ -938,9 +938,9 @@ class QrControllerApiTest extends BaseApiTest {
                 .geolocation(rGeolocation())
                 .customId(rCustomId())
                 .build();
-        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), command);
+        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), command);
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         assertEquals(command.getName(), qr.getName());
         assertEquals(command.getDescription(), qr.getDescription());
         assertEquals(command.getHeaderImage(), qr.getHeaderImage());
@@ -953,11 +953,11 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_raise_event_when_update_base_setting() {
         PreparedQrResponse response = setupApi.registerWithQr(rEmail(), rPassword());
-        String qrId = response.getQrId();
+        String qrId = response.qrId();
 
         Attribute instanceNameAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(INSTANCE_NAME).build();
         Attribute instanceCustomIdAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(INSTANCE_CUSTOM_ID).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), instanceCustomIdAttribute, instanceNameAttribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), instanceCustomIdAttribute, instanceNameAttribute);
 
         String qrName = rQrName();
         String customId = rCustomId();
@@ -970,7 +970,7 @@ class QrControllerApiTest extends BaseApiTest {
                 .customId(customId)
                 .build();
 
-        QrApi.updateQrBaseSetting(response.getJwt(), qrId, command);
+        QrApi.updateQrBaseSetting(response.jwt(), qrId, command);
 
         QrBaseSettingUpdatedEvent event = latestEventFor(qrId, QR_BASE_SETTING_UPDATED, QrBaseSettingUpdatedEvent.class);
         assertEquals(qrId, event.getQrId());
@@ -988,7 +988,7 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(DIRECT_INPUT).precision(2).manualInput(true)
                 .valueType(DOUBLE_VALUE).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         UpdateQrBaseSettingCommand command = UpdateQrBaseSettingCommand.builder()
                 .name(rQrName())
@@ -998,9 +998,9 @@ class QrControllerApiTest extends BaseApiTest {
                 .geolocation(rGeolocation())
                 .customId(rCustomId())
                 .build();
-        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), command);
+        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), command);
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
 
         DoubleAttributeValue attributeValue = (DoubleAttributeValue) qr.attributeValueOf(attribute.getId());
         assertEquals(12.34, attributeValue.getNumber());
@@ -1018,9 +1018,9 @@ class QrControllerApiTest extends BaseApiTest {
                 .geolocation(rGeolocation())
                 .customId(rCustomId())
                 .build();
-        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), command);
+        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), command);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
         UpdateQrBaseSettingCommand newCommand = UpdateQrBaseSettingCommand.builder()
                 .name(name)
                 .description(rSentence(100))
@@ -1029,8 +1029,8 @@ class QrControllerApiTest extends BaseApiTest {
                 .geolocation(rGeolocation())
                 .customId(rCustomId())
                 .build();
-        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), newCommand);
-        assertError(() -> QrApi.updateQrBaseSettingRaw(response.getJwt(), qrResponse.getQrId(), command), QR_WITH_NAME_ALREADY_EXISTS);
+        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), newCommand);
+        assertError(() -> QrApi.updateQrBaseSettingRaw(response.jwt(), qrResponse.getQrId(), command), QR_WITH_NAME_ALREADY_EXISTS);
     }
 
     @Test
@@ -1045,9 +1045,9 @@ class QrControllerApiTest extends BaseApiTest {
                 .geolocation(rGeolocation())
                 .customId(customId)
                 .build();
-        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), command);
+        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), command);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
         UpdateQrBaseSettingCommand newCommand = UpdateQrBaseSettingCommand.builder()
                 .name(rQrName())
                 .description(rSentence(100))
@@ -1056,18 +1056,18 @@ class QrControllerApiTest extends BaseApiTest {
                 .geolocation(rGeolocation())
                 .customId(customId)
                 .build();
-        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), newCommand);
-        assertError(() -> QrApi.updateQrBaseSettingRaw(response.getJwt(), qrResponse.getQrId(), command), QR_WITH_CUSTOM_ID_ALREADY_EXISTS);
+        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), newCommand);
+        assertError(() -> QrApi.updateQrBaseSettingRaw(response.jwt(), qrResponse.getQrId(), command), QR_WITH_CUSTOM_ID_ALREADY_EXISTS);
     }
 
     @Test
     public void should_list_qrs() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
 
         assertEquals(2, qrs.getTotalNumber());
         assertEquals(20, qrs.getPageSize());
@@ -1076,9 +1076,9 @@ class QrControllerApiTest extends BaseApiTest {
         QViewableListQr item1 = qrs.getData().stream().filter(item -> item.getId().equals(qr1Response.getQrId())).findFirst().get();
 
         assertEquals(qr1Response.getQrId(), item1.getId());
-        assertEquals(response.getAppId(), item1.getAppId());
-        assertEquals(response.getDefaultGroupId(), item1.getGroupId());
-        assertEquals(response.getMemberId(), item1.getCreatedBy());
+        assertEquals(response.appId(), item1.getAppId());
+        assertEquals(response.defaultGroupId(), item1.getGroupId());
+        assertEquals(response.memberId(), item1.getCreatedBy());
         assertEquals(qr1Response.getPlateId(), item1.getPlateId());
         assertNotNull(item1.getCreatedAt());
         assertNotNull(item1.getName());
@@ -1087,25 +1087,25 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_paged_qrs() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        IntStream.range(0, 30).forEach(value -> QrApi.createQr(response.getJwt(), response.getDefaultGroupId()));
+        IntStream.range(0, 30).forEach(value -> QrApi.createQr(response.jwt(), response.defaultGroupId()));
 
-        ListViewableQrsQuery queryCommand1 = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
-        assertEquals(20, QrApi.listQrs(response.getJwt(), queryCommand1).getData().size());
+        ListViewableQrsQuery queryCommand1 = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
+        assertEquals(20, QrApi.listQrs(response.jwt(), queryCommand1).getData().size());
 
-        ListViewableQrsQuery queryCommand2 = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(2).pageSize(20).build();
-        assertEquals(10, QrApi.listQrs(response.getJwt(), queryCommand2).getData().size());
+        ListViewableQrsQuery queryCommand2 = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(2).pageSize(20).build();
+        assertEquals(10, QrApi.listQrs(response.jwt(), queryCommand2).getData().size());
     }
 
     @Test
     public void should_list_template_only_qrs() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        QrApi.markTemplate(response.getJwt(), qr1Response.getQrId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        QrApi.markTemplate(response.jwt(), qr1Response.getQrId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).templateOnly(true).pageIndex(1)
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).templateOnly(true).pageIndex(1)
                 .pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
 
         assertEquals(1, qrs.getData().size());
         assertEquals(qr1Response.getQrId(), qrs.getData().get(0).getId());
@@ -1114,13 +1114,13 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_inactive_only_qrs() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        QrApi.deactivate(response.getJwt(), qr1Response.getQrId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        QrApi.deactivate(response.jwt(), qr1Response.getQrId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).inactiveOnly(true).pageIndex(1)
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).inactiveOnly(true).pageIndex(1)
                 .pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
 
         assertEquals(1, qrs.getData().size());
         assertEquals(qr1Response.getQrId(), qrs.getData().get(0).getId());
@@ -1129,26 +1129,26 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_inactive_qrs_for_app_manager() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        QrApi.deactivate(response.getJwt(), qr1Response.getQrId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        QrApi.deactivate(response.jwt(), qr1Response.getQrId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
         assertEquals(2, qrs.getData().size());
     }
 
     @Test
     public void should_list_inactive_qrs_for_group_manger() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        QrApi.deactivate(response.getJwt(), qr1Response.getQrId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        QrApi.deactivate(response.jwt(), qr1Response.getQrId());
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).groupId(response.getDefaultGroupId())
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).groupId(response.defaultGroupId())
                 .pageIndex(1).pageSize(20).build();
         PagedList<QViewableListQr> qrs = QrApi.listQrs(memberResponse.getJwt(), queryCommand);
         assertEquals(2, qrs.getData().size());
@@ -1157,14 +1157,14 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_only_active_qrs_for_non_app_managers() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        QrApi.deactivate(response.getJwt(), qr1Response.getQrId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        QrApi.deactivate(response.jwt(), qr1Response.getQrId());
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
         PagedList<QViewableListQr> qrs = QrApi.listQrs(memberResponse.getJwt(), queryCommand);
         assertEquals(1, qrs.getData().size());
         assertEquals(qr2Response.getQrId(), qrs.getData().get(0).getId());
@@ -1173,15 +1173,15 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_only_active_qrs_for_non_group_managers() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
 
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        QrApi.deactivate(response.getJwt(), qr1Response.getQrId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        QrApi.deactivate(response.jwt(), qr1Response.getQrId());
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).groupId(response.getDefaultGroupId())
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).groupId(response.defaultGroupId())
                 .pageIndex(1).pageSize(20).build();
         PagedList<QViewableListQr> qrs = QrApi.listQrs(memberResponse.getJwt(), queryCommand);
         assertEquals(1, qrs.getData().size());
@@ -1191,17 +1191,17 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qrs_for_all_viewable_groups() {
         LoginResponse loginResponse = setupApi.registerWithLogin();
-        CreateAppResponse appResponse = AppApi.createApp(loginResponse.getJwt(), AS_GROUP_MEMBER);
-        AppApi.updateAppOperationPermission(loginResponse.getJwt(), appResponse.getAppId(), AS_GROUP_MEMBER);
+        CreateAppResponse appResponse = AppApi.createApp(loginResponse.jwt(), AS_GROUP_MEMBER);
+        AppApi.updateAppOperationPermission(loginResponse.jwt(), appResponse.getAppId(), AS_GROUP_MEMBER);
 
-        String groupId1 = GroupApi.createGroup(loginResponse.getJwt(), appResponse.getAppId());
-        String groupId2 = GroupApi.createGroup(loginResponse.getJwt(), appResponse.getAppId());
-        CreateMemberResponse memberResponse1 = MemberApi.createMemberAndLogin(loginResponse.getJwt());
-        CreateMemberResponse memberResponse2 = MemberApi.createMemberAndLogin(loginResponse.getJwt());
-        GroupApi.addGroupMembers(loginResponse.getJwt(), groupId1, memberResponse1.getMemberId());
-        GroupApi.addGroupMembers(loginResponse.getJwt(), groupId2, memberResponse2.getMemberId());
-        CreateQrResponse qrResponse1 = QrApi.createQr(loginResponse.getJwt(), groupId1);
-        CreateQrResponse qrResponse2 = QrApi.createQr(loginResponse.getJwt(), groupId2);
+        String groupId1 = GroupApi.createGroup(loginResponse.jwt(), appResponse.getAppId());
+        String groupId2 = GroupApi.createGroup(loginResponse.jwt(), appResponse.getAppId());
+        CreateMemberResponse memberResponse1 = MemberApi.createMemberAndLogin(loginResponse.jwt());
+        CreateMemberResponse memberResponse2 = MemberApi.createMemberAndLogin(loginResponse.jwt());
+        GroupApi.addGroupMembers(loginResponse.jwt(), groupId1, memberResponse1.getMemberId());
+        GroupApi.addGroupMembers(loginResponse.jwt(), groupId2, memberResponse2.getMemberId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(loginResponse.jwt(), groupId1);
+        CreateQrResponse qrResponse2 = QrApi.createQr(loginResponse.jwt(), groupId2);
 
         ListViewableQrsQuery queryCommand1 = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).pageIndex(1).pageSize(20).build();
         PagedList<QViewableListQr> qrs1 = QrApi.listQrs(memberResponse1.getJwt(), queryCommand1);
@@ -1217,13 +1217,13 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qrs_for_given_group() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String anotherGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), anotherGroupId);
+        String anotherGroupId = GroupApi.createGroup(response.jwt(), response.appId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), anotherGroupId);
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).groupId(anotherGroupId).pageIndex(1)
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).groupId(anotherGroupId).pageIndex(1)
                 .pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
 
         assertEquals(1, qrs.getData().size());
         assertEquals(qr2Response.getQrId(), qrs.getData().get(0).getId());
@@ -1232,10 +1232,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qrs_near_current_position() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.enableAppPosition(response.getJwt(), response.getAppId());
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr3Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        AppApi.enableAppPosition(response.jwt(), response.appId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr3Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
 
         Geolocation geolocation1 = Geolocation.builder()
                 .address(rAddress())
@@ -1249,17 +1249,17 @@ class QrControllerApiTest extends BaseApiTest {
                 .address(rAddress())
                 .point(Geopoint.builder().longitude(120f).latitude(30f).build())
                 .build();
-        QrApi.updateQrBaseSetting(response.getJwt(), qr1Response.getQrId(),
+        QrApi.updateQrBaseSetting(response.jwt(), qr1Response.getQrId(),
                 UpdateQrBaseSettingCommand.builder().name(rQrName()).geolocation(geolocation1).build());
-        QrApi.updateQrBaseSetting(response.getJwt(), qr2Response.getQrId(),
+        QrApi.updateQrBaseSetting(response.jwt(), qr2Response.getQrId(),
                 UpdateQrBaseSettingCommand.builder().name(rQrName()).geolocation(geolocation2).build());
-        QrApi.updateQrBaseSetting(response.getJwt(), qr3Response.getQrId(),
+        QrApi.updateQrBaseSetting(response.jwt(), qr3Response.getQrId(),
                 UpdateQrBaseSettingCommand.builder().name(rQrName()).geolocation(geolocation3).build());
 
         Geopoint currentPoint = Geopoint.builder().longitude(120f).latitude(29f).build();
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).nearestPointEnabled(true)
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).nearestPointEnabled(true)
                 .currentPoint(currentPoint).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
 
         assertEquals(3, qrs.getData().size());
         assertEquals(qr3Response.getQrId(), qrs.getData().get(0).getId());
@@ -1271,26 +1271,26 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qrs_based_on_filterables() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
         FCheckboxControl control = defaultCheckboxControl();
-        AppApi.updateAppControls(appResponse.getJwt(), appResponse.getAppId(), control);
+        AppApi.updateAppControls(appResponse.jwt(), appResponse.appId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(appResponse.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(appResponse.getJwt(), appResponse.getAppId(), attribute);
+                .pageId(appResponse.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(appResponse.jwt(), appResponse.appId(), attribute);
 
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
 
         String optionId1 = control.getOptions().get(0).getId();
         CheckboxAnswer answer1 = rAnswerBuilder(control).optionIds(newArrayList(optionId1)).build();
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse1.getQrId(), appResponse.getHomePageId(), answer1);
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse1.getQrId(), appResponse.homePageId(), answer1);
 
         String optionId2 = control.getOptions().get(1).getId();
         CheckboxAnswer answer2 = rAnswerBuilder(control).optionIds(newArrayList(optionId2)).build();
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse2.getQrId(), appResponse.getHomePageId(), answer2);
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse2.getQrId(), appResponse.homePageId(), answer2);
 
         Map<String, Set<String>> filterables = Maps.of(attribute.getId(), newHashSet(optionId1));
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).filterables(filterables).pageIndex(1)
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).filterables(filterables).pageIndex(1)
                 .pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
 
         assertEquals(1, qrs.getData().size());
         assertEquals(qrResponse1.getQrId(), qrs.getData().get(0).getId());
@@ -1299,18 +1299,18 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qrs_based_on_no_space_search_equal_to_qr_name() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), "成都锻压机", appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), "成都切割机", appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.getJwt(), "重庆切割机", appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.getJwt(), "西安锻压机", appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), "成都锻压机", appResponse.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), "成都切割机", appResponse.defaultGroupId());
+        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.jwt(), "重庆切割机", appResponse.defaultGroupId());
+        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.jwt(), "西安锻压机", appResponse.defaultGroupId());
 
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(),
-                ListViewableQrsQuery.builder().appId(appResponse.getAppId()).search("重庆").pageIndex(1).pageSize(20).build());
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(),
+                ListViewableQrsQuery.builder().appId(appResponse.appId()).search("重庆").pageIndex(1).pageSize(20).build());
         assertEquals(1, qrs.getData().size());
         assertEquals(qrResponse3.getQrId(), qrs.getData().get(0).getId());
 
-        PagedList<QViewableListQr> qrs1 = QrApi.listQrs(appResponse.getJwt(),
-                ListViewableQrsQuery.builder().appId(appResponse.getAppId()).search("成都").pageIndex(1).pageSize(20).build());
+        PagedList<QViewableListQr> qrs1 = QrApi.listQrs(appResponse.jwt(),
+                ListViewableQrsQuery.builder().appId(appResponse.appId()).search("成都").pageIndex(1).pageSize(20).build());
         assertEquals(2, qrs1.getData().size());
         Set<String> ids = qrs1.getData().stream().map(QViewableListQr::getId).collect(toSet());
         assertTrue(ids.contains(qrResponse1.getQrId()));
@@ -1321,22 +1321,22 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qrs_based_on_no_space_search_equal_to_searchables() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
         FEmailControl control = defaultEmailControl();
-        AppApi.updateAppControls(appResponse.getJwt(), appResponse.getAppId(), control);
+        AppApi.updateAppControls(appResponse.jwt(), appResponse.appId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(appResponse.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(appResponse.getJwt(), appResponse.getAppId(), attribute);
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+                .pageId(appResponse.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(appResponse.jwt(), appResponse.appId(), attribute);
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
 
         EmailAnswer answer1 = rAnswerBuilder(control).email("aa1@aa.com").build();
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse1.getQrId(), appResponse.getHomePageId(), answer1);
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse1.getQrId(), appResponse.homePageId(), answer1);
 
         EmailAnswer answer2 = rAnswerBuilder(control).email("aa2@aa.com").build();
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse2.getQrId(), appResponse.getHomePageId(), answer2);
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse2.getQrId(), appResponse.homePageId(), answer2);
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).search("aa1@aa.com").pageIndex(1)
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).search("aa1@aa.com").pageIndex(1)
                 .pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
 
         assertEquals(1, qrs.getData().size());
         assertEquals(qrResponse1.getQrId(), qrs.getData().get(0).getId());
@@ -1345,20 +1345,20 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qrs_based_on_spaced_search() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), "成都一号锻压机", appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), "成都二号切割机", appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.getJwt(), "重庆一号切割机", appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.getJwt(), "西安一号锻压机", appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), "成都一号锻压机", appResponse.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), "成都二号切割机", appResponse.defaultGroupId());
+        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.jwt(), "重庆一号切割机", appResponse.defaultGroupId());
+        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.jwt(), "西安一号锻压机", appResponse.defaultGroupId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).search("成都 锻压机").pageIndex(1)
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).search("成都 锻压机").pageIndex(1)
                 .pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
         assertEquals(1, qrs.getData().size());
         assertEquals(qrResponse1.getQrId(), qrs.getData().get(0).getId());
 
-        ListViewableQrsQuery queryCommand1 = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).search("一号 锻压机").pageIndex(1)
+        ListViewableQrsQuery queryCommand1 = ListViewableQrsQuery.builder().appId(appResponse.appId()).search("一号 锻压机").pageIndex(1)
                 .pageSize(20).build();
-        PagedList<QViewableListQr> qrs1 = QrApi.listQrs(appResponse.getJwt(), queryCommand1);
+        PagedList<QViewableListQr> qrs1 = QrApi.listQrs(appResponse.jwt(), queryCommand1);
         assertEquals(2, qrs1.getData().size());
         Set<String> ids1 = qrs1.getData().stream().map(QViewableListQr::getId).collect(toSet());
         assertTrue(ids1.contains(qrResponse1.getQrId()));
@@ -1368,14 +1368,14 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_search_directly_by_qr_id() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).search(qrResponse1.getQrId())
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).search(qrResponse1.getQrId())
                 .pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
         assertEquals(1, qrs.getData().size());
         assertEquals(qrResponse1.getQrId(), qrs.getData().get(0).getId());
     }
@@ -1383,19 +1383,19 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_search_directly_by_qr_custom_id() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
         QR qr1 = qrRepository.byId(qrResponse1.getQrId());
         String customId = newShortUuid();
         qr1.updateCustomId(customId, User.NO_USER);
         qrRepository.save(qr1);
 
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).search(customId).pageIndex(1)
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).search(customId).pageIndex(1)
                 .pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
         assertEquals(1, qrs.getData().size());
         assertEquals(qrResponse1.getQrId(), qrs.getData().get(0).getId());
     }
@@ -1403,14 +1403,14 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_search_directly_by_qr_plate_id() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse4 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).search(qrResponse1.getPlateId())
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).search(qrResponse1.getPlateId())
                 .pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
         assertEquals(1, qrs.getData().size());
         assertEquals(qrResponse1.getQrId(), qrs.getData().get(0).getId());
     }
@@ -1419,24 +1419,24 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qrs_based_on_sort() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(appResponse.getJwt(), appResponse.getAppId(), control);
+        AppApi.updateAppControls(appResponse.jwt(), appResponse.appId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(appResponse.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(appResponse.getJwt(), appResponse.getAppId(), attribute);
+                .pageId(appResponse.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(appResponse.jwt(), appResponse.appId(), attribute);
 
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse1.getQrId(), appResponse.getHomePageId(),
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse1.getQrId(), appResponse.homePageId(),
                 rAnswerBuilder(control).number(2d).build());
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse2.getQrId(), appResponse.getHomePageId(),
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse2.getQrId(), appResponse.homePageId(),
                 rAnswerBuilder(control).number(1d).build());
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse3.getQrId(), appResponse.getHomePageId(),
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse3.getQrId(), appResponse.homePageId(),
                 rAnswerBuilder(control).number(3d).build());
 
-        ListViewableQrsQuery queryCommand1 = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).sortedBy(attribute.getId())
+        ListViewableQrsQuery queryCommand1 = ListViewableQrsQuery.builder().appId(appResponse.appId()).sortedBy(attribute.getId())
                 .ascSort(true).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand1);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand1);
         assertEquals(3, qrs.getData().size());
         assertEquals(qrResponse2.getQrId(), qrs.getData().get(0).getId());
         assertEquals(qrResponse1.getQrId(), qrs.getData().get(1).getId());
@@ -1447,18 +1447,18 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qrs_with_only_summary_eligible_attributes() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(appResponse.getJwt(), appResponse.getAppId(), control);
+        AppApi.updateAppControls(appResponse.jwt(), appResponse.appId(), control);
         Attribute summaryEligibleAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).pcListEligible(true)
-                .type(CONTROL_LAST).pageId(appResponse.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+                .type(CONTROL_LAST).pageId(appResponse.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
         Attribute summaryNonEligibleAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).pcListEligible(false)
-                .type(CONTROL_LAST).pageId(appResponse.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(appResponse.getJwt(), appResponse.getAppId(), summaryEligibleAttribute, summaryNonEligibleAttribute);
+                .type(CONTROL_LAST).pageId(appResponse.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(appResponse.jwt(), appResponse.appId(), summaryEligibleAttribute, summaryNonEligibleAttribute);
 
-        CreateQrResponse qrResponse = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse.getQrId(), appResponse.getHomePageId(), rAnswer(control));
+        CreateQrResponse qrResponse = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse.getQrId(), appResponse.homePageId(), rAnswer(control));
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).pageIndex(1).pageSize(20).build();
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
         assertEquals(1, qrs.getData().size());
         QViewableListQr qViewableListQr = qrs.getData().get(0);
         assertTrue(qViewableListQr.getAttributeDisplayValues().containsKey(summaryEligibleAttribute.getId()));
@@ -1473,11 +1473,11 @@ class QrControllerApiTest extends BaseApiTest {
         Attribute summaryNotEligibleAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).pcListEligible(false)
                 .type(FIXED).fixedValue("someOtherFixedValue").range(NO_LIMIT).build();
 
-        AppApi.updateAppAttributes(appResponse.getJwt(), appResponse.getAppId(), summaryEligibleAttribute, summaryNotEligibleAttribute);
-        CreateQrResponse qrResponse = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        AppApi.updateAppAttributes(appResponse.jwt(), appResponse.appId(), summaryEligibleAttribute, summaryNotEligibleAttribute);
+        CreateQrResponse qrResponse = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).pageIndex(1).pageSize(20).build();
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
 
         assertEquals(1, qrs.getData().size());
         QViewableListQr qViewableListQr = qrs.getData().get(0);
@@ -1489,12 +1489,12 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qrs_with_group_referenced_values() {
         PreparedQrResponse response = setupApi.registerWithQr();
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_GROUP).pcListEligible(true).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
 
-        Group group = groupRepository.byId(response.getDefaultGroupId());
+        Group group = groupRepository.byId(response.defaultGroupId());
         assertEquals(group.getName(), ((TextDisplayValue) qrs.getData().get(0).getAttributeDisplayValues().get(attribute.getId())).getText());
     }
 
@@ -1503,12 +1503,12 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_CREATOR).pcListEligible(true)
                 .build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
-        Member member = memberRepository.byId(response.getMemberId());
+        Member member = memberRepository.byId(response.memberId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
 
         assertEquals(member.getName(), ((TextDisplayValue) qrs.getData().get(0).getAttributeDisplayValues().get(attribute.getId())).getText());
     }
@@ -1516,14 +1516,14 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qrs_by_createdBy() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(appResponse.getJwt());
-        AppApi.setAppManager(appResponse.getJwt(), appResponse.getAppId(), memberResponse.getMemberId());
-        CreateQrResponse qr1 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qr2 = QrApi.createQr(memberResponse.getJwt(), appResponse.getDefaultGroupId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(appResponse.jwt());
+        AppApi.setAppManager(appResponse.jwt(), appResponse.appId(), memberResponse.getMemberId());
+        CreateQrResponse qr1 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qr2 = QrApi.createQr(memberResponse.getJwt(), appResponse.defaultGroupId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).createdBy(memberResponse.getMemberId())
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).createdBy(memberResponse.getMemberId())
                 .pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
 
         assertEquals(1, qrs.getData().size());
         QViewableListQr qViewableListQr = qrs.getData().get(0);
@@ -1533,9 +1533,9 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qrs_by_date_range() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        CreateQrResponse qrResponse3 = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
 
         QR qr1 = qrRepository.byId(qrResponse1.getQrId());
         ReflectionTestUtils.setField(qr1, "createdAt", LocalDate.of(2011, 3, 3).atStartOfDay(systemDefault()).toInstant());
@@ -1549,9 +1549,9 @@ class QrControllerApiTest extends BaseApiTest {
         ReflectionTestUtils.setField(qr3, "createdAt", LocalDate.of(2011, 3, 9).atStartOfDay(systemDefault()).toInstant());
         qrRepository.save(qr3);
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).startDate("2011-03-04")
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).startDate("2011-03-04")
                 .endDate("2011-03-07").pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.getJwt(), queryCommand);
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(appResponse.jwt(), queryCommand);
 
         assertEquals(1, qrs.getData().size());
         QViewableListQr qViewableListQr = qrs.getData().get(0);
@@ -1561,12 +1561,12 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qrs_with_sub_groups() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
-        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), subGroupId);
+        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), subGroupId);
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
-        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
+        PagedList<QViewableListQr> qrs = QrApi.listQrs(response.jwt(), queryCommand);
 
         assertEquals(2, qrs.getTotalNumber());
         assertTrue(
@@ -1576,21 +1576,21 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_to_list_qrs_if_no_viewable_groups() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        AppApi.updateAppPermission(appResponse.getJwt(), appResponse.getAppId(), CAN_MANAGE_GROUP);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(appResponse.getJwt());
+        AppApi.updateAppPermission(appResponse.jwt(), appResponse.appId(), CAN_MANAGE_GROUP);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(appResponse.jwt());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId()).pageIndex(1).pageSize(20).build();
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId()).pageIndex(1).pageSize(20).build();
         assertError(() -> QrApi.listQrsRaw(memberResponse.getJwt(), queryCommand), NO_VIEWABLE_GROUPS);
     }
 
     @Test
     public void should_fail_to_list_qrs_if_no_permission_for_given_group() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
-        AppApi.updateAppPermission(appResponse.getJwt(), appResponse.getAppId(), CAN_MANAGE_GROUP);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(appResponse.getJwt());
+        AppApi.updateAppPermission(appResponse.jwt(), appResponse.appId(), CAN_MANAGE_GROUP);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(appResponse.jwt());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.getAppId())
-                .groupId(appResponse.getDefaultGroupId()).pageIndex(1).pageSize(20).build();
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(appResponse.appId())
+                .groupId(appResponse.defaultGroupId()).pageIndex(1).pageSize(20).build();
         assertError(() -> QrApi.listQrsRaw(memberResponse.getJwt(), queryCommand), NO_VIEWABLE_PERMISSION_FOR_GROUP);
     }
 
@@ -1598,10 +1598,10 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_download_qrs_for_non_control_ref_values() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        AppApi.enableAppPosition(response.getJwt(), response.getAppId());
+        AppApi.enableAppPosition(response.jwt(), response.appId());
 
         Geolocation qrGeolocation = rGeolocation();
-        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), UpdateQrBaseSettingCommand.builder()
+        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), UpdateQrBaseSettingCommand.builder()
                 .customId(rCustomId())
                 .name(rQrName())
                 .geolocation(qrGeolocation)
@@ -1610,13 +1610,13 @@ class QrControllerApiTest extends BaseApiTest {
         String memberEmail = rEmail();
         String memberMobile = rMobile();
         String memberName = rMemberName();
-        MemberApi.updateMember(response.getJwt(), response.getMemberId(), UpdateMemberInfoCommand.builder()
+        MemberApi.updateMember(response.jwt(), response.memberId(), UpdateMemberInfoCommand.builder()
                 .email(memberEmail)
                 .mobile(memberMobile)
                 .name(memberName)
                 .departmentIds(List.of())
                 .build());
-        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), response.getMemberId());
+        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), response.memberId());
 
         Attribute instanceGeolocationAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_GEOLOCATION)
                 .range(NO_LIMIT).build();
@@ -1639,13 +1639,13 @@ class QrControllerApiTest extends BaseApiTest {
         Attribute instanceGroupManagersEmailAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName())
                 .type(INSTANCE_GROUP_MANAGERS_AND_EMAIL).range(NO_LIMIT).build();
         Attribute pageLastSubmiterMobileAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName())
-                .type(PAGE_LAST_SUBMITTER_AND_MOBILE).pageId(response.getHomePageId()).build();
+                .type(PAGE_LAST_SUBMITTER_AND_MOBILE).pageId(response.homePageId()).build();
         Attribute pageLastSubmiterEmailAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName())
-                .type(PAGE_LAST_SUBMITTER_AND_EMAIL).pageId(response.getHomePageId()).build();
+                .type(PAGE_LAST_SUBMITTER_AND_EMAIL).pageId(response.homePageId()).build();
         Attribute instanceActiveStatusAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_ACTIVE_STATUS)
                 .range(NO_LIMIT).build();
 
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(),
+        AppApi.updateAppAttributes(response.jwt(), response.appId(),
                 instanceGeolocationAttribute,
                 instanceGroupAttribute,
                 instanceSubmitCountAttribute,
@@ -1661,10 +1661,10 @@ class QrControllerApiTest extends BaseApiTest {
                 instanceActiveStatusAttribute
         );
 
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
-        byte[] exportBytes = QrApi.exportQrsAsExcel(response.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
+        byte[] exportBytes = QrApi.exportQrsAsExcel(response.jwt(), queryCommand);
         List<Map<Integer, String>> result = newArrayList();
         EasyExcel.read(new ByteArrayInputStream(exportBytes), new AnalysisEventListener<Map<Integer, String>>() {
 
@@ -1679,10 +1679,10 @@ class QrControllerApiTest extends BaseApiTest {
             }
         }).excelType(XLSX).sheet().doRead();
 
-        QR qr = qrRepository.byId(response.getQrId());
-        Group group = groupRepository.byId(response.getDefaultGroupId());
+        QR qr = qrRepository.byId(response.qrId());
+        Group group = groupRepository.byId(response.defaultGroupId());
         Map<Integer, String> record = result.get(0);
-        assertEquals(response.getQrId(), record.get(0));
+        assertEquals(response.qrId(), record.get(0));
         assertEquals(qr.getName(), record.get(1));
         assertEquals(qr.getGeolocation().toText(), record.get(2));
 
@@ -1716,67 +1716,67 @@ class QrControllerApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         RadioAnswer radioAnswer = rAnswer(radioControl);
         Attribute radioControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(radioControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(radioControl.getId()).range(NO_LIMIT).build();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         CheckboxAnswer checkboxAnswer = rAnswer(checkboxControl);
         Attribute checkboxControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(checkboxControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(checkboxControl.getId()).range(NO_LIMIT).build();
 
         FDropdownControl dropdownControl = defaultDropdownControl();
         DropdownAnswer dropdownAnswer = rAnswer(dropdownControl);
         Attribute dropdownControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(dropdownControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(dropdownControl.getId()).range(NO_LIMIT).build();
 
         FAddressControl addressControl = defaultAddressControlBuilder().precision(4).build();
         AddressAnswer addressAnswer = rAnswer(addressControl);
         Attribute addressControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(addressControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(addressControl.getId()).range(NO_LIMIT).build();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
         NumberInputAnswer numberInputAnswer = rAnswer(numberInputControl);
         Attribute numberInputControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(numberInputControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(numberInputControl.getId()).range(NO_LIMIT).build();
 
         FMobileNumberControl mobileNumberControl = defaultMobileControl();
         MobileNumberAnswer mobileNumberAnswer = rAnswer(mobileNumberControl);
         Attribute mobileNumberControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(mobileNumberControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(mobileNumberControl.getId()).range(NO_LIMIT).build();
 
         FIdentifierControl identifierControl = defaultIdentifierControl();
         IdentifierAnswer identifierAnswer = rAnswer(identifierControl);
         Attribute identifierControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(identifierControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(identifierControl.getId()).range(NO_LIMIT).build();
 
         FEmailControl emailControl = defaultEmailControl();
         EmailAnswer emailAnswer = rAnswer(emailControl);
         Attribute emailControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(emailControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(emailControl.getId()).range(NO_LIMIT).build();
 
         FDateControl dateControl = defaultDateControl();
         DateAnswer dateAnswer = rAnswer(dateControl);
         Attribute dateControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(dateControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(dateControl.getId()).range(NO_LIMIT).build();
 
         FTimeControl timeControl = defaultTimeControl();
         TimeAnswer timeAnswer = rAnswer(timeControl);
         Attribute timeControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(timeControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(timeControl.getId()).range(NO_LIMIT).build();
 
         FItemCountControl itemCountControl = defaultItemCountControl();
         ItemCountAnswer itemCountAnswer = rAnswer(itemCountControl);
         Attribute itemCountControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(itemCountControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(itemCountControl.getId()).range(NO_LIMIT).build();
 
         FItemStatusControl itemStatusControl = defaultItemStatusControl();
         ItemStatusAnswer itemStatusAnswer = rAnswer(itemStatusControl);
         Attribute itemStatusControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(itemStatusControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(itemStatusControl.getId()).range(NO_LIMIT).build();
 
         FPointCheckControl pointCheckControl = defaultPointCheckControl();
         PointCheckAnswer pointCheckAnswer = rAnswer(pointCheckControl);
         Attribute pointCheckControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(pointCheckControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(pointCheckControl.getId()).range(NO_LIMIT).build();
 
         FMultiLevelSelectionControl multiLevelSelectionControl = defaultMultiLevelSelectionControlBuilder()
                 .titleText("省份/城市")
@@ -1788,14 +1788,14 @@ class QrControllerApiTest extends BaseApiTest {
                 .level2("成都市")
                 .build()).build();
         Attribute multiLevelSelectionControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(multiLevelSelectionControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(multiLevelSelectionControl.getId()).range(NO_LIMIT).build();
 
         FDateTimeControl dateTimeControl = defaultDateTimeControl();
         DateTimeAnswer dateTimeAnswer = rAnswer(dateTimeControl);
         Attribute dateTimeControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(dateTimeControl.getId()).range(NO_LIMIT).build();
+                .pageId(response.homePageId()).controlId(dateTimeControl.getId()).range(NO_LIMIT).build();
 
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(),
+        AppApi.updateAppControls(response.jwt(), response.appId(),
                 radioControl,
                 checkboxControl,
                 dropdownControl,
@@ -1813,7 +1813,7 @@ class QrControllerApiTest extends BaseApiTest {
                 dateTimeControl
         );
 
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(),
+        AppApi.updateAppAttributes(response.jwt(), response.appId(),
                 radioControlRefAttribute,
                 checkboxControlRefAttribute,
                 dropdownControlRefAttribute,
@@ -1831,7 +1831,7 @@ class QrControllerApiTest extends BaseApiTest {
                 dateTimeControlRefAttribute
         );
 
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 radioAnswer,
                 checkboxAnswer,
                 dropdownAnswer,
@@ -1849,8 +1849,8 @@ class QrControllerApiTest extends BaseApiTest {
                 dateTimeAnswer
         );
 
-        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.getAppId()).pageIndex(1).pageSize(20).build();
-        byte[] exportBytes = QrApi.exportQrsAsExcel(response.getJwt(), queryCommand);
+        ListViewableQrsQuery queryCommand = ListViewableQrsQuery.builder().appId(response.appId()).pageIndex(1).pageSize(20).build();
+        byte[] exportBytes = QrApi.exportQrsAsExcel(response.jwt(), queryCommand);
         List<Map<Integer, String>> result = newArrayList();
         EasyExcel.read(new ByteArrayInputStream(exportBytes), new AnalysisEventListener<Map<Integer, String>>() {
 
@@ -1899,12 +1899,12 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fetch_submission_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        QSubmissionQr submissionQr = QrApi.fetchSubmissionQr(response.getJwt(), response.getPlateId());
+        QSubmissionQr submissionQr = QrApi.fetchSubmissionQr(response.jwt(), response.plateId());
 
-        QR qr = qrRepository.byId(response.getQrId());
-        App app = appRepository.byId(response.getAppId());
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
-        Member member = memberRepository.byId(response.getMemberId());
+        QR qr = qrRepository.byId(response.qrId());
+        App app = appRepository.byId(response.appId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
+        Member member = memberRepository.byId(response.memberId());
 
         QSubmissionQrDetail submissionQrDetail = submissionQr.getQr();
         QSubmissionAppDetail submissionAppDetail = submissionQr.getApp();
@@ -1931,7 +1931,7 @@ class QrControllerApiTest extends BaseApiTest {
         assertEquals(app.getName(), submissionAppDetail.getName());
         assertEquals(app.getVersion(), submissionAppDetail.getVersion());
 
-        assertEquals(response.getMemberId(), memberProfile.getMemberId());
+        assertEquals(response.memberId(), memberProfile.getMemberId());
         assertEquals(tenant.getTenantId(), memberProfile.getMemberTenantId());
         assertEquals(tenant.getName(), memberProfile.getTenantName());
         assertEquals(member.getName(), memberProfile.getMemberName());
@@ -1941,7 +1941,7 @@ class QrControllerApiTest extends BaseApiTest {
     public void tenant_admin_should_fetch_submission_qr() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
 
-        QSubmissionQr qr = QrApi.fetchSubmissionQr(response.getJwt(), response.getPlateId());
+        QSubmissionQr qr = QrApi.fetchSubmissionQr(response.jwt(), response.plateId());
 
         assertNotNull(qr.getApp());
         assertNotNull(qr.getSubmissionQrMemberProfile());
@@ -1952,10 +1952,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_fetch_submission_qr() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
-        AppApi.setAppManager(response.getJwt(), response.getAppId(), memberResponse.getMemberId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.setAppManager(response.jwt(), response.appId(), memberResponse.getMemberId());
 
-        QSubmissionQr qr = QrApi.fetchSubmissionQr(memberResponse.getJwt(), response.getPlateId());
+        QSubmissionQr qr = QrApi.fetchSubmissionQr(memberResponse.getJwt(), response.plateId());
 
         assertNotNull(qr.getApp());
         assertNotNull(qr.getSubmissionQrMemberProfile());
@@ -1966,10 +1966,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void group_manager_should_fetch_submission_qr() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rEmail(), rPassword());
-        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.getJwt(), AS_GROUP_MEMBER);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupManagers(loginResponse.getJwt(), createAppResponse.getDefaultGroupId(), memberResponse.getMemberId());
-        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.getJwt(), rQrName(), createAppResponse.getDefaultGroupId());
+        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.jwt(), AS_GROUP_MEMBER);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupManagers(loginResponse.jwt(), createAppResponse.getDefaultGroupId(), memberResponse.getMemberId());
+        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.jwt(), rQrName(), createAppResponse.getDefaultGroupId());
 
         QSubmissionQr qr = QrApi.fetchSubmissionQr(memberResponse.getJwt(), qrsResponse.getPlateId());
 
@@ -1983,10 +1983,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void common_group_member_should_fetch_submission_qr() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rEmail(), rPassword());
-        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.getJwt(), AS_GROUP_MEMBER);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupMembers(loginResponse.getJwt(), createAppResponse.getDefaultGroupId(), memberResponse.getMemberId());
-        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.getJwt(), rQrName(), createAppResponse.getDefaultGroupId());
+        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.jwt(), AS_GROUP_MEMBER);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupMembers(loginResponse.jwt(), createAppResponse.getDefaultGroupId(), memberResponse.getMemberId());
+        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.jwt(), rQrName(), createAppResponse.getDefaultGroupId());
 
         QSubmissionQr qr = QrApi.fetchSubmissionQr(memberResponse.getJwt(), qrsResponse.getPlateId());
 
@@ -2001,9 +2001,9 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void tenant_member_should_fetch_submission_qr() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rEmail(), rPassword());
-        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.getJwt(), AS_TENANT_MEMBER, CAN_MANAGE_GROUP);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
-        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.getJwt(), rQrName(), createAppResponse.getDefaultGroupId());
+        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.jwt(), AS_TENANT_MEMBER, CAN_MANAGE_GROUP);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.jwt(), rQrName(), createAppResponse.getDefaultGroupId());
 
         QSubmissionQr qr = QrApi.fetchSubmissionQr(memberResponse.getJwt(), qrsResponse.getPlateId());
 
@@ -2020,8 +2020,8 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void public_user_should_fetch_submission_qr() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rEmail(), rPassword());
-        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.getJwt(), PUBLIC);
-        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.getJwt(), rQrName(), createAppResponse.getDefaultGroupId());
+        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.jwt(), PUBLIC);
+        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.jwt(), rQrName(), createAppResponse.getDefaultGroupId());
 
         QSubmissionQr qr = QrApi.fetchSubmissionQr(null, qrsResponse.getPlateId());
 
@@ -2040,10 +2040,10 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fetch_submission_qr_for_parent_group_manager() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        String groupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupManager(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), groupId);
+        String groupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupManager(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), groupId);
 
         QSubmissionQr qr = QrApi.fetchSubmissionQr(memberResponse.getJwt(), qrResponse.getPlateId());
         assertTrue(qr.getPermissions().contains(CAN_MANAGE_GROUP));
@@ -2053,22 +2053,22 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fetch_submission_qr_for_sub_group_member() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        String groupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupMembers(response.getJwt(), groupId, memberResponse.getMemberId());
+        String groupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupMembers(response.jwt(), groupId, memberResponse.getMemberId());
 
-        QSubmissionQr qr = QrApi.fetchSubmissionQr(memberResponse.getJwt(), response.getPlateId());
+        QSubmissionQr qr = QrApi.fetchSubmissionQr(memberResponse.getJwt(), response.plateId());
         assertTrue(qr.getPermissions().contains(AS_GROUP_MEMBER));
     }
 
     @Test
     public void another_account_user_can_fetch_public_submission_qr() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rEmail(), rPassword());
-        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.getJwt(), PUBLIC);
-        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.getJwt(), rQrName(), createAppResponse.getDefaultGroupId());
+        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.jwt(), PUBLIC);
+        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.jwt(), rQrName(), createAppResponse.getDefaultGroupId());
         LoginResponse anotherResponse = setupApi.registerWithLogin(rEmail(), rPassword());
 
-        QSubmissionQr qr = QrApi.fetchSubmissionQr(anotherResponse.getJwt(), qrsResponse.getPlateId());
+        QSubmissionQr qr = QrApi.fetchSubmissionQr(anotherResponse.jwt(), qrsResponse.getPlateId());
 
         assertNotNull(qr.getApp());
         assertNotNull(qr.getSubmissionQrMemberProfile());
@@ -2083,14 +2083,14 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fetch_submission_qr_with_page_ids() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse normalMemberResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        CreateMemberResponse groupMemberResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        CreateMemberResponse groupManagerResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupMembers(response.getJwt(), response.getDefaultGroupId(), groupManagerResponse.getMemberId(),
+        CreateMemberResponse normalMemberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse groupMemberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse groupManagerResponse = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupMembers(response.jwt(), response.defaultGroupId(), groupManagerResponse.getMemberId(),
                 groupMemberResponse.getMemberId());
-        GroupApi.addGroupManager(response.getJwt(), response.getDefaultGroupId(), groupManagerResponse.getMemberId());
+        GroupApi.addGroupManager(response.jwt(), response.defaultGroupId(), groupManagerResponse.getMemberId());
 
-        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_GROUP_MEMBER);
+        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_GROUP_MEMBER);
 
         Page nonFillablePage = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(PUBLIC).build())
                 .build();
@@ -2102,7 +2102,7 @@ class QrControllerApiTest extends BaseApiTest {
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_GROUP).build()).build()).build();
         Page appManagerApprovablePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_TENANT_MEMBER)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build()).build();
-        AppApi.updateAppPages(response.getJwt(), response.getAppId(),
+        AppApi.updateAppPages(response.jwt(), response.appId(),
                 groupManagerRequiredPage,
                 nonFillablePage,
                 publicPage,
@@ -2111,12 +2111,12 @@ class QrControllerApiTest extends BaseApiTest {
                 groupManagerApprovablePage,
                 appManagerApprovablePage);
 
-        QSubmissionQr tenantAdminSubmissionQr = QrApi.fetchSubmissionQr(response.getJwt(), response.getPlateId());
+        QSubmissionQr tenantAdminSubmissionQr = QrApi.fetchSubmissionQr(response.jwt(), response.plateId());
         assertEquals(5, tenantAdminSubmissionQr.getCanViewFillablePageIds().size());
         assertEquals(6, tenantAdminSubmissionQr.getCanManageFillablePageIds().size());
         assertEquals(2, tenantAdminSubmissionQr.getCanApproveFillablePageIds().size());
 
-        QSubmissionQr groupManagerSubmissionQr = QrApi.fetchSubmissionQr(groupManagerResponse.getJwt(), response.getPlateId());
+        QSubmissionQr groupManagerSubmissionQr = QrApi.fetchSubmissionQr(groupManagerResponse.getJwt(), response.plateId());
         assertEquals(4, groupManagerSubmissionQr.getCanViewFillablePageIds().size());
         assertTrue(groupManagerSubmissionQr.getCanViewFillablePageIds().contains(tenantMemberRequiredPage.getId()));
         assertTrue(groupManagerSubmissionQr.getCanViewFillablePageIds().contains(groupManagerRequiredPage.getId()));
@@ -2131,7 +2131,7 @@ class QrControllerApiTest extends BaseApiTest {
         assertEquals(1, groupManagerSubmissionQr.getCanApproveFillablePageIds().size());
         assertTrue(groupManagerSubmissionQr.getCanApproveFillablePageIds().contains(groupManagerApprovablePage.getId()));
 
-        QSubmissionQr groupMemberSubmissionQr = QrApi.fetchSubmissionQr(groupMemberResponse.getJwt(), response.getPlateId());
+        QSubmissionQr groupMemberSubmissionQr = QrApi.fetchSubmissionQr(groupMemberResponse.getJwt(), response.plateId());
         assertEquals(3, groupMemberSubmissionQr.getCanViewFillablePageIds().size());
         assertTrue(groupMemberSubmissionQr.getCanViewFillablePageIds().contains(tenantMemberRequiredPage.getId()));
         assertTrue(groupMemberSubmissionQr.getCanViewFillablePageIds().contains(groupManagerApprovablePage.getId()));
@@ -2139,7 +2139,7 @@ class QrControllerApiTest extends BaseApiTest {
         assertEquals(0, groupMemberSubmissionQr.getCanManageFillablePageIds().size());
         assertEquals(0, groupMemberSubmissionQr.getCanApproveFillablePageIds().size());
 
-        QSubmissionQr tenantMemberSubmissionQr = QrApi.fetchSubmissionQr(normalMemberResponse.getJwt(), response.getPlateId());
+        QSubmissionQr tenantMemberSubmissionQr = QrApi.fetchSubmissionQr(normalMemberResponse.getJwt(), response.plateId());
         assertEquals(3, tenantMemberSubmissionQr.getCanViewFillablePageIds().size());
         assertEquals(0, tenantMemberSubmissionQr.getCanManageFillablePageIds().size());
         assertEquals(0, tenantMemberSubmissionQr.getCanApproveFillablePageIds().size());
@@ -2151,7 +2151,7 @@ class QrControllerApiTest extends BaseApiTest {
 
         BaseApiTest.given(null)
                 .when()
-                .get("/qrs/submission-qrs/{plateId}", loginResponse.getPlateId())
+                .get("/qrs/submission-qrs/{plateId}", loginResponse.plateId())
                 .then()
                 .statusCode(401);
     }
@@ -2161,9 +2161,9 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedQrResponse loginResponse = setupApi.registerWithQr(rEmail(), rPassword());
         PreparedQrResponse anotherResponse = setupApi.registerWithQr(rEmail(), rPassword());
 
-        BaseApiTest.given(anotherResponse.getJwt())
+        BaseApiTest.given(anotherResponse.jwt())
                 .when()
-                .get("/qrs/submission-qrs/{plateId}", loginResponse.getPlateId())
+                .get("/qrs/submission-qrs/{plateId}", loginResponse.plateId())
                 .then()
                 .statusCode(403);
     }
@@ -2171,9 +2171,9 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_fetch_submission_qr_if_permission_not_enough() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rEmail(), rPassword());
-        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.getJwt(), AS_GROUP_MEMBER);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
-        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.getJwt(), rQrName(), createAppResponse.getDefaultGroupId());
+        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.jwt(), AS_GROUP_MEMBER);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateQrResponse qrsResponse = QrApi.createQr(loginResponse.jwt(), rQrName(), createAppResponse.getDefaultGroupId());
 
         BaseApiTest.given(memberResponse.getJwt())
                 .when()
@@ -2186,7 +2186,7 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fail_fetch_submission_qr_if_plate_not_found() {
         PreparedQrResponse loginResponse = setupApi.registerWithQr(rEmail(), rPassword());
 
-        BaseApiTest.given(loginResponse.getJwt())
+        BaseApiTest.given(loginResponse.jwt())
                 .when()
                 .get("/qrs/submission-qrs/{plateId}", Plate.newPlateId())
                 .then()
@@ -2196,11 +2196,11 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_fetch_submission_qr_if_plate_not_bound() {
         PreparedQrResponse response = setupApi.registerWithQr(rEmail(), rPassword());
-        QrApi.deleteQrs(response.getJwt(), response.getQrId());
+        QrApi.deleteQrs(response.jwt(), response.qrId());
 
-        QErrorResponse error = BaseApiTest.given(response.getJwt())
+        QErrorResponse error = BaseApiTest.given(response.jwt())
                 .when()
-                .get("/qrs/submission-qrs/{plateId}", response.getPlateId())
+                .get("/qrs/submission-qrs/{plateId}", response.plateId())
                 .then()
                 .statusCode(409)
                 .extract()
@@ -2211,12 +2211,12 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void normal_members_should_fail_fetch_submission_qr_if_app_is_inactive() {
         PreparedQrResponse response = setupApi.registerWithQr(rEmail(), rPassword());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
-        AppApi.deactivateApp(response.getJwt(), response.getAppId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.deactivateApp(response.jwt(), response.appId());
 
         QErrorResponse error = BaseApiTest.given(memberResponse.getJwt())
                 .when()
-                .get("/qrs/submission-qrs/{plateId}", response.getPlateId())
+                .get("/qrs/submission-qrs/{plateId}", response.plateId())
                 .then()
                 .statusCode(409)
                 .extract()
@@ -2227,32 +2227,32 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_fetch_submission_qr_even_if_deactivated() {
         PreparedQrResponse response = setupApi.registerWithQr(rEmail(), rPassword());
-        AppApi.deactivateApp(response.getJwt(), response.getAppId());
-        QrApi.fetchSubmissionQr(response.getJwt(), response.getPlateId());
+        AppApi.deactivateApp(response.jwt(), response.appId());
+        QrApi.fetchSubmissionQr(response.jwt(), response.plateId());
     }
 
     @Test
     public void should_fail_fetch_submission_qr_if_qr_inactive() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        QrApi.deactivate(response.getJwt(), response.getQrId());
-        assertError(() -> QrApi.fetchQrSummaryRaw(response.getJwt(), response.getQrId()), QR_NOT_ACTIVE);
+        QrApi.deactivate(response.jwt(), response.qrId());
+        assertError(() -> QrApi.fetchQrSummaryRaw(response.jwt(), response.qrId()), QR_NOT_ACTIVE);
     }
 
     @Test
     public void should_fail_fetch_submission_qr_if_group_inactive() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        GroupApi.createGroup(response.getJwt(), response.getAppId());
-        GroupApi.deactivateGroup(response.getJwt(), response.getDefaultGroupId());
-        assertError(() -> QrApi.fetchQrSummaryRaw(response.getJwt(), response.getQrId()), GROUP_NOT_ACTIVE);
+        GroupApi.createGroup(response.jwt(), response.appId());
+        GroupApi.deactivateGroup(response.jwt(), response.defaultGroupId());
+        assertError(() -> QrApi.fetchQrSummaryRaw(response.jwt(), response.qrId()), GROUP_NOT_ACTIVE);
     }
 
     @Test
     public void should_fetch_listed_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        QViewableListQr listQr = QrApi.fetchListedQr(response.getJwt(), response.getQrId());
+        QViewableListQr listQr = QrApi.fetchListedQr(response.jwt(), response.qrId());
 
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         assertEquals(qr.getAppId(), listQr.getAppId());
         assertEquals(qr.getGroupId(), listQr.getGroupId());
         assertEquals(qr.getId(), listQr.getId());
@@ -2267,16 +2267,16 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fetch_listed_qr_with_attribute_values() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(appResponse.getJwt(), appResponse.getAppId(), control);
+        AppApi.updateAppControls(appResponse.jwt(), appResponse.appId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).pcListEligible(true).type(CONTROL_LAST)
-                .pageId(appResponse.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(appResponse.getJwt(), appResponse.getAppId(), attribute);
+                .pageId(appResponse.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(appResponse.jwt(), appResponse.appId(), attribute);
 
-        CreateQrResponse qrResponse = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
         NumberInputAnswer numberInputAnswer = rAnswer(control);
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse.getQrId(), appResponse.getHomePageId(), numberInputAnswer);
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse.getQrId(), appResponse.homePageId(), numberInputAnswer);
 
-        QViewableListQr listQr = QrApi.fetchListedQr(appResponse.getJwt(), qrResponse.getQrId());
+        QViewableListQr listQr = QrApi.fetchListedQr(appResponse.jwt(), qrResponse.getQrId());
         assertTrue(listQr.getAttributeDisplayValues().containsKey(attribute.getId()));
         assertEquals(numberInputAnswer.getNumber(),
                 ((NumberDisplayValue) listQr.getAttributeDisplayValues().get(attribute.getId())).getNumber());
@@ -2286,17 +2286,17 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fetch_listed_qr_with_only_summary_eligible_attribute_values() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(appResponse.getJwt(), appResponse.getAppId(), control);
+        AppApi.updateAppControls(appResponse.jwt(), appResponse.appId(), control);
         Attribute summaryEligibleAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).pcListEligible(true)
-                .type(CONTROL_LAST).pageId(appResponse.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+                .type(CONTROL_LAST).pageId(appResponse.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
         Attribute summaryNonEligibleAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).pcListEligible(false)
-                .type(CONTROL_LAST).pageId(appResponse.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(appResponse.getJwt(), appResponse.getAppId(), summaryEligibleAttribute, summaryNonEligibleAttribute);
+                .type(CONTROL_LAST).pageId(appResponse.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(appResponse.jwt(), appResponse.appId(), summaryEligibleAttribute, summaryNonEligibleAttribute);
 
-        CreateQrResponse qrResponse = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
-        SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse.getQrId(), appResponse.getHomePageId(), rAnswer(control));
+        CreateQrResponse qrResponse = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
+        SubmissionApi.newSubmission(appResponse.jwt(), qrResponse.getQrId(), appResponse.homePageId(), rAnswer(control));
 
-        QViewableListQr listQr = QrApi.fetchListedQr(appResponse.getJwt(), qrResponse.getQrId());
+        QViewableListQr listQr = QrApi.fetchListedQr(appResponse.jwt(), qrResponse.getQrId());
         assertTrue(listQr.getAttributeDisplayValues().containsKey(summaryEligibleAttribute.getId()));
         assertFalse(listQr.getAttributeDisplayValues().containsKey(summaryNonEligibleAttribute.getId()));
     }
@@ -2304,9 +2304,9 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_fetch_listed_qr_if_no_permission() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rEmail(), rPassword());
-        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.getJwt(), AS_GROUP_MEMBER);
-        CreateQrResponse qrResponse = QrApi.createQr(loginResponse.getJwt(), createAppResponse.getDefaultGroupId());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateAppResponse createAppResponse = AppApi.createApp(loginResponse.jwt(), AS_GROUP_MEMBER);
+        CreateQrResponse qrResponse = QrApi.createQr(loginResponse.jwt(), createAppResponse.getDefaultGroupId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
 
         assertError(() -> QrApi.fetchListedQrRaw(memberResponse.getJwt(), qrResponse.getQrId()), ACCESS_DENIED);
     }
@@ -2315,7 +2315,7 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fetch_qr_base_setting() {
         PreparedQrResponse response = setupApi.registerWithQr();
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(DIRECT_INPUT).manualInput(true).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         UpdateQrBaseSettingCommand command = UpdateQrBaseSettingCommand.builder()
                 .name(rQrName())
@@ -2325,10 +2325,10 @@ class QrControllerApiTest extends BaseApiTest {
                 .geolocation(rGeolocation())
                 .customId(rCustomId())
                 .build();
-        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), command);
+        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), command);
 
-        QQrBaseSetting qrBaseSetting = QrApi.fetchQrBaseSetting(response.getJwt(), response.getQrId());
-        QR qr = qrRepository.byId(response.getQrId());
+        QQrBaseSetting qrBaseSetting = QrApi.fetchQrBaseSetting(response.jwt(), response.qrId());
+        QR qr = qrRepository.byId(response.qrId());
         assertEquals(qr.getName(), qrBaseSetting.getName());
         assertEquals(qr.getDescription(), qrBaseSetting.getDescription());
         assertEquals(qr.getHeaderImage(), qrBaseSetting.getHeaderImage());
@@ -2340,9 +2340,9 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fetch_qr_summary() {
         PreparedQrResponse qrResponse = setupApi.registerWithQr();
-        QQrSummary qQrSummary = QrApi.fetchQrSummary(qrResponse.getJwt(), qrResponse.getQrId());
+        QQrSummary qQrSummary = QrApi.fetchQrSummary(qrResponse.jwt(), qrResponse.qrId());
 
-        QR qr = qrRepository.byId(qrResponse.getQrId());
+        QR qr = qrRepository.byId(qrResponse.qrId());
         assertEquals(qr.getName(), qQrSummary.getName());
         assertEquals(qr.getAppId(), qQrSummary.getAppId());
         assertEquals(qr.getGroupId(), qQrSummary.getGroupId());
@@ -2354,14 +2354,14 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_fetch_qr_summary_if_inactive() {
         PreparedQrResponse qrResponse = setupApi.registerWithQr();
-        QrApi.deactivate(qrResponse.getJwt(), qrResponse.getQrId());
-        assertError(() -> QrApi.fetchQrSummaryRaw(qrResponse.getJwt(), qrResponse.getQrId()), QR_NOT_ACTIVE);
+        QrApi.deactivate(qrResponse.jwt(), qrResponse.qrId());
+        assertError(() -> QrApi.fetchQrSummaryRaw(qrResponse.jwt(), qrResponse.qrId()), QR_NOT_ACTIVE);
     }
 
     @Test
     public void should_list_qr_submissions_for_submitter_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse anotherMember = MemberApi.createMemberAndLogin(response.getJwt());
+        CreateMemberResponse anotherMember = MemberApi.createMemberAndLogin(response.jwt());
         FSingleLineTextControl control1 = defaultSingleLineTextControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
         Page page1 = defaultPageBuilder().controls(newArrayList(control1))
@@ -2372,18 +2372,18 @@ class QrControllerApiTest extends BaseApiTest {
         Page page2 = defaultPageBuilder().controls(newArrayList(control2))
                 .setting(defaultPageSettingBuilder().permission(AS_TENANT_MEMBER).build()).build();
 
-        AppApi.updateAppPages(response.getJwt(), response.getAppId(), page1, page2);
+        AppApi.updateAppPages(response.jwt(), response.appId(), page1, page2);
 
         IntStream.range(1, 11)
-                .forEach(value -> SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), page1.getId(), rAnswer(control1)));
+                .forEach(value -> SubmissionApi.newSubmission(response.jwt(), response.qrId(), page1.getId(), rAnswer(control1)));
         IntStream.range(1, 11)
-                .forEach(value -> SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), page2.getId(), rAnswer(control2)));
+                .forEach(value -> SubmissionApi.newSubmission(response.jwt(), response.qrId(), page2.getId(), rAnswer(control2)));
         IntStream.range(1, 2)
-                .forEach(value -> SubmissionApi.newSubmission(anotherMember.getJwt(), response.getQrId(), page2.getId(), rAnswer(control2)));
+                .forEach(value -> SubmissionApi.newSubmission(anotherMember.getJwt(), response.qrId(), page2.getId(), rAnswer(control2)));
         SingleLineTextAnswer lastAnswer = rAnswer(control1);
-        String lastSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), page1.getId(), lastAnswer);
+        String lastSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), page1.getId(), lastAnswer);
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(),
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(SUBMITTER_SUBMISSION).pageId(null).pageIndex(1).pageSize(10).build());
         assertEquals(10, submissions.getData().size());
         Set<String> memberIds = submissions.getData().stream().map(QListSubmission::getCreatedBy).collect(toSet());
@@ -2395,12 +2395,12 @@ class QrControllerApiTest extends BaseApiTest {
 
         QListSubmission firstSubmission = submissions.getData().get(0);
         assertEquals(lastSubmissionId, firstSubmission.getId());
-        assertEquals(response.getAppId(), firstSubmission.getAppId());
-        assertEquals(response.getMemberId(), firstSubmission.getCreatedBy());
-        assertEquals(response.getDefaultGroupId(), firstSubmission.getGroupId());
+        assertEquals(response.appId(), firstSubmission.getAppId());
+        assertEquals(response.memberId(), firstSubmission.getCreatedBy());
+        assertEquals(response.defaultGroupId(), firstSubmission.getGroupId());
         assertEquals(page1.getId(), firstSubmission.getPageId());
-        assertEquals(response.getPlateId(), firstSubmission.getPlateId());
-        assertEquals(response.getQrId(), firstSubmission.getQrId());
+        assertEquals(response.plateId(), firstSubmission.getPlateId());
+        assertEquals(response.qrId(), firstSubmission.getQrId());
         assertEquals(NONE, firstSubmission.getApprovalStatus());
         assertNotNull(firstSubmission.getCreatedAt());
         assertEquals(1, firstSubmission.getDisplayAnswers().size());
@@ -2412,10 +2412,10 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(),
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(ALL_SUBMIT_HISTORY).pageId(null).pageIndex(1).pageSize(30).build());
 
         assertEquals(submissionId, submissions.getData().get(0).getId());
@@ -2429,15 +2429,15 @@ class QrControllerApiTest extends BaseApiTest {
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
         PageSetting pageSetting = defaultPageSettingBuilder().approvalSetting(
                 defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(),
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(TO_BE_APPROVED).pageId(null).pageIndex(1).pageSize(30).build());
         assertEquals(submissionId, submissions.getData().get(0).getId());
 
-        SubmissionApi.approveSubmission(response.getJwt(), submissionId, true);
-        PagedList<QListSubmission> updatedSubmissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(),
+        SubmissionApi.approveSubmission(response.jwt(), submissionId, true);
+        PagedList<QListSubmission> updatedSubmissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(TO_BE_APPROVED).pageId(null).pageIndex(1).pageSize(30).build());
         assertEquals(0, updatedSubmissions.getData().size());
     }
@@ -2449,11 +2449,11 @@ class QrControllerApiTest extends BaseApiTest {
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
         FSingleLineTextControl nonEligibleControl = defaultSingleLineTextControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().submissionSummaryEligible(false).build()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), eligibleControl, nonEligibleControl);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(eligibleControl),
+        AppApi.updateAppControls(response.jwt(), response.appId(), eligibleControl, nonEligibleControl);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(eligibleControl),
                 rAnswer(nonEligibleControl));
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(),
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(ALL_SUBMIT_HISTORY).pageId(null).pageIndex(1).pageSize(30).build());
 
         QListSubmission qListSubmission = submissions.getData().get(0);
@@ -2465,18 +2465,18 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void managers_can_view_all_control_answers_even_if_no_permission_to_submit() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse groupManager = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), groupManager.getMemberId());
+        CreateMemberResponse groupManager = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), groupManager.getMemberId());
 
         FSingleLineTextControl permissionedControl = defaultSingleLineTextControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
         FSingleLineTextControl nonPermissionedControl = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_APP)
                 .fillableSetting(defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), permissionedControl, nonPermissionedControl);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(permissionedControl),
+        AppApi.updateAppControls(response.jwt(), response.appId(), permissionedControl, nonPermissionedControl);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(permissionedControl),
                 rAnswer(nonPermissionedControl));
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(groupManager.getJwt(), response.getQrId(),
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(groupManager.getJwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(ALL_SUBMIT_HISTORY).pageId(null).pageIndex(1).pageSize(30).build());
 
         QListSubmission qListSubmission = submissions.getData().get(0);
@@ -2490,17 +2490,17 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         Page page1 = defaultPage();
         Page page2 = defaultPage();
-        AppApi.updateAppPages(response.getJwt(), response.getAppId(), page1, page2);
+        AppApi.updateAppPages(response.jwt(), response.appId(), page1, page2);
 
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), page1.getId());
-        String submission2Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), page2.getId());
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), page1.getId());
+        String submission2Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), page2.getId());
         ListQrSubmissionsQuery queryCommand = ListQrSubmissionsQuery.builder()
                 .type(ALL_SUBMIT_HISTORY)
                 .pageId(null)
                 .pageIndex(1)
                 .pageSize(30)
                 .build();
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         Set<String> submissionIds = submissions.getData().stream().map(QListSubmission::getId).collect(toSet());
         assertTrue(submissionIds.contains(submission1Id));
         assertTrue(submissionIds.contains(submission2Id));
@@ -2511,17 +2511,17 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         Page page1 = defaultPage();
         Page page2 = defaultPage();
-        AppApi.updateAppPages(response.getJwt(), response.getAppId(), page1, page2);
+        AppApi.updateAppPages(response.jwt(), response.appId(), page1, page2);
 
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), page1.getId());
-        String submission2Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), page2.getId());
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), page1.getId());
+        String submission2Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), page2.getId());
         ListQrSubmissionsQuery queryCommand = ListQrSubmissionsQuery.builder()
                 .type(ALL_SUBMIT_HISTORY)
                 .pageId(page1.getId())
                 .pageIndex(1)
                 .pageSize(30)
                 .build();
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         Set<String> submissionIds = submissions.getData().stream().map(QListSubmission::getId).collect(toSet());
         assertTrue(submissionIds.contains(submission1Id));
         assertFalse(submissionIds.contains(submission2Id));
@@ -2530,10 +2530,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qr_submissions_with_created_by() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
 
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
-        String submission2Id = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submission2Id = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
 
         ListQrSubmissionsQuery queryCommand = ListQrSubmissionsQuery.builder()
                 .type(ALL_SUBMIT_HISTORY)
@@ -2542,7 +2542,7 @@ class QrControllerApiTest extends BaseApiTest {
                 .pageSize(30)
                 .build();
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         Set<String> submissionIds = submissions.getData().stream().map(QListSubmission::getId).collect(toSet());
         assertFalse(submissionIds.contains(submission1Id));
         assertTrue(submissionIds.contains(submission2Id));
@@ -2552,23 +2552,23 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qr_submissions_with_control_option_filters() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FCheckboxControl control = defaultCheckboxControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         String answer1OptionId = control.getOptions().get(0).getId();
         CheckboxAnswer answer1 = rAnswerBuilder(control).optionIds(newArrayList(answer1OptionId)).build();
         CheckboxAnswer answer2 = rAnswerBuilder(control).optionIds(newArrayList(control.getOptions().get(1).getId())).build();
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer1);
-        String submission2Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer2);
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer1);
+        String submission2Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer2);
 
         ListQrSubmissionsQuery queryCommand = ListQrSubmissionsQuery.builder()
                 .type(ALL_SUBMIT_HISTORY)
-                .pageId(response.getHomePageId())
+                .pageId(response.homePageId())
                 .filterables(Map.of(control.getId(), Set.of(answer1OptionId)))
                 .pageIndex(1)
                 .pageSize(30)
                 .build();
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         Set<String> submissionIds = submissions.getData().stream().map(QListSubmission::getId).collect(toSet());
         assertTrue(submissionIds.contains(submission1Id));
         assertFalse(submissionIds.contains(submission2Id));
@@ -2582,23 +2582,23 @@ class QrControllerApiTest extends BaseApiTest {
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
         PageSetting pageSetting = defaultPageSettingBuilder().approvalSetting(
                 defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
 
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        SubmissionApi.approveSubmission(response.getJwt(), submission1Id, true);
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.approveSubmission(response.jwt(), submission1Id, true);
 
-        String submission2Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        SubmissionApi.approveSubmission(response.getJwt(), submission2Id, false);
+        String submission2Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.approveSubmission(response.jwt(), submission2Id, false);
 
         ListQrSubmissionsQuery queryCommand = ListQrSubmissionsQuery.builder()
                 .type(ALL_SUBMIT_HISTORY)
-                .pageId(response.getHomePageId())
+                .pageId(response.homePageId())
                 .filterables(Map.of("approval", Set.of("YES")))
                 .pageIndex(1)
                 .pageSize(30)
                 .build();
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         Set<String> submissionIds = submissions.getData().stream().map(QListSubmission::getId).collect(toSet());
         assertTrue(submissionIds.contains(submission1Id));
         assertFalse(submissionIds.contains(submission2Id));
@@ -2607,10 +2607,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_qr_submissions_with_sort_by_created_at() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
 
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
-        String submission2Id = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submission2Id = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
 
         ListQrSubmissionsQuery queryCommand = ListQrSubmissionsQuery.builder()
                 .type(ALL_SUBMIT_HISTORY)
@@ -2620,7 +2620,7 @@ class QrControllerApiTest extends BaseApiTest {
                 .pageSize(30)
                 .build();
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         assertEquals(submission1Id, submissions.getData().get(0).getId());
         assertEquals(submission2Id, submissions.getData().get(1).getId());
     }
@@ -2629,23 +2629,23 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qr_submissions_with_sort_by_control_answer() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(control).number(10d).build());
-        String submission2Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        String submission2Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(control).number(20d).build());
 
         ListQrSubmissionsQuery queryCommand = ListQrSubmissionsQuery.builder()
                 .type(ALL_SUBMIT_HISTORY)
-                .pageId(response.getHomePageId())
+                .pageId(response.homePageId())
                 .sortedBy(control.getId())
                 .ascSort(false)
                 .pageIndex(1)
                 .pageSize(30)
                 .build();
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         assertEquals(submission2Id, submissions.getData().get(0).getId());
         assertEquals(submission1Id, submissions.getData().get(1).getId());
     }
@@ -2654,11 +2654,11 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qr_submissions_with_search() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FMobileNumberControl control = defaultMobileControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(control).mobileNumber("15111111111").build());
-        String submission2Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        String submission2Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(control).mobileNumber("15222222222").build());
 
         ListQrSubmissionsQuery queryCommand = ListQrSubmissionsQuery.builder()
@@ -2668,7 +2668,7 @@ class QrControllerApiTest extends BaseApiTest {
                 .pageSize(30)
                 .build();
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         Set<String> submissionIds = submissions.getData().stream().map(QListSubmission::getId).collect(toSet());
         assertTrue(submissionIds.contains(submission1Id));
         assertFalse(submissionIds.contains(submission2Id));
@@ -2678,17 +2678,17 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_list_qr_submissions_with_date_range() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        String submission1Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        String submission1Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
         Submission submission1 = submissionRepository.byId(submission1Id);
         ReflectionTestUtils.setField(submission1, "createdAt", LocalDate.of(2011, 3, 6).atStartOfDay(systemDefault()).toInstant());
         submissionRepository.save(submission1);
 
-        String submission2Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        String submission2Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
         Submission submission2 = submissionRepository.byId(submission2Id);
         ReflectionTestUtils.setField(submission2, "createdAt", LocalDate.of(2011, 4, 6).atStartOfDay(systemDefault()).toInstant());
         submissionRepository.save(submission2);
 
-        String submission3Id = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        String submission3Id = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
         Submission submission3 = submissionRepository.byId(submission3Id);
         ReflectionTestUtils.setField(submission3, "createdAt", LocalDate.of(2011, 5, 6).atStartOfDay(systemDefault()).toInstant());
         submissionRepository.save(submission3);
@@ -2701,7 +2701,7 @@ class QrControllerApiTest extends BaseApiTest {
                 .pageSize(30)
                 .build();
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.getJwt(), response.getQrId(), queryCommand);
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(response.jwt(), response.qrId(), queryCommand);
         Set<String> submissionIds = submissions.getData().stream().map(QListSubmission::getId).collect(toSet());
         assertTrue(submissionIds.contains(submission2Id));
         assertFalse(submissionIds.contains(submission1Id));
@@ -2711,8 +2711,8 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_list_submitter_submissions_if_not_contain_viewable_page() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
-        CreateMemberResponse tenantMember = MemberApi.createMemberAndLogin(response.getJwt());
+        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        CreateMemberResponse tenantMember = MemberApi.createMemberAndLogin(response.jwt());
         FSingleLineTextControl control1 = defaultSingleLineTextControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
         Page page1 = defaultPageBuilder().controls(newArrayList(control1))
@@ -2723,16 +2723,16 @@ class QrControllerApiTest extends BaseApiTest {
         Page page2 = defaultPageBuilder().controls(newArrayList(control2))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
 
-        AppApi.updateAppPages(response.getJwt(), response.getAppId(), page1, page2);
+        AppApi.updateAppPages(response.jwt(), response.appId(), page1, page2);
 
-        String submissionId = SubmissionApi.newSubmission(tenantMember.getJwt(), response.getQrId(), page1.getId(), rAnswer(control1));
+        String submissionId = SubmissionApi.newSubmission(tenantMember.getJwt(), response.qrId(), page1.getId(), rAnswer(control1));
 
-        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(tenantMember.getJwt(), response.getQrId(),
+        PagedList<QListSubmission> submissions = QrApi.listQrSubmissions(tenantMember.getJwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(SUBMITTER_SUBMISSION).pageId(page1.getId()).pageIndex(1).pageSize(30).build());
         assertEquals(1, submissions.getData().size());
         assertEquals(submissionId, submissions.getData().get(0).getId());
 
-        assertError(() -> QrApi.listQrSubmissionsRaw(tenantMember.getJwt(), response.getQrId(),
+        assertError(() -> QrApi.listQrSubmissionsRaw(tenantMember.getJwt(), response.qrId(),
                         ListQrSubmissionsQuery.builder().type(SUBMITTER_SUBMISSION).pageId(page2.getId()).pageIndex(1).pageSize(10).build()),
                 NO_VIEWABLE_PERMISSION_FOR_PAGE);
     }
@@ -2740,10 +2740,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_list_history_submissions_if_no_managable_pages() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
-        CreateMemberResponse tenantMember = MemberApi.createMemberAndLogin(response.getJwt());
-        CreateMemberResponse groupManager = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), groupManager.getMemberId());
+        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        CreateMemberResponse tenantMember = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse groupManager = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), groupManager.getMemberId());
         FSingleLineTextControl control1 = defaultSingleLineTextControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
         Page page1 = defaultPageBuilder().controls(newArrayList(control1))
@@ -2754,15 +2754,15 @@ class QrControllerApiTest extends BaseApiTest {
         Page page2 = defaultPageBuilder().controls(newArrayList(control2))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_APP).build()).build();
 
-        AppApi.updateAppPages(response.getJwt(), response.getAppId(), page1, page2);
+        AppApi.updateAppPages(response.jwt(), response.appId(), page1, page2);
 
-        QrApi.listQrSubmissions(response.getJwt(), response.getQrId(),
+        QrApi.listQrSubmissions(response.jwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(ALL_SUBMIT_HISTORY).pageId(null).pageIndex(1).pageSize(30).build());
-        QrApi.listQrSubmissions(groupManager.getJwt(), response.getQrId(),
+        QrApi.listQrSubmissions(groupManager.getJwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(ALL_SUBMIT_HISTORY).pageId(null).pageIndex(1).pageSize(30).build());
-        assertError(() -> QrApi.listQrSubmissionsRaw(tenantMember.getJwt(), response.getQrId(),
+        assertError(() -> QrApi.listQrSubmissionsRaw(tenantMember.getJwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(ALL_SUBMIT_HISTORY).pageId(null).pageIndex(1).pageSize(10).build()), NO_MANAGABLE_PAGES);
-        assertError(() -> QrApi.listQrSubmissionsRaw(groupManager.getJwt(), response.getQrId(),
+        assertError(() -> QrApi.listQrSubmissionsRaw(groupManager.getJwt(), response.qrId(),
                         ListQrSubmissionsQuery.builder().type(ALL_SUBMIT_HISTORY).pageId(page2.getId()).pageIndex(1).pageSize(10).build()),
                 NO_MANAGABLE_PERMISSION_FOR_PAGE);
     }
@@ -2770,10 +2770,10 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_list_to_be_approved_submissions_if_no_approvable_pages() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
-        CreateMemberResponse tenantMember = MemberApi.createMemberAndLogin(response.getJwt());
-        CreateMemberResponse groupManager = MemberApi.createMemberAndLogin(response.getJwt());
-        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), groupManager.getMemberId());
+        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        CreateMemberResponse tenantMember = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse groupManager = MemberApi.createMemberAndLogin(response.jwt());
+        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), groupManager.getMemberId());
         FSingleLineTextControl control1 = defaultSingleLineTextControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().submissionSummaryEligible(true).build()).build();
         Page page1 = defaultPageBuilder().controls(newArrayList(control1)).setting(defaultPageSettingBuilder().permission(AS_TENANT_MEMBER)
@@ -2784,15 +2784,15 @@ class QrControllerApiTest extends BaseApiTest {
         Page page2 = defaultPageBuilder().controls(newArrayList(control2)).setting(defaultPageSettingBuilder().permission(AS_TENANT_MEMBER)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build()).build();
 
-        AppApi.updateAppPages(response.getJwt(), response.getAppId(), page1, page2);
+        AppApi.updateAppPages(response.jwt(), response.appId(), page1, page2);
 
-        QrApi.listQrSubmissions(response.getJwt(), response.getQrId(),
+        QrApi.listQrSubmissions(response.jwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(TO_BE_APPROVED).pageId(null).pageIndex(1).pageSize(30).build());
-        QrApi.listQrSubmissions(groupManager.getJwt(), response.getQrId(),
+        QrApi.listQrSubmissions(groupManager.getJwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(TO_BE_APPROVED).pageId(null).pageIndex(1).pageSize(30).build());
-        assertError(() -> QrApi.listQrSubmissionsRaw(tenantMember.getJwt(), response.getQrId(),
+        assertError(() -> QrApi.listQrSubmissionsRaw(tenantMember.getJwt(), response.qrId(),
                 ListQrSubmissionsQuery.builder().type(TO_BE_APPROVED).pageId(null).pageIndex(1).pageSize(10).build()), NO_APPROVABLE_PAGES);
-        assertError(() -> QrApi.listQrSubmissionsRaw(groupManager.getJwt(), response.getQrId(),
+        assertError(() -> QrApi.listQrSubmissionsRaw(groupManager.getJwt(), response.qrId(),
                         ListQrSubmissionsQuery.builder().type(TO_BE_APPROVED).pageId(page2.getId()).pageIndex(1).pageSize(10).build()),
                 NO_APPROVABLE_PERMISSION_FOR_PAGE);
     }
@@ -2800,37 +2800,37 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fetch_bind_plate_info() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
-        App app = appRepository.byId(response.getAppId());
-        String newGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
+        App app = appRepository.byId(response.appId());
+        String newGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
 
-        QBindPlateInfo bindPlateInfo = QrApi.fetchBindPlateInfo(response.getJwt(), plateId);
+        QBindPlateInfo bindPlateInfo = QrApi.fetchBindPlateInfo(response.jwt(), plateId);
         assertEquals(plateId, bindPlateInfo.getPlateId());
-        assertEquals(response.getAppId(), bindPlateInfo.getAppId());
+        assertEquals(response.appId(), bindPlateInfo.getAppId());
         assertEquals(app.getName(), bindPlateInfo.getAppName());
         assertEquals(app.homePageId(), bindPlateInfo.getHomePageId());
         assertEquals(app.instanceDesignation(), bindPlateInfo.getInstanceDesignation());
         assertEquals(app.groupDesignation(), bindPlateInfo.getGroupDesignation());
-        assertEquals(response.getMemberId(), bindPlateInfo.getMemberId());
+        assertEquals(response.memberId(), bindPlateInfo.getMemberId());
         assertEquals(2, bindPlateInfo.getSelectableGroups().size());
-        assertTrue(bindPlateInfo.getSelectableGroups().containsKey(response.getDefaultGroupId()));
+        assertTrue(bindPlateInfo.getSelectableGroups().containsKey(response.defaultGroupId()));
         assertTrue(bindPlateInfo.getSelectableGroups().containsKey(newGroupId));
     }
 
     @Test
     public void group_manager_should_fetch_bind_plate_info() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
-        App app = appRepository.byId(response.getAppId());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
-        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
-        GroupApi.addGroupManagers(response.getJwt(), groupId, memberResponse.getMemberId());
+        App app = appRepository.byId(response.appId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
+        GroupApi.addGroupManagers(response.jwt(), groupId, memberResponse.getMemberId());
 
         QBindPlateInfo bindPlateInfo = QrApi.fetchBindPlateInfo(memberResponse.getJwt(), plateId);
         assertEquals(plateId, bindPlateInfo.getPlateId());
-        assertEquals(response.getAppId(), bindPlateInfo.getAppId());
+        assertEquals(response.appId(), bindPlateInfo.getAppId());
         assertEquals(app.getName(), bindPlateInfo.getAppName());
         assertEquals(memberResponse.getMemberId(), bindPlateInfo.getMemberId());
         assertEquals(1, bindPlateInfo.getSelectableGroups().size());
@@ -2840,9 +2840,9 @@ class QrControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_fetch_bind_plate_info_if_no_managable_groups() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String plateBatchId = PlateBatchApi.createPlateBatch(response.getJwt(), response.getAppId(), 10);
+        String plateBatchId = PlateBatchApi.createPlateBatch(response.jwt(), response.appId(), 10);
         String plateId = plateRepository.allPlateIdsUnderPlateBatch(plateBatchId).stream().findAny().get();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
 
         assertError(() -> QrApi.fetchBindPlateInfoRaw(memberResponse.getJwt(), plateId), ACCESS_DENIED);
     }
@@ -2851,7 +2851,7 @@ class QrControllerApiTest extends BaseApiTest {
     public void should_fail_fetch_bind_plate_info_if_already_bound() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        assertError(() -> QrApi.fetchBindPlateInfoRaw(response.getJwt(), response.getPlateId()), PLATE_ALREADY_BOUND);
+        assertError(() -> QrApi.fetchBindPlateInfoRaw(response.jwt(), response.plateId()), PLATE_ALREADY_BOUND);
     }
 
     @Test
@@ -2859,7 +2859,7 @@ class QrControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FRadioControl radioControl = defaultRadioControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl, radioControl);
+        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl, radioControl);
 
         Attribute fixedAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(FIXED).fixedValue("FIXED_VALUE")
                 .build();
@@ -2871,10 +2871,10 @@ class QrControllerApiTest extends BaseApiTest {
         Attribute instanceGroupAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_GROUP).range(NO_LIMIT)
                 .build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(NO_LIMIT).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+                .pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
         Attribute radioAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(NO_LIMIT).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(radioControl.getId()).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), fixedAttribute, instanceNameAttribute, instanceSubmitCountAttribute,
+                .pageId(response.homePageId()).controlId(radioControl.getId()).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), fixedAttribute, instanceNameAttribute, instanceSubmitCountAttribute,
                 instanceCreatorAttribute, instanceGroupAttribute, checkboxAttribute, radioAttribute);
 
         SingleRowTextControl singleRowTextControl = SingleRowTextControl.builder()
@@ -3008,7 +3008,7 @@ class QrControllerApiTest extends BaseApiTest {
                 .qrRows(3)
                 .build();
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         PlateSetting plateSetting = setting.getPlateSetting();
@@ -3021,19 +3021,19 @@ class QrControllerApiTest extends BaseApiTest {
         plateSetting.getControls().add(groupSingleRowTextControl);
         plateSetting.getControls().add(checkBoxSingleRowTextControl);
         plateSetting.getControls().add(radioBoxSingleRowTextControl);
-        AppApi.updateAppSetting(response.getJwt(), appId, app.getVersion(), setting);
+        AppApi.updateAppSetting(response.jwt(), appId, app.getVersion(), setting);
         CheckboxAnswer checkboxAnswer = rAnswer(checkboxControl);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), checkboxAnswer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), checkboxAnswer);
 
-        ListPlateAttributeValuesQuery query = ListPlateAttributeValuesQuery.builder().appId(response.getAppId())
-                .qrIds(Set.of(response.getQrId())).build();
-        Map<String, Map<String, String>> attributeValues = QrApi.listPlateAttributeValues(response.getJwt(), query);
+        ListPlateAttributeValuesQuery query = ListPlateAttributeValuesQuery.builder().appId(response.appId())
+                .qrIds(Set.of(response.qrId())).build();
+        Map<String, Map<String, String>> attributeValues = QrApi.listPlateAttributeValues(response.jwt(), query);
 
-        QR qr = qrRepository.byId(response.getQrId());
-        Group group = groupRepository.byId(response.getDefaultGroupId());
-        Member member = memberRepository.byId(response.getMemberId());
+        QR qr = qrRepository.byId(response.qrId());
+        Group group = groupRepository.byId(response.defaultGroupId());
+        Member member = memberRepository.byId(response.memberId());
         assertEquals(1, attributeValues.size());
-        Map<String, String> qrAttributeValues = attributeValues.get(response.getQrId());
+        Map<String, String> qrAttributeValues = attributeValues.get(response.qrId());
         assertEquals(7, qrAttributeValues.size());
         assertEquals("FIXED_VALUE", qrAttributeValues.get(fixedAttribute.getId()));
         assertEquals(qr.getName(), qrAttributeValues.get(instanceNameAttribute.getId()));

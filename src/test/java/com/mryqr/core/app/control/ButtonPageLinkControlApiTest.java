@@ -28,9 +28,9 @@ public class ButtonPageLinkControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PButtonPageLinkControl control = defaultButtonPageLinkControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -41,8 +41,8 @@ public class ButtonPageLinkControlApiTest extends BaseApiTest {
 
         PageLink pageLink = PageLink.builder().id(newShortUuid()).type(PAGE).build();
         PButtonPageLinkControl control = defaultButtonPageLinkControlBuilder().links(newArrayList(pageLink)).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        App app = appRepository.byId(response.getAppId());
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -53,11 +53,11 @@ public class ButtonPageLinkControlApiTest extends BaseApiTest {
 
         PageLink pageLink = PageLink.builder().id(newShortUuid()).type(PAGE).pageId(Page.newPageId()).build();
         PButtonPageLinkControl control = defaultButtonPageLinkControlBuilder().links(newArrayList(pageLink)).build();
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 VALIDATION_LINK_PAGE_NOT_EXIST);
     }
 
@@ -70,11 +70,11 @@ public class ButtonPageLinkControlApiTest extends BaseApiTest {
         PageLink link2 = PageLink.builder().id(linkId).name(rPageLinkName()).type(EXTERNAL_URL).url(rUrl()).build();
         PButtonPageLinkControl control = defaultButtonPageLinkControlBuilder().links(newArrayList(link1, link2)).build();
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 PAGE_LINK_ID_DUPLICATED);
     }
 }

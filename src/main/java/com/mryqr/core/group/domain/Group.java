@@ -65,6 +65,10 @@ public class Group extends AggregateRoot {
         this.managers = department.getManagers().stream().distinct().collect(toImmutableList());
     }
 
+    public static String newGroupId() {
+        return "GRP" + newSnowflakeId();
+    }
+
     private void init(String name, String appId, User user) {
         this.name = name;
         this.appId = appId;
@@ -73,10 +77,6 @@ public class Group extends AggregateRoot {
         this.active = true;
         this.addOpsLog("新建", user);
         raiseEvent(new GroupCreatedEvent(this.getId(), this.getAppId(), user));
-    }
-
-    public static String newGroupId() {
-        return "GRP" + newSnowflakeId();
     }
 
     public void rename(String newName, User user) {

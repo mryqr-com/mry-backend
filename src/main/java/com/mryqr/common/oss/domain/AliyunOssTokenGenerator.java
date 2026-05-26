@@ -8,9 +8,9 @@ import com.aliyuncs.sts.model.v20150401.AssumeRoleRequest;
 import com.aliyuncs.sts.model.v20150401.AssumeRoleResponse.Credentials;
 import com.mryqr.common.properties.AliyunProperties;
 import com.mryqr.common.properties.CommonProperties;
-import com.mryqr.common.utils.MryObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,7 +22,7 @@ import static java.time.Instant.parse;
 @RequiredArgsConstructor
 public class AliyunOssTokenGenerator {
     private static final String ENDPOINT = "sts.aliyuncs.com";
-    private final MryObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
     private final AliyunProperties aliyunProperties;
     private final CommonProperties commonProperties;
     private IAcsClient acsClient;

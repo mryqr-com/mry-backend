@@ -4,7 +4,6 @@ import com.mryqr.common.properties.JwtProperties;
 import com.mryqr.common.security.IpJwtCookieUpdater;
 import com.mryqr.common.security.MdcFilter;
 import com.mryqr.common.tracing.MryTracingService;
-import com.mryqr.common.utils.MryObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +18,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.springframework.http.HttpMethod.*;
 
@@ -32,7 +32,7 @@ public class JwtWebSecurityConfiguration {
     private final JwtCookieFactory jwtCookieFactory;
     private final IpJwtCookieUpdater ipJwtCookieUpdater;
     private final JwtProperties jwtProperties;
-    private final MryObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
     private final MryTracingService mryTracingService;
 
     @Bean

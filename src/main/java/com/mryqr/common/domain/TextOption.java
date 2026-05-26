@@ -22,14 +22,11 @@ public class TextOption implements Identified {
     @NotBlank
     @ShortUuid
     private final String id;
-
-    @Size(max = MAX_GENERIC_NAME_LENGTH)
-    private String name;
-
     private final double numericalValue;
-
     @Color
     private final String color;
+    @Size(max = MAX_GENERIC_NAME_LENGTH)
+    private String name;
 
     public void correct() {
         if (isBlank(name)) {

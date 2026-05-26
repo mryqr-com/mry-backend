@@ -32,6 +32,10 @@ public class RadioAnswer extends Answer {
     @ShortUuid
     private String optionId;
 
+    public static RadioAnswerBuilder<?, ?> answerBuilder(FRadioControl control) {
+        return RadioAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -89,10 +93,6 @@ public class RadioAnswer extends Answer {
     protected Double doCalculateNumericalValue(Control control) {
         FRadioControl theControl = (FRadioControl) control;
         return theControl.numericalValueFor(optionId);
-    }
-
-    public static RadioAnswerBuilder<?, ?> answerBuilder(FRadioControl control) {
-        return RadioAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

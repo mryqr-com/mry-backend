@@ -32,6 +32,10 @@ public class SignatureAnswer extends Answer {
     @Valid
     private UploadedFile signature;
 
+    public static SignatureAnswer.SignatureAnswerBuilder<?, ?> answerBuilder(FSignatureControl control) {
+        return SignatureAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
 
@@ -79,10 +83,6 @@ public class SignatureAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
-    }
-
-    public static SignatureAnswer.SignatureAnswerBuilder<?, ?> answerBuilder(FSignatureControl control) {
-        return SignatureAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

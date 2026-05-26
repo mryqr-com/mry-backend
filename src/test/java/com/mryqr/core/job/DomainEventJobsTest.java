@@ -18,6 +18,7 @@ import com.mryqr.core.plate.domain.Plate;
 import com.mryqr.core.qr.domain.QR;
 import com.mryqr.core.qr.domain.QrCreatedEvent;
 import com.mryqr.core.tenant.domain.Tenant;
+import com.mryqr.support.PollingAssertion;
 import com.mryqr.utils.RandomTestFixture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -106,14 +107,18 @@ public class DomainEventJobsTest extends BaseApiTest {
 
         domainEventSender.send(event1);
         domainEventSender.send(event2);
-
-        StreamInfo.XInfoStream info = stringRedisTemplate.opsForStream().info(mryRedisProperties.domainEventStreamForTenant(ar1.getTenantId()));
-        assertTrue(info.streamLength() >= 2);
+        PollingAssertion.pollAssert().run(() -> {
+            StreamInfo.XInfoStream info = stringRedisTemplate.opsForStream().info(mryRedisProperties.domainEventStreamForTenant(ar1.getTenantId()));
+            assertTrue(info.streamLength() >= 2);
+        });
 
         domainEventJobs.removeOldDomainEventsFromRedis(1, false);
-        StreamInfo.XInfoStream updatedInfo = stringRedisTemplate.opsForStream()
-                .info(mryRedisProperties.domainEventStreamForTenant(ar1.getTenantId()));
-        assertEquals(1, updatedInfo.streamLength());
+
+        PollingAssertion.pollAssert().run(() -> {
+            StreamInfo.XInfoStream updatedInfo = stringRedisTemplate.opsForStream()
+                    .info(mryRedisProperties.domainEventStreamForTenant(ar1.getTenantId()));
+            assertEquals(1, updatedInfo.streamLength());
+        });
     }
 
     @Test
@@ -123,13 +128,17 @@ public class DomainEventJobsTest extends BaseApiTest {
 
         redisWebhookEventSender.send(event1);
         redisWebhookEventSender.send(event2);
-
-        StreamInfo.XInfoStream info = stringRedisTemplate.opsForStream().info(mryRedisProperties.getWebhookStream());
-        assertTrue(info.streamLength() >= 2);
+        PollingAssertion.pollAssert().run(() -> {
+            StreamInfo.XInfoStream info = stringRedisTemplate.opsForStream().info(mryRedisProperties.getWebhookStream());
+            assertTrue(info.streamLength() >= 2);
+        });
 
         domainEventJobs.removeOldWebhookEventsFromRedis(1, false);
-        StreamInfo.XInfoStream updatedInfo = stringRedisTemplate.opsForStream().info(mryRedisProperties.getWebhookStream());
-        assertEquals(1, updatedInfo.streamLength());
+
+        PollingAssertion.pollAssert().run(() -> {
+            StreamInfo.XInfoStream updatedInfo = stringRedisTemplate.opsForStream().info(mryRedisProperties.getWebhookStream());
+            assertEquals(1, updatedInfo.streamLength());
+        });
     }
 
     @Test
@@ -140,11 +149,16 @@ public class DomainEventJobsTest extends BaseApiTest {
         redisNotificationEventSender.send(event1);
         redisNotificationEventSender.send(event2);
 
-        StreamInfo.XInfoStream info = stringRedisTemplate.opsForStream().info(mryRedisProperties.getNotificationStream());
-        assertTrue(info.streamLength() >= 2);
+        PollingAssertion.pollAssert().run(() -> {
+            StreamInfo.XInfoStream info = stringRedisTemplate.opsForStream().info(mryRedisProperties.getNotificationStream());
+            assertTrue(info.streamLength() >= 2);
+        });
 
         domainEventJobs.removeOldNotificationEventsFromRedis(1, false);
-        StreamInfo.XInfoStream updatedInfo = stringRedisTemplate.opsForStream().info(mryRedisProperties.getNotificationStream());
-        assertEquals(1, updatedInfo.streamLength());
+
+        PollingAssertion.pollAssert().run(() -> {
+            StreamInfo.XInfoStream updatedInfo = stringRedisTemplate.opsForStream().info(mryRedisProperties.getNotificationStream());
+            assertEquals(1, updatedInfo.streamLength());
+        });
     }
 }

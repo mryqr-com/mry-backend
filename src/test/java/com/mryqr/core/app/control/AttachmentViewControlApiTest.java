@@ -22,9 +22,9 @@ public class AttachmentViewControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PAttachmentViewControl control = defaultAttachmentViewControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -35,11 +35,11 @@ public class AttachmentViewControlApiTest extends BaseApiTest {
 
         UploadedFile uploadedFile = rImageFile();
         PAttachmentViewControl control = defaultAttachmentViewControlBuilder().attachments(newArrayList(uploadedFile, uploadedFile)).build();
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 ATTACHMENT_ID_DUPLICATED);
     }
 }

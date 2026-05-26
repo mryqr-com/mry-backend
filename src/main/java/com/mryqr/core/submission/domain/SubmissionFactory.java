@@ -42,7 +42,7 @@ public class SubmissionFactory {
 
         User finalUser = page.requireLogin() ? user : ANONYMOUS_HUMAN_USER;//只有需要登录的页面才记录user
         PlatedQr platedQr = qrFactory.createPlatedQrFromTemplate(templateQr, app, finalUser);
-        QR qr = platedQr.getQr();
+        QR qr = platedQr.qr();
 
         Map<String, Answer> checkedAnswers = submissionDomainService.checkAnswers(answers, qr, page, app, permissions);
         Submission submission = new Submission(checkedAnswers, page.getId(), qr, app, referenceData, finalUser);
@@ -50,7 +50,7 @@ public class SubmissionFactory {
         return CreateSubmissionWithQrResult.builder()
                 .submission(submission)
                 .qr(qr)
-                .plate(platedQr.getPlate())
+                .plate(platedQr.plate())
                 .build();
     }
 

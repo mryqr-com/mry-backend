@@ -11,6 +11,10 @@ public class AssignmentIdValidator implements ConstraintValidator<AssignmentId, 
 
     private static final Pattern PATTERN = Pattern.compile("^ASM[0-9]{17,19}$");
 
+    public static boolean isAssignmentId(String assignmentId) {
+        return PATTERN.matcher(assignmentId).matches();
+    }
+
     @Override
     public void initialize(AssignmentId constraintAnnotation) {
     }
@@ -22,10 +26,6 @@ public class AssignmentIdValidator implements ConstraintValidator<AssignmentId, 
         }
 
         return isAssignmentId(assignmentId);
-    }
-
-    public static boolean isAssignmentId(String assignmentId) {
-        return PATTERN.matcher(assignmentId).matches();
     }
 
 }

@@ -2,24 +2,24 @@ package com.mryqr.common.notification.publish;
 
 import com.mryqr.common.event.DomainEvent;
 import com.mryqr.common.properties.MryRedisProperties;
-import com.mryqr.common.utils.MryObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class RedisNotificationEventSender {
-    private final MryObjectMapper mryObjectMapper;
+    private final ObjectMapper objectMapper;
     private final MryRedisProperties mryRedisProperties;
     private final StringRedisTemplate stringRedisTemplate;
 
     public void send(DomainEvent event) {
-        String eventString = mryObjectMapper.writeValueAsString(event);
+        String eventString = objectMapper.writeValueAsString(event);
         ObjectRecord<String, String> record = StreamRecords.newRecord()
                 .ofObject(eventString)
                 .withStreamKey(mryRedisProperties.getNotificationStream());

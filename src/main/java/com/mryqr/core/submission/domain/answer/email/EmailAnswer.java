@@ -31,6 +31,10 @@ public class EmailAnswer extends Answer {
     @Email
     private String email;
 
+    public static EmailAnswer.EmailAnswerBuilder<?, ?> answerBuilder(FEmailControl control) {
+        return EmailAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -77,10 +81,6 @@ public class EmailAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
-    }
-
-    public static EmailAnswer.EmailAnswerBuilder<?, ?> answerBuilder(FEmailControl control) {
-        return EmailAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

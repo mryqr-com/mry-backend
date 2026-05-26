@@ -15,13 +15,13 @@ public class MinMaxSetting {
     private final double min;
     private final double max;
 
+    public static MinMaxSetting minMaxOf(double min, double max) {
+        return MinMaxSetting.builder().min(min).max(max).build();
+    }
+
     public void validate() {
         if (min > max) {
             throw new MryException(MIN_GREATER_THAN_MAX, "最小值不能大于最大值。");
         }
-    }
-
-    public static MinMaxSetting minMaxOf(double min, double max) {
-        return MinMaxSetting.builder().min(min).max(max).build();
     }
 }

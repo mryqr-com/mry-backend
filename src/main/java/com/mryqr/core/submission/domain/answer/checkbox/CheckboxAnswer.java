@@ -43,6 +43,10 @@ public class CheckboxAnswer extends Answer {
     @Size(max = FCheckboxControl.MAX_OPTION_SIZE)
     private List<@ShortUuid String> optionIds;
 
+    public static CheckboxAnswer.CheckboxAnswerBuilder<?, ?> answerBuilder(FCheckboxControl control) {
+        return CheckboxAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -93,10 +97,6 @@ public class CheckboxAnswer extends Answer {
     protected Double doCalculateNumericalValue(Control control) {
         FCheckboxControl theControl = (FCheckboxControl) control;
         return theControl.numericalValueFor(optionIds);
-    }
-
-    public static CheckboxAnswer.CheckboxAnswerBuilder<?, ?> answerBuilder(FCheckboxControl control) {
-        return CheckboxAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

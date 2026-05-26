@@ -12,9 +12,7 @@ import com.mryqr.core.qr.domain.QR;
 import com.mryqr.core.submission.domain.Submission;
 import com.mryqr.core.submission.domain.SubmissionHouseKeeper;
 import com.mryqr.core.submission.domain.SubmissionRepository;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
@@ -34,7 +32,6 @@ import static com.mryqr.common.utils.MongoCriteriaUtils.*;
 import static com.mryqr.core.app.domain.attribute.AttributeStatisticRange.startAt;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static lombok.AccessLevel.PRIVATE;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.domain.Sort.Direction.ASC;
@@ -218,11 +215,11 @@ public class MongoSubmissionRepository extends MongoBaseRepository<Submission> i
 
         Result result = mongoTemplate.aggregate(aggregation, Submission.class, Result.class).getUniqueMappedResult();
 
-        if (result == null || result.getResult() == null) {
+        if (result == null || result.result() == null) {
             return null;
         }
 
-        return result.getResult();
+        return result.result();
     }
 
     @Override
@@ -377,10 +374,7 @@ public class MongoSubmissionRepository extends MongoBaseRepository<Submission> i
         throw new IllegalStateException("Attribute type[" + attribute.getType() + "] not supported.");
     }
 
-    @Value
     @Builder
-    @AllArgsConstructor(access = PRIVATE)
-    private static class Result {
-        Double result;
+    private record Result(Double result) {
     }
 }

@@ -18,20 +18,20 @@ public enum Permission {
         this.tier = tier;
     }
 
-    public boolean covers(Permission permission) {
-        return this.tier >= permission.tier;
-    }
-
-    public int getTier() {
-        return tier;
-    }
-
     public static Permission maxPermission(Permission... permissions) {
         return Arrays.stream(permissions).max(comparing(Permission::getTier)).orElse(PUBLIC);
     }
 
     public static Permission minPermission(Permission... permissions) {
         return Arrays.stream(permissions).min(comparing(Permission::getTier)).orElse(PUBLIC);
+    }
+
+    public boolean covers(Permission permission) {
+        return this.tier >= permission.tier;
+    }
+
+    public int getTier() {
+        return tier;
     }
 
     public boolean isPublic() {

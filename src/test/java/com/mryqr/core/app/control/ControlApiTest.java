@@ -58,13 +58,13 @@ public class ControlApiTest extends BaseApiTest {
     @Test
     public void should_raise_event_when_delete_control() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String appId = response.getAppId();
+        String appId = response.appId();
         FRadioControl control = defaultRadioControl();
-        AppApi.updateAppControls(response.getJwt(), appId, control);
+        AppApi.updateAppControls(response.jwt(), appId, control);
         App app = appRepository.byId(appId);
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
         RadioAnswer radioAnswer = RandomTestFixture.rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer);
         Submission submission = submissionRepository.byId(submissionId);
         RadioAnswer loadedAnswer = (RadioAnswer) submission.getAnswers().get(control.getId());
         assertEquals(radioAnswer.getOptionId(), loadedAnswer.getOptionId());
@@ -72,12 +72,12 @@ public class ControlApiTest extends BaseApiTest {
         assertEquals(control.getId(), indexedValue.getRid());
         assertEquals(radioAnswer.getOptionId(), indexedValue.getTv().stream().findFirst().get());
 
-        AppApi.updateAppControls(response.getJwt(), appId);
+        AppApi.updateAppControls(response.jwt(), appId);
 
         AppControlsDeletedEvent controlDeletedEvent = latestEventFor(app.getId(), APP_CONTROLS_DELETED, AppControlsDeletedEvent.class);
         assertEquals(1, controlDeletedEvent.getControls().size());
         assertTrue(controlDeletedEvent.getControls().contains(DeletedControlInfo.builder()
-                .pageId(response.getHomePageId())
+                .pageId(response.homePageId())
                 .controlId(control.getId())
                 .controlType(control.getType())
                 .indexedField(indexedField)
@@ -91,9 +91,9 @@ public class ControlApiTest extends BaseApiTest {
     public void delete_control_should_also_delete_control_aware_number_reports() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), appId, control);
+        AppApi.updateAppControls(response.jwt(), appId, control);
 
         ControlNumberReport controlNumberReport = ControlNumberReport.builder()
                 .id(newShortUuid())
@@ -101,7 +101,7 @@ public class ControlApiTest extends BaseApiTest {
                 .type(CONTROL_NUMBER_REPORT)
                 .range(NO_LIMIT)
                 .numberAggregationType(AVG)
-                .pageId(response.getHomePageId())
+                .pageId(response.homePageId())
                 .controlId(control.getId())
                 .build();
 
@@ -115,12 +115,12 @@ public class ControlApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        AppApi.updateAppReportSetting(response.getJwt(), response.getAppId(), command);
-        assertEquals(1, appRepository.byId(response.getAppId())
+        AppApi.updateAppReportSetting(response.jwt(), response.appId(), command);
+        assertEquals(1, appRepository.byId(response.appId())
                 .getReportSetting().getNumberReportSetting().getReports().size());
 
-        AppApi.updateAppControls(response.getJwt(), appId);
-        assertEquals(0, appRepository.byId(response.getAppId())
+        AppApi.updateAppControls(response.jwt(), appId);
+        assertEquals(0, appRepository.byId(response.appId())
                 .getReportSetting().getNumberReportSetting().getReports().size());
     }
 
@@ -130,23 +130,23 @@ public class ControlApiTest extends BaseApiTest {
         FCheckboxControl control = defaultCheckboxControlBuilder().options(rTextOptions(10)).build();
         CheckboxAnswer answer = RandomTestFixture.rAnswer(control);
         String tobeDeletedOptionId = answer.getOptionIds().get(0);
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(AttributeType.CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(control.getId()).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
-        App app = appRepository.byId(response.getAppId());
-        IndexedField controlIndexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
+                .pageId(response.homePageId()).controlId(control.getId()).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        App app = appRepository.byId(response.appId());
+        IndexedField controlIndexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
         IndexedField attributeIndexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
         Submission submission = submissionRepository.byId(submissionId);
         assertTrue(submission.getIndexedValues().valueOf(controlIndexedField).getTv().contains(tobeDeletedOptionId));
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         assertTrue(qr.getIndexedValues().valueOf(attributeIndexedField).getTv().contains(tobeDeletedOptionId));
         control.getOptions().removeIf(textOption -> textOption.getId().equals(tobeDeletedOptionId));
 
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        AppControlOptionsDeletedEvent event = latestEventFor(response.getAppId(), APP_CONTROL_OPTIONS_DELETED,
+        AppControlOptionsDeletedEvent event = latestEventFor(response.appId(), APP_CONTROL_OPTIONS_DELETED,
                 AppControlOptionsDeletedEvent.class);
         assertEquals(1, event.getControlOptions().size());
         DeletedTextOptionInfo controlOptionInfo = event.getControlOptions().stream().findFirst().get();
@@ -155,7 +155,7 @@ public class ControlApiTest extends BaseApiTest {
         assertEquals(tobeDeletedOptionId, controlOptionInfo.getOptionId());
         Submission updatedSubmission = submissionRepository.byId(submissionId);
         assertFalse(updatedSubmission.getIndexedValues().valueOf(controlIndexedField).getTv().contains(tobeDeletedOptionId));
-        QR updatedQr = qrRepository.byId(response.getQrId());
+        QR updatedQr = qrRepository.byId(response.qrId());
         assertFalse(updatedQr.getIndexedValues().valueOf(attributeIndexedField).getTv().contains(tobeDeletedOptionId));
     }
 
@@ -163,10 +163,10 @@ public class ControlApiTest extends BaseApiTest {
     public void update_app_setting_should_reset_submitter_viewable_for_public_fillable_controls() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        String appId = response.getAppId();
-        AppApi.updateAppPermission(response.getJwt(), appId, PUBLIC);
+        String appId = response.appId();
+        AppApi.updateAppPermission(response.jwt(), appId, PUBLIC);
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().submitterViewable(true).build();
-        AppApi.updateAppControls(response.getJwt(), appId, control);
+        AppApi.updateAppControls(response.jwt(), appId, control);
 
         App app = appRepository.byId(appId);
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
@@ -177,10 +177,10 @@ public class ControlApiTest extends BaseApiTest {
     public void update_app_setting_should_reset_for_non_fillable_controls() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         PSectionTitleViewControl control = defaultSectionTitleControlBuilder()
                 .fillableSetting(defaultFillableSetting()).submitterViewable(true).build();
-        AppApi.updateAppControls(response.getJwt(), appId, control);
+        AppApi.updateAppControls(response.jwt(), appId, control);
 
         App app = appRepository.byId(appId);
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
@@ -192,9 +192,9 @@ public class ControlApiTest extends BaseApiTest {
     public void update_app_setting_should_reset_for_permission_not_enabled() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().permissionEnabled(false).submitterViewable(true).build();
-        AppApi.updateAppControls(response.getJwt(), appId, control);
+        AppApi.updateAppControls(response.jwt(), appId, control);
 
         App app = appRepository.byId(appId);
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
@@ -204,25 +204,25 @@ public class ControlApiTest extends BaseApiTest {
     @Test
     public void should_fail_update_app_setting_if_new_control_in_not_supported_by_packages() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        Tenant theTenant = tenantRepository.byId(response.getTenantId());
+        Tenant theTenant = tenantRepository.byId(response.tenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withSupportedControlTypes(allControlTypesExcept(ITEM_COUNT)));
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         Page page = setting.homePage();
         FItemCountControl higherPackagesRequiredControl = defaultItemCountControl();
         page.getControls().add(higherPackagesRequiredControl);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), CONTROL_TYPES_NOT_ALLOWED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), CONTROL_TYPES_NOT_ALLOWED);
     }
 
     @Test
     public void should_fail_update_app_setting_if_control_type_changes() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.getAppId();
+        String appId = response.appId();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), appId, control);
+        AppApi.updateAppControls(response.jwt(), appId, control);
 
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
@@ -231,42 +231,42 @@ public class ControlApiTest extends BaseApiTest {
         ReflectionTestUtils.setField(control, "type", SECTION_TITLE);
         controls.add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), CONTROL_TYPE_NOT_MATCH);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), CONTROL_TYPE_NOT_MATCH);
     }
 
     @Test
     public void should_failed_update_app_setting_if_no_fillable_settings_provided_for_fillable_controls() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().fillableSetting(null).build();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         List<Control> controls = setting.homePage().getControls();
         controls.add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), EMPTY_FILLABLE_SETTING);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), EMPTY_FILLABLE_SETTING);
     }
 
     @Test
     public void should_failed_update_app_setting_if_permission_not_allowed_for_control() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(AS_TENANT_MEMBER).build();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         List<Control> controls = setting.homePage().getControls();
         controls.add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), CONTROL_PERMISSION_NOT_ALLOWED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), CONTROL_PERMISSION_NOT_ALLOWED);
     }
 
     @Test
     public void should_fail_update_app_setting_if_control_id_duplicated() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         Page page = setting.homePage();
@@ -274,6 +274,6 @@ public class ControlApiTest extends BaseApiTest {
         page.getControls().add(control);
         page.getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), CONTROL_ID_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), CONTROL_ID_DUPLICATED);
     }
 }

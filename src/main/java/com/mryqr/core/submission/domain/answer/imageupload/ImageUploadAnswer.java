@@ -43,6 +43,10 @@ public class ImageUploadAnswer extends Answer {
     @Size(max = MAX_MAX_IMAGE_SIZE)
     private List<@Valid UploadedFile> images;
 
+    public static ImageUploadAnswer.ImageUploadAnswerBuilder<?, ?> answerBuilder(FImageUploadControl control) {
+        return ImageUploadAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
         if (isDuplicated(images)) {
@@ -92,10 +96,6 @@ public class ImageUploadAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
-    }
-
-    public static ImageUploadAnswer.ImageUploadAnswerBuilder<?, ?> answerBuilder(FImageUploadControl control) {
-        return ImageUploadAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

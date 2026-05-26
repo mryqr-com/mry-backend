@@ -64,8 +64,8 @@ public class FItemStatusControl extends AbstractTextOptionControl {
         correctOptions();
 
         if (autoCalculateEnabled) {
-            setAutoFill(false);
-            setMandatory(false);
+            configAutoFill(false);
+            configMandatory(false);
             this.initialOptionId = null;
             this.shouldAutoCalculate = autoCalculateSetting.shouldAutoCalculate();
         } else {

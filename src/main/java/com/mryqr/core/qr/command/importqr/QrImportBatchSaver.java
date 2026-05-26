@@ -45,11 +45,11 @@ public class QrImportBatchSaver {
 
         records.forEach(record -> {
             PlatedQr platedQr = qrFactory.createImportedPlatedQr(record.getName(), group, app, record.getCustomId(), user);
-            QR qr = platedQr.getQr();
+            QR qr = platedQr.qr();
             qr.putAttributeValues(record.getAttributeValues(), user);
             qrs.add(qr);
 
-            Plate plate = platedQr.getPlate();
+            Plate plate = platedQr.plate();
             plates.add(plate);
 
             Map<String, Set<Answer>> answers = record.getAnswers();

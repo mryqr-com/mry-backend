@@ -47,9 +47,9 @@ public class PlanControllerApiTest extends BaseApiTest {
     @Test
     public void expired_plan_should_fall_back_to_free_plan() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        Tenant theTenant = tenantRepository.byId(response.getTenantId());
+        Tenant theTenant = tenantRepository.byId(response.tenantId());
         setupApi.updateTenantPackages(theTenant, BASIC, Instant.now().minus(10, DAYS));
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(FREE_PLAN, tenant.effectivePlan());
         assertEquals(BASIC_PLAN, tenant.currentPlan());
     }

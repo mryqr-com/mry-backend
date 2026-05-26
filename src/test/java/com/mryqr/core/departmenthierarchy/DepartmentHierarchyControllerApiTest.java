@@ -12,6 +12,7 @@ import com.mryqr.core.departmenthierarchy.domain.event.DepartmentHierarchyChange
 import com.mryqr.core.departmenthierarchy.query.QDepartmentHierarchy;
 import com.mryqr.core.group.domain.Group;
 import com.mryqr.core.grouphierarchy.domain.GroupHierarchy;
+import com.mryqr.support.PollingAssertion;
 import com.mryqr.utils.LoginResponse;
 import com.mryqr.utils.PreparedAppResponse;
 import org.junit.jupiter.api.Test;
@@ -30,16 +31,16 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
     @Test
     public void should_fetch_department_hierarchy() {
         LoginResponse response = setupApi.registerWithLogin();
-        String departmentId1 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId2 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId3 = DepartmentApi.createDepartmentWithParent(response.getJwt(), departmentId1, rDepartmentName());
+        String departmentId1 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId2 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId3 = DepartmentApi.createDepartmentWithParent(response.jwt(), departmentId1, rDepartmentName());
 
-        QDepartmentHierarchy hierarchy = DepartmentHierarchyApi.fetchDepartmentHierarchy(response.getJwt());
+        QDepartmentHierarchy hierarchy = DepartmentHierarchyApi.fetchDepartmentHierarchy(response.jwt());
         List<String> departmentIds = hierarchy.getAllDepartments().stream().map(QDepartmentHierarchy.QHierarchyDepartment::getId).toList();
         assertEquals(3, departmentIds.size());
         assertTrue(departmentIds.containsAll(List.of(departmentId1, departmentId2, departmentId3)));
 
-        DepartmentHierarchy departmentHierarchy = departmentHierarchyRepository.byTenantId(response.getTenantId());
+        DepartmentHierarchy departmentHierarchy = departmentHierarchyRepository.byTenantId(response.tenantId());
         assertEquals(departmentHierarchy.getIdTree(), hierarchy.getIdTree());
     }
 
@@ -47,9 +48,9 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
     public void should_update_department_hierarchy() {
         LoginResponse response = setupApi.registerWithLogin();
 
-        String departmentId1 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId2 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId3 = DepartmentApi.createDepartmentWithParent(response.getJwt(), departmentId1, rDepartmentName());
+        String departmentId1 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId2 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId3 = DepartmentApi.createDepartmentWithParent(response.jwt(), departmentId1, rDepartmentName());
 
         IdTree idTree = new IdTree(new ArrayList<>(0));
         idTree.addNode(null, departmentId2);
@@ -57,31 +58,31 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
         idTree.addNode(departmentId2, departmentId1);
 
         UpdateDepartmentHierarchyCommand command = UpdateDepartmentHierarchyCommand.builder().idTree(idTree).build();
-        DepartmentHierarchyApi.updateDepartmentHierarchy(response.getJwt(), command);
+        DepartmentHierarchyApi.updateDepartmentHierarchy(response.jwt(), command);
 
-        DepartmentHierarchy hierarchy = departmentHierarchyRepository.byTenantId(response.getTenantId());
+        DepartmentHierarchy hierarchy = departmentHierarchyRepository.byTenantId(response.tenantId());
         assertEquals(3, hierarchy.allDepartmentIds().size());
         assertTrue(hierarchy.allDepartmentIds().containsAll(List.of(departmentId1, departmentId2, departmentId3)));
         assertEquals(departmentId2 + "/" + departmentId1, hierarchy.getHierarchy().schemaOf(departmentId1));
         assertEquals(departmentId2, hierarchy.getHierarchy().schemaOf(departmentId2));
         assertEquals(departmentId3, hierarchy.getHierarchy().schemaOf(departmentId3));
 
-        assertEquals(response.getTenantId(),
+        assertEquals(response.tenantId(),
                 latestEventFor(hierarchy.getId(), DEPARTMENT_HIERARCHY_CHANGED, DepartmentHierarchyChangedEvent.class).getTenantId());
     }
 
     @Test
     public void update_hierarchy_should_also_sync_to_group() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.enableGroupSync(response.getJwt(), response.getAppId());
-        String departmentId1 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId2 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId3 = DepartmentApi.createDepartmentWithParent(response.getJwt(), departmentId1, rDepartmentName());
+        AppApi.enableGroupSync(response.jwt(), response.appId());
+        String departmentId1 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId2 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId3 = DepartmentApi.createDepartmentWithParent(response.jwt(), departmentId1, rDepartmentName());
 
-        GroupHierarchy groupHierarchy = groupHierarchyRepository.byAppId(response.getAppId());
-        Group group1 = groupRepository.byDepartmentIdOptional(departmentId1, response.getAppId()).get();
-        Group group2 = groupRepository.byDepartmentIdOptional(departmentId2, response.getAppId()).get();
-        Group group3 = groupRepository.byDepartmentIdOptional(departmentId3, response.getAppId()).get();
+        GroupHierarchy groupHierarchy = groupHierarchyRepository.byAppId(response.appId());
+        Group group1 = groupRepository.byDepartmentIdOptional(departmentId1, response.appId()).get();
+        Group group2 = groupRepository.byDepartmentIdOptional(departmentId2, response.appId()).get();
+        Group group3 = groupRepository.byDepartmentIdOptional(departmentId3, response.appId()).get();
         assertEquals(group1.getId(), groupHierarchy.getHierarchy().schemaOf(group1.getId()));
         assertEquals(group2.getId(), groupHierarchy.getHierarchy().schemaOf(group2.getId()));
         assertEquals(group1.getId() + "/" + group3.getId(), groupHierarchy.getHierarchy().schemaOf(group3.getId()));
@@ -92,9 +93,9 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
         idTree.addNode(departmentId2, departmentId1);
 
         UpdateDepartmentHierarchyCommand command = UpdateDepartmentHierarchyCommand.builder().idTree(idTree).build();
-        DepartmentHierarchyApi.updateDepartmentHierarchy(response.getJwt(), command);
+        DepartmentHierarchyApi.updateDepartmentHierarchy(response.jwt(), command);
 
-        GroupHierarchy updatedHierarchy = groupHierarchyRepository.byAppId(response.getAppId());
+        GroupHierarchy updatedHierarchy = groupHierarchyRepository.byAppId(response.appId());
         assertEquals(group2.getId() + "/" + group1.getId(), updatedHierarchy.getHierarchy().schemaOf(group1.getId()));
         assertEquals(group2.getId(), updatedHierarchy.getHierarchy().schemaOf(group2.getId()));
         assertEquals(group3.getId(), updatedHierarchy.getHierarchy().schemaOf(group3.getId()));
@@ -108,22 +109,22 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
         UpdateDepartmentHierarchyCommand updateCommand = UpdateDepartmentHierarchyCommand.builder()
                 .idTree(idTree)
                 .build();
-        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.getJwt(), updateCommand),
+        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.jwt(), updateCommand),
                 DEPARTMENT_HIERARCHY_NOT_MATCH);
     }
 
     @Test
     public void should_fail_update_department_hierarchy_if_not_all_department_provided() {
         LoginResponse response = setupApi.registerWithLogin();
-        String departmentId1 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId2 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
+        String departmentId1 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId2 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
 
         IdTree idTree = new IdTree(new ArrayList<>(0));
         idTree.addNode(null, departmentId1);
         UpdateDepartmentHierarchyCommand updateCommand = UpdateDepartmentHierarchyCommand.builder()
                 .idTree(idTree)
                 .build();
-        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.getJwt(), updateCommand),
+        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.jwt(), updateCommand),
                 DEPARTMENT_HIERARCHY_NOT_MATCH);
     }
 
@@ -131,12 +132,12 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
     public void should_fail_update_department_hierarchy_if_too_deep() {
         LoginResponse response = setupApi.registerWithLogin();
 
-        String departmentId1 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId2 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId3 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId4 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId5 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId6 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
+        String departmentId1 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId2 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId3 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId4 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId5 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId6 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
         IdTree idTree = new IdTree(new ArrayList<>(0));
         idTree.addNode(null, departmentId1);
         idTree.addNode(departmentId1, departmentId2);
@@ -148,7 +149,7 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
         UpdateDepartmentHierarchyCommand updateCommand = UpdateDepartmentHierarchyCommand.builder()
                 .idTree(idTree)
                 .build();
-        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.getJwt(), updateCommand), DEPARTMENT_HIERARCHY_TOO_DEEP);
+        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.jwt(), updateCommand), DEPARTMENT_HIERARCHY_TOO_DEEP);
     }
 
     @Test
@@ -156,14 +157,14 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
         LoginResponse response = setupApi.registerWithLogin();
 
         String name = rDepartmentName();
-        String departmentId1 = DepartmentApi.createDepartment(response.getJwt(), name);
-        String departmentId2 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
+        String departmentId1 = DepartmentApi.createDepartment(response.jwt(), name);
+        String departmentId2 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
 
         IdTree idTree = new IdTree(new ArrayList<>(0));
         idTree.addNode(null, departmentId1);
         idTree.addNode(departmentId1, departmentId2);
-        DepartmentHierarchyApi.updateDepartmentHierarchy(response.getJwt(), UpdateDepartmentHierarchyCommand.builder().idTree(idTree).build());
-        DepartmentApi.renameDepartment(response.getJwt(), departmentId2, RenameDepartmentCommand.builder().name(name).build());
+        DepartmentHierarchyApi.updateDepartmentHierarchy(response.jwt(), UpdateDepartmentHierarchyCommand.builder().idTree(idTree).build());
+        DepartmentApi.renameDepartment(response.jwt(), departmentId2, RenameDepartmentCommand.builder().name(name).build());
 
         IdTree updateIdTree = new IdTree(new ArrayList<>(0));
         updateIdTree.addNode(null, departmentId1);
@@ -172,7 +173,7 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
         UpdateDepartmentHierarchyCommand updateCommand = UpdateDepartmentHierarchyCommand.builder()
                 .idTree(updateIdTree)
                 .build();
-        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.getJwt(), updateCommand), DEPARTMENT_NAME_DUPLICATES);
+        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.jwt(), updateCommand), DEPARTMENT_NAME_DUPLICATES);
     }
 
     @Test
@@ -180,16 +181,16 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
         LoginResponse response = setupApi.registerWithLogin();
 
         String name = rDepartmentName();
-        String departmentId1 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
-        String departmentId2 = DepartmentApi.createDepartment(response.getJwt(), name);
-        String departmentId3 = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
+        String departmentId1 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId2 = DepartmentApi.createDepartment(response.jwt(), name);
+        String departmentId3 = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
 
         IdTree idTree = new IdTree(new ArrayList<>(0));
         idTree.addNode(null, departmentId1);
         idTree.addNode(departmentId1, departmentId2);
         idTree.addNode(departmentId2, departmentId3);
-        DepartmentHierarchyApi.updateDepartmentHierarchy(response.getJwt(), UpdateDepartmentHierarchyCommand.builder().idTree(idTree).build());
-        DepartmentApi.renameDepartment(response.getJwt(), departmentId3, RenameDepartmentCommand.builder().name(name).build());
+        DepartmentHierarchyApi.updateDepartmentHierarchy(response.jwt(), UpdateDepartmentHierarchyCommand.builder().idTree(idTree).build());
+        DepartmentApi.renameDepartment(response.jwt(), departmentId3, RenameDepartmentCommand.builder().name(name).build());
 
         IdTree updateIdTree = new IdTree(new ArrayList<>(0));
         updateIdTree.addNode(null, departmentId1);
@@ -199,20 +200,20 @@ public class DepartmentHierarchyControllerApiTest extends BaseApiTest {
         UpdateDepartmentHierarchyCommand updateCommand = UpdateDepartmentHierarchyCommand.builder()
                 .idTree(updateIdTree)
                 .build();
-        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.getJwt(), updateCommand), DEPARTMENT_NAME_DUPLICATES);
+        assertError(() -> DepartmentHierarchyApi.updateDepartmentHierarchyRaw(response.jwt(), updateCommand), DEPARTMENT_NAME_DUPLICATES);
     }
 
     @Test
     public void should_cache_department_hierarchy() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String key = "Cache:DEPARTMENT_HIERARCHY::" + response.getTenantId();
-        assertNotEquals(TRUE, stringRedisTemplate.hasKey(key));
+        String key = "Cache:DEPARTMENT_HIERARCHY::" + response.tenantId();
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
-        departmentHierarchyRepository.cachedByTenantId(response.getTenantId());
-        assertEquals(TRUE, stringRedisTemplate.hasKey(key));
+        departmentHierarchyRepository.cachedByTenantId(response.tenantId());
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
-        DepartmentHierarchy hierarchy = departmentHierarchyRepository.byTenantId(response.getTenantId());
+        DepartmentHierarchy hierarchy = departmentHierarchyRepository.byTenantId(response.tenantId());
         departmentHierarchyRepository.save(hierarchy);
-        assertNotEquals(TRUE, stringRedisTemplate.hasKey(key));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 }

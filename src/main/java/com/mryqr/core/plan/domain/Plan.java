@@ -18,62 +18,6 @@ import static lombok.AccessLevel.PRIVATE;
 @Builder
 @AllArgsConstructor(access = PRIVATE)
 public class Plan {
-    private static final Set<ControlType> FREE_PLAN_EXCLUDES = Set.of();
-
-    private static final Set<ControlType> BASIC_PLAN_EXCLUDES = Set.of();
-
-    public static final Plan FREE_PLAN = Plan.builder()
-            .type(FREE)
-            .maxAppCount(3)
-            .maxQrCount(1000)
-            .maxSubmissionCount(3000)
-            .maxMemberCount(3)
-            .maxStorage(0.2f)
-            .maxSmsCountPerMonth(10)
-            .maxDepartmentCount(10)
-            .maxGroupCountPerApp(10)
-            .maxVideoTrafficPerMonth(1)
-            .supportedControlTypes(freePlanControlTypes())
-            .customLogoAllowed(true)
-            .hideBottomMryLogo(true)
-            .hideAds(true)
-            .videoAudioAllowed(true)
-            .developerAllowed(false)
-            .reportingAllowed(true)
-            .kanbanAllowed(true)
-            .submissionNotifyAllowed(true)
-            .batchImportQrAllowed(true)
-            .batchImportMemberAllowed(true)
-            .submissionApprovalAllowed(true)
-            .assignmentAllowed(true)
-            .build();
-
-    public static final Plan BASIC_PLAN = Plan.builder()
-            .type(BASIC)
-            .maxAppCount(5)
-            .maxQrCount(10000)
-            .maxSubmissionCount(50000)
-            .maxMemberCount(20)
-            .maxStorage(3)
-            .maxSmsCountPerMonth(200)
-            .maxDepartmentCount(20)
-            .maxGroupCountPerApp(50)
-            .maxVideoTrafficPerMonth(30)
-            .supportedControlTypes(basicPlanControlTypes())
-            .customLogoAllowed(true)
-            .hideBottomMryLogo(true)
-            .hideAds(true)
-            .videoAudioAllowed(true)
-            .developerAllowed(false)
-            .reportingAllowed(true)
-            .kanbanAllowed(true)
-            .submissionNotifyAllowed(true)
-            .batchImportQrAllowed(true)
-            .batchImportMemberAllowed(true)
-            .submissionApprovalAllowed(true)
-            .assignmentAllowed(true)
-            .build();
-
     public static final Plan ADVANCED_PLAN = Plan.builder()
             .type(ADVANCED)
             .maxAppCount(20)
@@ -99,7 +43,6 @@ public class Plan {
             .submissionApprovalAllowed(true)
             .assignmentAllowed(true)
             .build();
-
     public static final Plan PROFESSIONAL_PLAN = Plan.builder()
             .type(PROFESSIONAL)
             .maxAppCount(50)
@@ -125,7 +68,6 @@ public class Plan {
             .submissionApprovalAllowed(true)
             .assignmentAllowed(true)
             .build();
-
     public static final Plan FLAGSHIP_PLAN = Plan.builder()
             .type(FLAGSHIP)
             .maxAppCount(100)
@@ -151,7 +93,58 @@ public class Plan {
             .submissionApprovalAllowed(true)
             .assignmentAllowed(true)
             .build();
-
+    private static final Set<ControlType> FREE_PLAN_EXCLUDES = Set.of();
+    public static final Plan FREE_PLAN = Plan.builder()
+            .type(FREE)
+            .maxAppCount(3)
+            .maxQrCount(1000)
+            .maxSubmissionCount(3000)
+            .maxMemberCount(3)
+            .maxStorage(0.2f)
+            .maxSmsCountPerMonth(10)
+            .maxDepartmentCount(10)
+            .maxGroupCountPerApp(10)
+            .maxVideoTrafficPerMonth(1)
+            .supportedControlTypes(freePlanControlTypes())
+            .customLogoAllowed(true)
+            .hideBottomMryLogo(true)
+            .hideAds(true)
+            .videoAudioAllowed(true)
+            .developerAllowed(false)
+            .reportingAllowed(true)
+            .kanbanAllowed(true)
+            .submissionNotifyAllowed(true)
+            .batchImportQrAllowed(true)
+            .batchImportMemberAllowed(true)
+            .submissionApprovalAllowed(true)
+            .assignmentAllowed(true)
+            .build();
+    private static final Set<ControlType> BASIC_PLAN_EXCLUDES = Set.of();
+    public static final Plan BASIC_PLAN = Plan.builder()
+            .type(BASIC)
+            .maxAppCount(5)
+            .maxQrCount(10000)
+            .maxSubmissionCount(50000)
+            .maxMemberCount(20)
+            .maxStorage(3)
+            .maxSmsCountPerMonth(200)
+            .maxDepartmentCount(20)
+            .maxGroupCountPerApp(50)
+            .maxVideoTrafficPerMonth(30)
+            .supportedControlTypes(basicPlanControlTypes())
+            .customLogoAllowed(true)
+            .hideBottomMryLogo(true)
+            .hideAds(true)
+            .videoAudioAllowed(true)
+            .developerAllowed(false)
+            .reportingAllowed(true)
+            .kanbanAllowed(true)
+            .submissionNotifyAllowed(true)
+            .batchImportQrAllowed(true)
+            .batchImportMemberAllowed(true)
+            .submissionApprovalAllowed(true)
+            .assignmentAllowed(true)
+            .build();
     private static Map<PlanType, Plan> ALL_PLANS = Map.of(
             FREE, FREE_PLAN,
             BASIC, BASIC_PLAN,

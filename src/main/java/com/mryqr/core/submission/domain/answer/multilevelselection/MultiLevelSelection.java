@@ -31,6 +31,10 @@ public class MultiLevelSelection {
     @Size(max = MAX_OPTION_NAME_LENGTH)
     private final String level3;
 
+    public static String joinLevels(String... levels) {
+        return Stream.of(levels).filter(StringUtils::isNotBlank).collect(joining(JOINNER));
+    }
+
     public boolean isFilled() {
         return isNotBlank(level1) ||
                isNotBlank(level2) ||
@@ -60,10 +64,6 @@ public class MultiLevelSelection {
 
     public String displayValue() {
         return joinLevels(level1, level2, level3);
-    }
-
-    public static String joinLevels(String... levels) {
-        return Stream.of(levels).filter(StringUtils::isNotBlank).collect(joining(JOINNER));
     }
 
     public String toText() {

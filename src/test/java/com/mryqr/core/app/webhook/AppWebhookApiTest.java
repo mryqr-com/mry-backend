@@ -59,7 +59,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
 
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(true)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -69,14 +69,14 @@ public class AppWebhookApiTest extends BaseApiTest {
                 .build());
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .submissionWebhookTypes(newArrayList(SubmissionWebhookType.ON_CREATE))
                 .build();
-        String appId = response.getAppId();
-        AppApi.updateAppHomePageSetting(response.getJwt(), appId, pageSetting);
+        String appId = response.appId();
+        AppApi.updateAppHomePageSetting(response.jwt(), appId, pageSetting);
 
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
         Submission submission = submissionRepository.byId(submissionId);
 
         SubmissionCreatedWebhookPayload lastPayload = (SubmissionCreatedWebhookPayload) ApiTestingWebhookController.lastPayload;
@@ -102,7 +102,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
 
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(true)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -112,15 +112,15 @@ public class AppWebhookApiTest extends BaseApiTest {
                 .build());
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .submissionWebhookTypes(newArrayList(ON_UPDATE))
                 .build();
-        String appId = response.getAppId();
-        AppApi.updateAppHomePageSetting(response.getJwt(), appId, pageSetting);
+        String appId = response.appId();
+        AppApi.updateAppHomePageSetting(response.jwt(), appId, pageSetting);
 
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        SubmissionApi.updateSubmission(response.getJwt(), submissionId, rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.updateSubmission(response.jwt(), submissionId, rAnswer(control));
         Submission submission = submissionRepository.byId(submissionId);
 
         SubmissionUpdatedWebhookPayload lastPayload = (SubmissionUpdatedWebhookPayload) ApiTestingWebhookController.lastPayload;
@@ -146,7 +146,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
 
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(true)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -156,16 +156,16 @@ public class AppWebhookApiTest extends BaseApiTest {
                 .build());
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .submissionWebhookTypes(newArrayList(ON_APPROVAL))
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        String appId = response.getAppId();
-        AppApi.updateAppHomePageSetting(response.getJwt(), appId, pageSetting);
+        String appId = response.appId();
+        AppApi.updateAppHomePageSetting(response.jwt(), appId, pageSetting);
 
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        SubmissionApi.approveSubmission(response.getJwt(), submissionId, true);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.approveSubmission(response.jwt(), submissionId, true);
         Submission submission = submissionRepository.byId(submissionId);
 
         SubmissionApprovedWebhookPayload lastPayload = (SubmissionApprovedWebhookPayload) ApiTestingWebhookController.lastPayload;
@@ -191,7 +191,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
 
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(true)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -201,16 +201,16 @@ public class AppWebhookApiTest extends BaseApiTest {
                 .build());
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .submissionWebhookTypes(newArrayList(SubmissionWebhookType.ON_DELETE))
                 .build();
-        String appId = response.getAppId();
-        AppApi.updateAppHomePageSetting(response.getJwt(), appId, pageSetting);
+        String appId = response.appId();
+        AppApi.updateAppHomePageSetting(response.jwt(), appId, pageSetting);
 
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
         Submission submission = submissionRepository.byId(submissionId);
-        SubmissionApi.deleteSubmission(response.getJwt(), submissionId);
+        SubmissionApi.deleteSubmission(response.jwt(), submissionId);
 
         SubmissionDeletedWebhookPayload lastPayload = (SubmissionDeletedWebhookPayload) ApiTestingWebhookController.lastPayload;
         assertEquals(authString, ApiTestingWebhookController.lastAuthString);
@@ -230,7 +230,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
 
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(true)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -239,7 +239,7 @@ public class AppWebhookApiTest extends BaseApiTest {
                         .build())
                 .build());
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         AppConfig config = AppConfig.builder()
                 .homePageId(setting.homePageId())
@@ -255,9 +255,9 @@ public class AppWebhookApiTest extends BaseApiTest {
                 .build();
 
         ReflectionTestUtils.setField(setting, "config", config);
-        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
+        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
         QR qr = qrRepository.byId(qrResponse.getQrId());
 
         QrCreatedWebhookPayload lastPayload = (QrCreatedWebhookPayload) ApiTestingWebhookController.lastPayload;
@@ -290,7 +290,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
 
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(true)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -299,7 +299,7 @@ public class AppWebhookApiTest extends BaseApiTest {
                         .build())
                 .build());
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         AppConfig config = AppConfig.builder()
                 .homePageId(setting.homePageId())
@@ -315,10 +315,10 @@ public class AppWebhookApiTest extends BaseApiTest {
                 .build();
 
         ReflectionTestUtils.setField(setting, "config", config);
-        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
+        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
 
-        QrApi.renameQr(response.getJwt(), response.getQrId(), rQrName());
-        QR qr = qrRepository.byId(response.getQrId());
+        QrApi.renameQr(response.jwt(), response.qrId(), rQrName());
+        QR qr = qrRepository.byId(response.qrId());
 
         QrUpdatedWebhookPayload lastPayload = (QrUpdatedWebhookPayload) ApiTestingWebhookController.lastPayload;
         assertEquals(authString, ApiTestingWebhookController.lastAuthString);
@@ -351,7 +351,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String username = randomAlphanumeric(10);
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(true)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -360,7 +360,7 @@ public class AppWebhookApiTest extends BaseApiTest {
                         .build())
                 .build());
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         AppConfig config = AppConfig.builder()
                 .homePageId(setting.homePageId())
@@ -376,10 +376,10 @@ public class AppWebhookApiTest extends BaseApiTest {
                 .build();
 
         ReflectionTestUtils.setField(setting, "config", config);
-        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
-        QR qr = qrRepository.byId(response.getQrId());
+        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
+        QR qr = qrRepository.byId(response.qrId());
 
-        QrApi.deleteQr(response.getJwt(), response.getQrId());
+        QrApi.deleteQr(response.jwt(), response.qrId());
 
         QrDeletedWebhookPayload lastPayload = (QrDeletedWebhookPayload) ApiTestingWebhookController.lastPayload;
         assertEquals(authString, ApiTestingWebhookController.lastAuthString);
@@ -399,7 +399,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
 
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(true)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -411,11 +411,11 @@ public class AppWebhookApiTest extends BaseApiTest {
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .submissionWebhookTypes(newArrayList(SubmissionWebhookType.ON_CREATE))
                 .build();
-        AppApi.updateAppHomePageSetting(response.getJwt(), response.getAppId(), pageSetting);
-        Tenant theTenant = tenantRepository.byId(response.getTenantId());
+        AppApi.updateAppHomePageSetting(response.jwt(), response.appId(), pageSetting);
+        Tenant theTenant = tenantRepository.byId(response.tenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withDeveloperAllowed(false));
 
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
         assertNotEquals(authString, ApiTestingWebhookController.lastAuthString);
     }
 
@@ -427,7 +427,7 @@ public class AppWebhookApiTest extends BaseApiTest {
         String password = randomAlphanumeric(10);
         String authString = "Basic " + getEncoder().encodeToString((username + ":" + password).getBytes(US_ASCII));
 
-        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), UpdateAppWebhookSettingCommand.builder()
+        AppApi.updateWebhookSetting(response.jwt(), response.appId(), UpdateAppWebhookSettingCommand.builder()
                 .webhookSetting(WebhookSetting.builder()
                         .enabled(false)
                         .url("http://localhost:" + port + "/api-testing/webhook")
@@ -439,9 +439,9 @@ public class AppWebhookApiTest extends BaseApiTest {
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .submissionWebhookTypes(newArrayList(SubmissionWebhookType.ON_CREATE))
                 .build();
-        AppApi.updateAppHomePageSetting(response.getJwt(), response.getAppId(), pageSetting);
+        AppApi.updateAppHomePageSetting(response.jwt(), response.appId(), pageSetting);
 
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
         assertNotEquals(authString, ApiTestingWebhookController.lastAuthString);
     }
 }

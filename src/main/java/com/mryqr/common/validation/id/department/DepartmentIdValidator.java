@@ -11,6 +11,10 @@ public class DepartmentIdValidator implements ConstraintValidator<DepartmentId, 
 
     private static final Pattern PATTERN = Pattern.compile("^DPT[0-9]{17,19}$");
 
+    public static boolean isDepartmentId(String departmentId) {
+        return PATTERN.matcher(departmentId).matches();
+    }
+
     @Override
     public void initialize(DepartmentId constraintAnnotation) {
     }
@@ -22,10 +26,6 @@ public class DepartmentIdValidator implements ConstraintValidator<DepartmentId, 
         }
 
         return isDepartmentId(departmentId);
-    }
-
-    public static boolean isDepartmentId(String departmentId) {
-        return PATTERN.matcher(departmentId).matches();
     }
 
 }

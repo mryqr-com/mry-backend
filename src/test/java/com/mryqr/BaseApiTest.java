@@ -11,7 +11,6 @@ import com.mryqr.common.exception.QErrorResponse;
 import com.mryqr.common.password.MryPasswordEncoder;
 import com.mryqr.common.properties.CommonProperties;
 import com.mryqr.common.security.jwt.JwtService;
-import com.mryqr.common.utils.MryObjectMapper;
 import com.mryqr.core.app.domain.AppFactory;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.core.appmanual.domain.AppManualRepository;
@@ -50,10 +49,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.function.Supplier;
 
-import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 import static com.mryqr.common.utils.MryConstants.AUTHORIZATION;
 import static com.mryqr.common.utils.MryConstants.AUTH_COOKIE_NAME;
 import static io.restassured.config.RestAssuredConfig.config;
@@ -72,101 +71,71 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 @Execution(CONCURRENT)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 public abstract class BaseApiTest {
-
+    private static ObjectMapper staticObjectMapper; // todo: 看看如何共享同一个ObjectMapper
     @Autowired
     protected CommonProperties commonProperties;
-
     @Autowired
     protected MongoTemplate mongoTemplate;
-
-    @Autowired
-    protected MryObjectMapper objectMapper;
-
     @Autowired
     protected StringRedisTemplate stringRedisTemplate;
-
     @Autowired
     protected SetupApi setupApi;
-
     @Autowired
     protected PublishingDomainEventDao publishingDomainEventDao;
     @Autowired
     protected ConsumingDomainEventDao<DomainEvent> consumingDomainEventDao;
-
     @Autowired
     protected GroupRepository groupRepository;
-
     @Autowired
     protected AppRepository appRepository;
-
     @Autowired
     protected TenantRepository tenantRepository;
-
     @Autowired
     protected SubmissionRepository submissionRepository;
-
     @Autowired
     protected QrRepository qrRepository;
-
     @Autowired
     protected MemberRepository memberRepository;
-
     @Autowired
     protected VerificationCodeRepository verificationCodeRepository;
-
     @Autowired
     protected PlateRepository plateRepository;
-
     @Autowired
     protected PlateBatchRepository plateBatchRepository;
-
     @Autowired
     protected OrderRepository orderRepository;
-
     @Autowired
     protected PlateTemplateRepository plateTemplateRepository;
-
     @Autowired
     protected JwtService jwtService;
-
     @Autowired
     protected MryPasswordEncoder mryPasswordEncoder;
-
     @Autowired
     protected AppManualRepository appManualRepository;
-
     @Autowired
     protected AssignmentPlanRepository assignmentPlanRepository;
-
     @Autowired
     protected AssignmentRepository assignmentRepository;
-
     @Autowired
     protected DepartmentRepository departmentRepository;
-
     @Autowired
     protected GroupHierarchyRepository groupHierarchyRepository;
-
     @Autowired
     protected AppFactory appFactory;
-
     @Autowired
     protected DepartmentHierarchyRepository departmentHierarchyRepository;
-
     @Autowired
     protected InAppNotificationRepository inAppNotificationRepository;
-
     @Autowired
     protected InAppNotificationFactory inAppNotificationFactory;
-
     @LocalServerPort
     protected int port;
+    protected ObjectMapper objectMapper;
 
     public static RequestSpecification given() {
         return RestAssured.given()
                 .config(config()
-                        .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory(
-                                (type, s) -> new MryObjectMapper()))
+                        .objectMapperConfig(new ObjectMapperConfig().jackson3ObjectMapperFactory((type, s) -> staticObjectMapper))
                         .encoderConfig(new EncoderConfig().appendDefaultContentCharsetToContentTypeIfUndefined(false))
                         .logConfig(LogConfig.logConfig().enableLoggingOfRequestAndResponseIfValidationFails()));
     }
@@ -191,9 +160,19 @@ public abstract class BaseApiTest {
         return given().auth().preemptive().basic(username, password);
     }
 
+    public static void assertError(Supplier<Response> apiCall, ErrorCode expectedCode) {
+        Error error = apiCall.get().then().statusCode(expectedCode.getStatus()).extract().as(QErrorResponse.class).getError();
+        assertEquals(expectedCode, error.getCode());
+    }
+
+    @Autowired
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        staticObjectMapper = objectMapper;
+    }
+
     @BeforeEach
     public void setUp() {
-        objectMapper.enable(INDENT_OUTPUT);
         RestAssured.port = port;
 //        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
         RestAssured.requestSpecification = new RequestSpecBuilder()
@@ -204,11 +183,6 @@ public abstract class BaseApiTest {
 
     @AfterEach
     public void cleanUp() {
-    }
-
-    public static void assertError(Supplier<Response> apiCall, ErrorCode expectedCode) {
-        Error error = apiCall.get().then().statusCode(expectedCode.getStatus()).extract().as(QErrorResponse.class).getError();
-        assertEquals(expectedCode, error.getCode());
     }
 
     protected <T extends DomainEvent> T latestEventFor(String arId, DomainEventType type, Class<T> eventClass) {

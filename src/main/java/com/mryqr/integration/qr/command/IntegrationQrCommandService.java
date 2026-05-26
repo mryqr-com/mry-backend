@@ -54,8 +54,8 @@ public class IntegrationQrCommandService {
 
         App app = appRepository.cachedById(appId);
         PlatedQr platedQr = qrFactory.createPlatedQr(name, group, app, customId, user);
-        QR qr = platedQr.getQr();
-        Plate plate = platedQr.getPlate();
+        QR qr = platedQr.qr();
+        Plate plate = platedQr.plate();
         qrRepository.save(qr);
         plateRepository.save(plate);
 
@@ -84,8 +84,8 @@ public class IntegrationQrCommandService {
         String name = command.getName();
         String customId = command.getCustomId();
         PlatedQr platedQr = qrFactory.createPlatedQr(name, group, app, customId, user);
-        QR qr = platedQr.getQr();
-        Plate plate = platedQr.getPlate();
+        QR qr = platedQr.qr();
+        Plate plate = platedQr.plate();
 
         qrDomainService.updateQrBaseSetting(qr,
                 app,
@@ -206,8 +206,8 @@ public class IntegrationQrCommandService {
         mryRateLimiter.applyFor(user.getTenantId(), "Integration:QR:UpdateBaseSetting", 10);
 
         AppedQr appedQr = qrRepository.appedQrByIdAndCheckTenantShip(qrId, user);
-        QR qr = appedQr.getQr();
-        App app = appedQr.getApp();
+        QR qr = appedQr.qr();
+        App app = appedQr.app();
 
         qrDomainService.updateQrBaseSetting(qr,
                 app,

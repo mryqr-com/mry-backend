@@ -35,6 +35,10 @@ public class DateAnswer extends Answer {
     @Pattern(regexp = DATE_PATTERN, message = "日期格式不正确。")
     private String date;
 
+    public static DateAnswer.DateAnswerBuilder<?, ?> answerBuilder(FDateControl control) {
+        return DateAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -81,10 +85,6 @@ public class DateAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
-    }
-
-    public static DateAnswer.DateAnswerBuilder<?, ?> answerBuilder(FDateControl control) {
-        return DateAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

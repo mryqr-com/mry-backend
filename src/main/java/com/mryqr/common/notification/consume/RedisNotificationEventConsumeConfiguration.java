@@ -3,7 +3,6 @@ package com.mryqr.common.notification.consume;
 import com.mryqr.common.event.DomainEvent;
 import com.mryqr.common.profile.NonCiProfile;
 import com.mryqr.common.properties.MryRedisProperties;
-import com.mryqr.common.utils.MryObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +14,7 @@ import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamMessageListenerContainerOptions;
 import org.springframework.util.ErrorHandler;
+import tools.jackson.databind.ObjectMapper;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -33,7 +33,7 @@ import static org.springframework.data.redis.connection.stream.StreamOffset.crea
 public class RedisNotificationEventConsumeConfiguration {
     private final MryRedisProperties mryRedisProperties;
 
-    private final MryObjectMapper mryObjectMapper;
+    private final ObjectMapper objectMapper;
 
     private final NotificationEventConsumer notificationEventConsumer;
 
@@ -56,7 +56,7 @@ public class RedisNotificationEventConsumeConfiguration {
                         create(mryRedisProperties.getNotificationStream(), lastConsumed()),
                         message -> {
                             String jsonString = message.getValue();
-                            DomainEvent domainEvent = mryObjectMapper.readValue(jsonString, DomainEvent.class);
+                            DomainEvent domainEvent = objectMapper.readValue(jsonString, DomainEvent.class);
                             try {
                                 notificationEventConsumer.consume(domainEvent);
                             } catch (Throwable t) {

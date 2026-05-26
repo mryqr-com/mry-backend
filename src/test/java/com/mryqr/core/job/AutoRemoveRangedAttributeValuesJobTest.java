@@ -34,10 +34,10 @@ public class AutoRemoveRangedAttributeValuesJobTest extends BaseApiTest {
                 .type(INSTANCE_SUBMIT_COUNT)
                 .range(THIS_WEEK)
                 .build();
-        AppApi.updateAppAttributes(response1.getJwt(), response1.getAppId(), attribute1);
-        SubmissionApi.newSubmission(response1.getJwt(), response1.getQrId(), response1.getHomePageId());
-        App app1 = appRepository.byId(response1.getAppId());
-        QR qr1 = qrRepository.byId(response1.getQrId());
+        AppApi.updateAppAttributes(response1.jwt(), response1.appId(), attribute1);
+        SubmissionApi.newSubmission(response1.jwt(), response1.qrId(), response1.homePageId());
+        App app1 = appRepository.byId(response1.appId());
+        QR qr1 = qrRepository.byId(response1.qrId());
         IntegerAttributeValue attributeValue1 = (IntegerAttributeValue) qr1.attributeValueOf(attributeId1);
         assertEquals(1, attributeValue1.getNumber());
         IndexedField indexedField1 = app1.indexedFieldForAttributeOptional(attributeId1).get();
@@ -51,10 +51,10 @@ public class AutoRemoveRangedAttributeValuesJobTest extends BaseApiTest {
                 .type(INSTANCE_SUBMIT_COUNT)
                 .range(THIS_WEEK)
                 .build();
-        AppApi.updateAppAttributes(response2.getJwt(), response2.getAppId(), attribute2);
-        SubmissionApi.newSubmission(response2.getJwt(), response2.getQrId(), response2.getHomePageId());
-        App app2 = appRepository.byId(response1.getAppId());
-        QR qr2 = qrRepository.byId(response2.getQrId());
+        AppApi.updateAppAttributes(response2.jwt(), response2.appId(), attribute2);
+        SubmissionApi.newSubmission(response2.jwt(), response2.qrId(), response2.homePageId());
+        App app2 = appRepository.byId(response1.appId());
+        QR qr2 = qrRepository.byId(response2.qrId());
         IntegerAttributeValue attributeValue2 = (IntegerAttributeValue) qr2.attributeValueOf(attributeId2);
         assertEquals(1, attributeValue2.getNumber());
         IndexedField indexedField2 = app2.indexedFieldForAttributeOptional(attributeId1).get();
@@ -62,11 +62,11 @@ public class AutoRemoveRangedAttributeValuesJobTest extends BaseApiTest {
 
         job.run(THIS_WEEK);
 
-        QR updatedQr1 = qrRepository.byId(response1.getQrId());
+        QR updatedQr1 = qrRepository.byId(response1.qrId());
         assertNull(updatedQr1.attributeValueOf(attributeId1));
         assertNull(updatedQr1.getIndexedValues().valueOf(indexedField1));
 
-        QR updatedQr2 = qrRepository.byId(response2.getQrId());
+        QR updatedQr2 = qrRepository.byId(response2.qrId());
         assertNull(updatedQr2.attributeValueOf(attributeId2));
         assertNull(updatedQr2.getIndexedValues().valueOf(indexedField2));
     }

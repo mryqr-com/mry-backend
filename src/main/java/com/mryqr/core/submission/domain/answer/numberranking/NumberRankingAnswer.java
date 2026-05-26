@@ -33,6 +33,10 @@ public class NumberRankingAnswer extends Answer {
     @Max(MAX_RANKING_LIMIT)
     private int rank;
 
+    public static NumberRankingAnswer.NumberRankingAnswerBuilder<?, ?> answerBuilder(FNumberRankingControl control) {
+        return NumberRankingAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -79,10 +83,6 @@ public class NumberRankingAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return (double) rank;
-    }
-
-    public static NumberRankingAnswer.NumberRankingAnswerBuilder<?, ?> answerBuilder(FNumberRankingControl control) {
-        return NumberRankingAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

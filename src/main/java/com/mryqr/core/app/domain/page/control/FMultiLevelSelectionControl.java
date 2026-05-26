@@ -6,7 +6,10 @@ import com.mryqr.core.submission.domain.answer.Answer;
 import com.mryqr.core.submission.domain.answer.multilevelselection.MultiLevelSelection;
 import com.mryqr.core.submission.domain.answer.multilevelselection.MultiLevelSelectionAnswer;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -173,25 +176,25 @@ public class FMultiLevelSelectionControl extends Control {
                 .distinct()
                 .map(str -> toSplitRecord(str, 2))
                 .filter(Objects::nonNull)
-                .filter(record -> isNotBlank(record.getLeft()))
-                .collect(groupingBy(SplitRecord::getLeft, LinkedHashMap::new, toImmutableList()));
+                .filter(record -> isNotBlank(record.left()))
+                .collect(groupingBy(SplitRecord::left, LinkedHashMap::new, toImmutableList()));
 
         List<MultiLevelOption> firstLevelOptions = firstSplit.entrySet().stream()
                 .map(firstLevelEntry -> {
                     Map<String, ImmutableList<SplitRecord>> secondSplit = firstLevelEntry.getValue().stream()
-                            .map(SplitRecord::getRight)
+                            .map(SplitRecord::right)
                             .map(String::trim)
                             .filter(StringUtils::isNotBlank)
                             .distinct()
                             .map(str -> toSplitRecord(str, -1))
                             .filter(Objects::nonNull)
-                            .filter(record -> isNotBlank(record.getLeft()))
-                            .collect(groupingBy(SplitRecord::getLeft, LinkedHashMap::new, toImmutableList()));
+                            .filter(record -> isNotBlank(record.left()))
+                            .collect(groupingBy(SplitRecord::left, LinkedHashMap::new, toImmutableList()));
 
                     List<MultiLevelOption> secondLevelOptions = secondSplit.entrySet().stream()
                             .map(secondLevelEntry -> {
                                 List<MultiLevelOption> thirdLevelOptions = secondLevelEntry.getValue().stream()
-                                        .map(SplitRecord::getRight)
+                                        .map(SplitRecord::right)
                                         .map(String::trim)
                                         .filter(StringUtils::isNotBlank)
                                         .distinct()
@@ -304,12 +307,8 @@ public class FMultiLevelSelectionControl extends Control {
         return substring(str, 0, 10);
     }
 
-    @Value
     @Builder
-    @AllArgsConstructor(access = PRIVATE)
-    private static class SplitRecord {
-        private final String left;
-        private final String right;
+    private record SplitRecord(String left, String right) {
     }
 
 }

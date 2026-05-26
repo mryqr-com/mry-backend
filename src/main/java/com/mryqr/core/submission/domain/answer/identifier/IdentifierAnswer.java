@@ -36,6 +36,10 @@ public class IdentifierAnswer extends Answer {
     @Size(max = MAX_IDENTIFIER_LENGTH)
     private String content;
 
+    public static IdentifierAnswer.IdentifierAnswerBuilder<?, ?> answerBuilder(FIdentifierControl control) {
+        return IdentifierAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -85,10 +89,6 @@ public class IdentifierAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
-    }
-
-    public static IdentifierAnswer.IdentifierAnswerBuilder<?, ?> answerBuilder(FIdentifierControl control) {
-        return IdentifierAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

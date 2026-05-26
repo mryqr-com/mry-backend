@@ -31,11 +31,11 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(response.getHomePageId())
+        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(response.homePageId())
                 .basedControlId(numberInputControl.getId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         PNumberRangeSegmentControl updatedControl = (PNumberRangeSegmentControl) app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -48,10 +48,10 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
         PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,whatever,3")
-                .pageId(response.getHomePageId()).basedControlId(numberInputControl.getId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
+                .pageId(response.homePageId()).basedControlId(numberInputControl.getId()).build();
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         PNumberRangeSegmentControl updatedControl = (PNumberRangeSegmentControl) app.controlByIdOptional(control.getId()).get();
         assertEquals("1,2,3", updatedControl.getNumberRangesString());
     }
@@ -61,12 +61,12 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
         PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3")
                 .basedControlId(numberInputControl.getId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -76,12 +76,12 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
-        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(response.homePageId())
                 .build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -91,12 +91,12 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
-        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString(null).pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString(null).pageId(response.homePageId())
                 .basedControlId(numberInputControl.getId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -106,12 +106,12 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
-        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1").pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1").pageId(response.homePageId())
                 .basedControlId(numberInputControl.getId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -121,14 +121,14 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
         PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(Page.newPageId())
                 .basedControlId(numberInputControl.getId()).build();
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 VALIDATION_PAGE_NOT_EXIST);
     }
 
@@ -137,14 +137,14 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
-        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(response.homePageId())
                 .basedControlId(Control.newControlId()).build();
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -153,14 +153,14 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FSingleLineTextControl lineTextControl = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), lineTextControl);
-        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(response.getHomePageId())
+        AppApi.updateAppControls(response.jwt(), response.appId(), lineTextControl);
+        PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString("1,2,3").pageId(response.homePageId())
                 .basedControlId(lineTextControl.getId()).build();
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
                 CONTROL_NOT_SUPPORT_NUMBER_RANGE_SEGMENT);
     }
 
@@ -171,32 +171,32 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(2).build();
         String allScenrioSegments = "17.55, 1.55 ,5.55 ，9.55, 13.55 ,invalid";//无序的，包含空格，中英文逗号均有，非法字符
         PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder().numberRangesString(allScenrioSegments)
-                .pageId(response.getHomePageId()).basedControlId(numberInputControl.getId()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
+                .pageId(response.homePageId()).basedControlId(numberInputControl.getId()).build();
+        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
 
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(1d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(1.55d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(4d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(5.45d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(5.55d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(9.55d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(numberInputControl).number(20d).build());
 
-        QNumberRangeSegmentPresentation presentation = (QNumberRangeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
-                response.getQrId(), response.getHomePageId(), control.getId());
+        QNumberRangeSegmentPresentation presentation = (QNumberRangeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
+                response.qrId(), response.homePageId(), control.getId());
         assertEquals(newArrayList(1.55, 5.55, 9.55, 13.55, 17.55), presentation.getNumberRanges());
 
         List<NumberRangeSegment> counts = presentation.getSegments();
@@ -225,31 +225,31 @@ public class NumberRangeSegmentControlApiTest extends BaseApiTest {
         PNumberRangeSegmentControl control = defaultValueSegmentControlBuilder()
                 .segmentType(CONTROL_VALUE_MAX)
                 .numberRangesString(allScenrioSegments)
-                .pageId(response.getHomePageId())
+                .pageId(response.homePageId())
                 .basedControlId(basedControl.getId())
                 .targetControlId(targetControl.getId())
                 .build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), basedControl, targetControl, control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), basedControl, targetControl, control);
 
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(basedControl).number(11D).build(), rAnswerBuilder(targetControl).number(1D).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(basedControl).number(12D).build(), rAnswerBuilder(targetControl).number(2D).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(basedControl).number(21D).build(), rAnswerBuilder(targetControl).number(3D).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(basedControl).number(22D).build(), rAnswerBuilder(targetControl).number(4D).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(basedControl).number(31D).build(), rAnswerBuilder(targetControl).number(5D).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(basedControl).number(32D).build(), rAnswerBuilder(targetControl).number(6D).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(basedControl).number(41D).build(), rAnswerBuilder(targetControl).number(7D).build());
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
                 rAnswerBuilder(basedControl).number(42D).build(), rAnswerBuilder(targetControl).number(8D).build());
 
-        QNumberRangeSegmentPresentation presentation = (QNumberRangeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
-                response.getQrId(), response.getHomePageId(), control.getId());
+        QNumberRangeSegmentPresentation presentation = (QNumberRangeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
+                response.qrId(), response.homePageId(), control.getId());
         assertEquals(newArrayList(10D, 20D, 30D, 40D, 50D), presentation.getNumberRanges());
 
         List<NumberRangeSegment> counts = presentation.getSegments();

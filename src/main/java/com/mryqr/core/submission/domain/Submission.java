@@ -114,6 +114,10 @@ public class Submission extends AggregateRoot {
         return approval != null;
     }
 
+    public IndexedValues getIndexedValues() {
+        return ivs;
+    }
+
     public void setIndexedValues(IndexedValues values) {
         if (values == null || values.isEmpty()) {
             this.ivs = null;
@@ -122,16 +126,12 @@ public class Submission extends AggregateRoot {
         }
     }
 
-    public IndexedValues getIndexedValues() {
-        return ivs;
+    public Set<String> getSearchableValues() {
+        return svs;
     }
 
     public void setSearchableValues(Set<String> values) {
         this.svs = isNotEmpty(values) ? values : null;
-    }
-
-    public Set<String> getSearchableValues() {
-        return svs;
     }
 
     public Optional<Answer> answerForControlOptional(String controlId) {

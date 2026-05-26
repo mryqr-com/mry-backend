@@ -33,6 +33,10 @@ public class MultiLineTextAnswer extends Answer {
     @Size(max = MAX_PARAGRAPH_LENGTH)
     private String content;
 
+    public static MultiLineTextAnswer.MultiLineTextAnswerBuilder<?, ?> answerBuilder(FMultiLineTextControl control) {
+        return MultiLineTextAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -79,10 +83,6 @@ public class MultiLineTextAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
-    }
-
-    public static MultiLineTextAnswer.MultiLineTextAnswerBuilder<?, ?> answerBuilder(FMultiLineTextControl control) {
-        return MultiLineTextAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

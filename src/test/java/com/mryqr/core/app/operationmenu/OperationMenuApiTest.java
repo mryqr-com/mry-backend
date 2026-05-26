@@ -25,14 +25,14 @@ public class OperationMenuApiTest extends BaseApiTest {
     @Test
     public void update_app_setting_should_also_update_operation_menus() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.getAppId();
+        String appId = response.appId();
 
         List<OperationMenuItem> submissionListMenuItems = newArrayList();
-        OperationMenuItem menuItem1 = OperationMenuItem.builder().id(newShortUuid()).type(SUBMITTER_SUBMISSION).name("提交人提交").pageId(response.getHomePageId()).build();
+        OperationMenuItem menuItem1 = OperationMenuItem.builder().id(newShortUuid()).type(SUBMITTER_SUBMISSION).name("提交人提交").pageId(response.homePageId()).build();
         OperationMenuItem menuItem2 = OperationMenuItem.builder().id(newShortUuid()).type(ALL_SUBMIT_HISTORY).name("提交历史").pageId(ALL).build();
         OperationMenuItem menuItem3 = OperationMenuItem.builder().id(newShortUuid()).type(TO_BE_APPROVED).name("待审批").pageId(ALL).build();
         submissionListMenuItems.addAll(newArrayList(menuItem1, menuItem2, menuItem3));
-        AppApi.updateAppOperationMenuItems(response.getJwt(), appId, submissionListMenuItems);
+        AppApi.updateAppOperationMenuItems(response.jwt(), appId, submissionListMenuItems);
 
         App updatedApp = appRepository.byId(appId);
         List<OperationMenuItem> updatedMenus = updatedApp.getSetting().getOperationMenuItems();
@@ -42,7 +42,7 @@ public class OperationMenuApiTest extends BaseApiTest {
     @Test
     public void should_fail_update_app_setting_if_operation_menu_reference_non_exist_page() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
@@ -51,13 +51,13 @@ public class OperationMenuApiTest extends BaseApiTest {
         OperationMenuItem menuItem = OperationMenuItem.builder().id(newShortUuid()).type(SUBMITTER_SUBMISSION).name("提交人提交").pageId(Page.newPageId()).build();
         submissionListMenuItems.addAll(newArrayList(menuItem));
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), VALIDATION_OPERATION_MENU_REF_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), VALIDATION_OPERATION_MENU_REF_PAGE_NOT_EXIST);
     }
 
     @Test
     public void should_fail_update_app_setting_if_operation_menu_if_id_duplicated() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
@@ -68,13 +68,13 @@ public class OperationMenuApiTest extends BaseApiTest {
         OperationMenuItem menuItem2 = OperationMenuItem.builder().id(menuId).type(TO_BE_APPROVED).name("待审批").pageId(ALL).build();
         submissionListMenuItems.addAll(newArrayList(menuItem1, menuItem2));
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), OPERATION_MENU_ITEM_ID_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), OPERATION_MENU_ITEM_ID_DUPLICATED);
     }
 
     @Test
     public void should_fail_update_app_setting_if_operation_menu_if_has_same_schema() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
@@ -84,13 +84,13 @@ public class OperationMenuApiTest extends BaseApiTest {
         OperationMenuItem menuItem2 = OperationMenuItem.builder().id(newShortUuid()).type(SUBMITTER_SUBMISSION).name("所有提交2").pageId(ALL).build();
         submissionListMenuItems.addAll(newArrayList(menuItem1, menuItem2));
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), OPERATION_MENU_ITEM_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), OPERATION_MENU_ITEM_DUPLICATED);
     }
 
     @Test
     public void should_fail_update_app_setting_if_operation_menu_if_has_same_name() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
@@ -100,7 +100,7 @@ public class OperationMenuApiTest extends BaseApiTest {
         OperationMenuItem menuItem2 = OperationMenuItem.builder().id(newShortUuid()).type(TO_BE_APPROVED).name("提交").pageId(ALL).build();
         submissionListMenuItems.addAll(newArrayList(menuItem1, menuItem2));
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), OPERATION_MENU_ITEM_NAME_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), OPERATION_MENU_ITEM_NAME_DUPLICATED);
     }
 
 }

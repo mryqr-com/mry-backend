@@ -22,35 +22,22 @@ import static lombok.AccessLevel.PRIVATE;
 public class PlateConfig {
     @NotNull
     private final PlateSize size;
-
-    @Min(320)
-    @Max(1200)
-    private int width;
-
-    @Min(320)
-    @Max(1200)
-    private int height;
-
     @Valid
     private final UploadedFile backgroundImage;
-
     @Color
     private final String backgroundColor;
-
     @Min(0)
     @Max(100)
     private final int borderRadius;
-
     @Min(0)
     @Max(100)
     private final int padding;
-
-    public void correct() {
-        if (size != CUSTOM) {
-            this.width = size.getWidth();
-            this.height = size.getHeight();
-        }
-    }
+    @Min(320)
+    @Max(1200)
+    private int width;
+    @Min(320)
+    @Max(1200)
+    private int height;
 
     public static PlateConfig defaultPlateConfig() {
         return PlateConfig.builder()
@@ -58,5 +45,12 @@ public class PlateConfig {
                 .width(480)
                 .height(480)
                 .build();
+    }
+
+    public void correct() {
+        if (size != CUSTOM) {
+            this.width = size.getWidth();
+            this.height = size.getHeight();
+        }
     }
 }

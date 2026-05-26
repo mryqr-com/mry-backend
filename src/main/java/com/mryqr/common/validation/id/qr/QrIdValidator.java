@@ -11,6 +11,10 @@ public class QrIdValidator implements ConstraintValidator<QrId, String> {
 
     private static final Pattern PATTERN = Pattern.compile("^QRC[0-9]{17,19}$");
 
+    public static boolean isQrId(String qrId) {
+        return PATTERN.matcher(qrId).matches();
+    }
+
     @Override
     public void initialize(QrId constraintAnnotation) {
     }
@@ -22,10 +26,6 @@ public class QrIdValidator implements ConstraintValidator<QrId, String> {
         }
 
         return isQrId(qrId);
-    }
-
-    public static boolean isQrId(String qrId) {
-        return PATTERN.matcher(qrId).matches();
     }
 
 }

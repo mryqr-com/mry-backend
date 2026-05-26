@@ -35,9 +35,9 @@ public class PersonNameControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FPersonNameControl control = defaultPersonNameControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -46,13 +46,13 @@ public class PersonNameControlApiTest extends BaseApiTest {
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FPersonNameControl control = defaultPersonNameControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         PersonNameAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        App app = appRepository.byId(response.getAppId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
+        App app = appRepository.byId(response.appId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         PersonNameAnswer updatedAnswer = (PersonNameAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -65,28 +65,28 @@ public class PersonNameControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FPersonNameControl control = defaultPersonNameControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
         PersonNameAnswer answer = rAnswerBuilder(control).name(null).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
+        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FPersonNameControl control = defaultPersonNameControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         PersonNameAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         IdentifierAttributeValue attributeValue = (IdentifierAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getName(), attributeValue.getContent());
         assertTrue(qr.getIndexedValues().valueOf(indexedField).getTv().contains(answer.getName()));
@@ -96,17 +96,17 @@ public class PersonNameControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FPersonNameControl control = defaultPersonNameControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         PersonNameAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         IdentifierAttributeValue attributeValue = (IdentifierAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getName(), attributeValue.getContent());
         assertTrue(qr.getIndexedValues().valueOf(indexedField).getTv().contains(answer.getName()));

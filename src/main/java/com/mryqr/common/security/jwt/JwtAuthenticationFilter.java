@@ -3,7 +3,6 @@ package com.mryqr.common.security.jwt;
 import com.mryqr.common.exception.Error;
 import com.mryqr.common.exception.MryException;
 import com.mryqr.common.tracing.MryTracingService;
-import com.mryqr.common.utils.MryObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -14,6 +13,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -27,11 +27,11 @@ import static org.springframework.web.util.WebUtils.getCookie;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AuthenticationManager authenticationManager;
-    private final MryObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
     private final MryTracingService mryTracingService;
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
-                                   MryObjectMapper objectMapper,
+                                   ObjectMapper objectMapper,
                                    MryTracingService mryTracingService) {
         this.authenticationManager = authenticationManager;
         this.objectMapper = objectMapper;

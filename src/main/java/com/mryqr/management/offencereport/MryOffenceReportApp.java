@@ -28,7 +28,7 @@ import com.mryqr.core.qr.domain.QrFactory;
 import com.mryqr.core.qr.domain.QrRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.web.server.autoconfigure.ServerProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -519,9 +519,9 @@ public class MryOffenceReportApp {
         log.info("Created offence reporting manage app.");
 
         PlatedQr platedQr = qrFactory.createPlatedQr("举报", OFFENCE_TEMPLATE_PLATE_ID, defaultGroup, app, MRY_MANAGE_ROBOT_USER);
-        QR qr = platedQr.getQr();
+        QR qr = platedQr.qr();
         qr.markAsTemplate(MRY_MANAGE_ROBOT_USER);
-        Plate plate = platedQr.getPlate();
+        Plate plate = platedQr.plate();
         qrRepository.save(qr);
         plateRepository.save(plate);
     }

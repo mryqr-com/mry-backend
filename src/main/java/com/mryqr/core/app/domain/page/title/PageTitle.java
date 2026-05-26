@@ -24,25 +24,16 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @EqualsAndHashCode
 @AllArgsConstructor(access = PRIVATE)
 public class PageTitle {
-    @Size(max = MAX_GENERIC_NAME_LENGTH)
-    private String text;//标题文本
-
     @Valid
     @NotNull
     private final BoxedTextStyle textStyle;//标题样式
-
     @Size(max = MAX_PARAGRAPH_LENGTH)
     private final String description;//描述文本
-
     @Valid
     @NotNull
     private final MarkdownStyle descriptionStyle;//描述文本样式
-
-    public void correct() {
-        if (isBlank(text)) {
-            this.text = "点击编辑标题";
-        }
-    }
+    @Size(max = MAX_GENERIC_NAME_LENGTH)
+    private String text;//标题文本
 
     public static PageTitle defaultPageTitle() {
         return defaultPageTitleBuilder().build();
@@ -82,5 +73,11 @@ public class PageTitle {
                                 .build())
                         .lineHeight(1.6f)
                         .build());
+    }
+
+    public void correct() {
+        if (isBlank(text)) {
+            this.text = "点击编辑标题";
+        }
     }
 }

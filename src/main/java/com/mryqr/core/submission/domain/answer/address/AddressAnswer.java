@@ -36,6 +36,10 @@ public class AddressAnswer extends Answer {
     @NotNull
     private Address address;
 
+    public static AddressAnswer.AddressAnswerBuilder<?, ?> answerBuilder(FAddressControl control) {
+        return AddressAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -101,10 +105,6 @@ public class AddressAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
-    }
-
-    public static AddressAnswer.AddressAnswerBuilder<?, ?> answerBuilder(FAddressControl control) {
-        return AddressAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

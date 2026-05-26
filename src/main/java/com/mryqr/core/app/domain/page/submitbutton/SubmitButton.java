@@ -22,18 +22,11 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @EqualsAndHashCode
 @AllArgsConstructor(access = PRIVATE)
 public class SubmitButton {
-    @Size(max = MAX_GENERIC_NAME_LENGTH)
-    private String text;//显示文本
-
     @Valid
     @NotNull
     private final ButtonStyle buttonStyle;//按钮样式
-
-    public void correct() {
-        if (isBlank(text)) {
-            this.text = "提交";
-        }
-    }
+    @Size(max = MAX_GENERIC_NAME_LENGTH)
+    private String text;//显示文本
 
     public static SubmitButton defaultSubmitButton() {
         return SubmitButton.builder()
@@ -52,5 +45,11 @@ public class SubmitButton {
                         .vPadding(12)
                         .build())
                 .build();
+    }
+
+    public void correct() {
+        if (isBlank(text)) {
+            this.text = "提交";
+        }
     }
 }

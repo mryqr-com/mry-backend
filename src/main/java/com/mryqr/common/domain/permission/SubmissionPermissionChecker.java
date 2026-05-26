@@ -33,7 +33,7 @@ public class SubmissionPermissionChecker {
         requireNonNull(user, "User must not be null.");
         requireNonNull(appedQr, "AppedQR must not be null.");
 
-        return permissionsFor(user, appedQr.getApp(), appedQr.getQr().getGroupId());
+        return permissionsFor(user, appedQr.app(), appedQr.qr().getGroupId());
     }
 
     public SubmissionPermissions permissionsFor(User user, App app, String groupId) {
@@ -125,7 +125,7 @@ public class SubmissionPermissionChecker {
             return;
         }
 
-        user.checkIsLoggedInFor(appedQr.getApp().getTenantId());
+        user.checkIsLoggedInFor(appedQr.app().getTenantId());
 
         if (!hasPermission(user, appedQr, maxRequestedPermission)) {
             throw accessDeniedException();
@@ -139,15 +139,15 @@ public class SubmissionPermissionChecker {
             }
 
             case AS_TENANT_MEMBER -> {
-                return user.isLoggedInFor(appedQr.getApp().getTenantId());
+                return user.isLoggedInFor(appedQr.app().getTenantId());
             }
 
             case AS_GROUP_MEMBER -> {
-                if (managePermissionChecker.canManageApp(user, appedQr.getApp())) {
+                if (managePermissionChecker.canManageApp(user, appedQr.app())) {
                     return true;
                 }
 
-                Group group = groupRepository.cachedById(appedQr.getQr().getGroupId());
+                Group group = groupRepository.cachedById(appedQr.qr().getGroupId());
                 if (group.isVisible() && group.containsMember(user.getMemberId())) {
                     return true;
                 }
@@ -161,11 +161,11 @@ public class SubmissionPermissionChecker {
             }
 
             case CAN_MANAGE_GROUP -> {
-                if (managePermissionChecker.canManageApp(user, appedQr.getApp())) {
+                if (managePermissionChecker.canManageApp(user, appedQr.app())) {
                     return true;
                 }
 
-                Group group = groupRepository.cachedById(appedQr.getQr().getGroupId());
+                Group group = groupRepository.cachedById(appedQr.qr().getGroupId());
                 if (group.containsManager(user.getMemberId())) {
                     return true;
                 }
@@ -179,7 +179,7 @@ public class SubmissionPermissionChecker {
             }
 
             case CAN_MANAGE_APP -> {
-                return managePermissionChecker.canManageApp(user, appedQr.getApp());
+                return managePermissionChecker.canManageApp(user, appedQr.app());
             }
 
             default -> {

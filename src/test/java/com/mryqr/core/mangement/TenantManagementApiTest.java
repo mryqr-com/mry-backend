@@ -50,8 +50,8 @@ public class TenantManagementApiTest extends BaseApiTest {
     public void register_tenant_should_sync_managed_tenant_qr() {
         LoginResponse loginResponse = setupApi.registerWithLogin();
 
-        Tenant tenant = tenantRepository.byId(loginResponse.getTenantId());
-        QR qr = qrRepository.byCustomId(MRY_TENANT_MANAGE_APP_ID, loginResponse.getTenantId());
+        Tenant tenant = tenantRepository.byId(loginResponse.tenantId());
+        QR qr = qrRepository.byCustomId(MRY_TENANT_MANAGE_APP_ID, loginResponse.tenantId());
 
         assertEquals(tenant.getName(), qr.getName());
         DropdownAttributeValue packageAttrValue = (DropdownAttributeValue) qr.attributeValueOf(CURRENT_PACKAGE_ATTR_ID);
@@ -65,14 +65,14 @@ public class TenantManagementApiTest extends BaseApiTest {
         assertEquals(PACKAGES_STATUS_NORMAL_OPTION_ID, packageStatusAttrValue.getOptionId());
 
         IdentifierAttributeValue tenantIdAttrValue = (IdentifierAttributeValue) qr.attributeValueOf(TENANT_ID_ATTR_ID);
-        assertEquals(loginResponse.getTenantId(), tenantIdAttrValue.getContent());
+        assertEquals(loginResponse.tenantId(), tenantIdAttrValue.getContent());
     }
 
     @Test
     public void should_set_packages_for_tenant() {
         LoginResponse loginResponse = setupApi.registerWithLogin();
 
-        QR qr = qrRepository.byCustomId(MRY_TENANT_MANAGE_APP_ID, loginResponse.getTenantId());
+        QR qr = qrRepository.byCustomId(MRY_TENANT_MANAGE_APP_ID, loginResponse.tenantId());
         assertNotNull(qr);
 
         String jwt = LoginApi.loginWithMobileOrEmail(ADMIN_INIT_MOBILE, ADMIN_INIT_PASSWORD);
@@ -102,7 +102,7 @@ public class TenantManagementApiTest extends BaseApiTest {
     public void should_set_packages_for_tenant_2() {
         LoginResponse loginResponse = setupApi.registerWithLogin();
 
-        QR qr = qrRepository.byCustomId(MRY_TENANT_MANAGE_APP_ID, loginResponse.getTenantId());
+        QR qr = qrRepository.byCustomId(MRY_TENANT_MANAGE_APP_ID, loginResponse.tenantId());
         assertNotNull(qr);
 
         String jwt = LoginApi.loginWithMobileOrEmail(ADMIN_INIT_MOBILE, ADMIN_INIT_PASSWORD);
@@ -127,7 +127,7 @@ public class TenantManagementApiTest extends BaseApiTest {
 
         SubmissionApi.newSubmission(jwt, qr.getId(), PACKAGE_SETTING_PAGE_ID, packageAnswer, expireDateAnswer, noteAnswer);
 
-        Tenant tenant = tenantRepository.byId(loginResponse.getTenantId());
+        Tenant tenant = tenantRepository.byId(loginResponse.tenantId());
         assertEquals(BASIC, tenant.currentPlanType());
         assertEquals(expireDateAnswer.getDate(), LocalDate.ofInstant(tenant.packagesExpiredAt(), systemDefault()).toString());
     }
@@ -135,7 +135,7 @@ public class TenantManagementApiTest extends BaseApiTest {
     @Test
     public void should_set_active_status_for_tenant() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        QR qr = qrRepository.byCustomId(MRY_TENANT_MANAGE_APP_ID, response.getTenantId());
+        QR qr = qrRepository.byCustomId(MRY_TENANT_MANAGE_APP_ID, response.tenantId());
         assertNotNull(qr);
 
         String jwt = LoginApi.loginWithMobileOrEmail(ADMIN_INIT_MOBILE, ADMIN_INIT_PASSWORD);
@@ -157,11 +157,11 @@ public class TenantManagementApiTest extends BaseApiTest {
         SingleLineTextAnswer noteAnswer = SingleLineTextAnswer.answerBuilder(noteControl).content("some note").build();
 
         SubmissionApi.newSubmission(jwt, qr.getId(), STATUS_SETTING_PAGE_ID, inActiveStatusAnswer, noteAnswer);
-        assertFalse(tenantRepository.byId(response.getTenantId()).isActive());
-        assertFalse(memberRepository.byId(response.getMemberId()).isTenantActive());
+        assertFalse(tenantRepository.byId(response.tenantId()).isActive());
+        assertFalse(memberRepository.byId(response.memberId()).isTenantActive());
 
         SubmissionApi.newSubmission(jwt, qr.getId(), STATUS_SETTING_PAGE_ID, activeStatusAnswer, noteAnswer);
-        assertTrue(tenantRepository.byId(response.getTenantId()).isActive());
-        assertTrue(memberRepository.byId(response.getMemberId()).isTenantActive());
+        assertTrue(tenantRepository.byId(response.tenantId()).isActive());
+        assertTrue(memberRepository.byId(response.memberId()).isTenantActive());
     }
 }

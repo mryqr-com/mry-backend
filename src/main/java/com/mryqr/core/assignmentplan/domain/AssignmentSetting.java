@@ -169,12 +169,12 @@ public class AssignmentSetting {
 
     private LocalDateTime timeForFutureCycle(LocalDateTime initialTime, long cycleIndex) {
         LocalDateTime nextTime = switch (frequency) {
-            case EVERY_DAY -> initialTime.plus(cycleIndex, DAYS);
-            case EVERY_WEEK -> initialTime.plus(7 * cycleIndex, DAYS);
-            case EVERY_MONTH -> initialTime.plus(cycleIndex, MONTHS);
-            case EVERY_THREE_MONTH -> initialTime.plus(3 * cycleIndex, MONTHS);
-            case EVERY_SIX_MONTH -> initialTime.plus(6 * cycleIndex, MONTHS);
-            case EVERY_YEAR -> initialTime.plus(12 * cycleIndex, MONTHS);
+            case EVERY_DAY -> initialTime.plusDays(cycleIndex);
+            case EVERY_WEEK -> initialTime.plusDays(7 * cycleIndex);
+            case EVERY_MONTH -> initialTime.plusMonths(cycleIndex);
+            case EVERY_THREE_MONTH -> initialTime.plusMonths(3 * cycleIndex);
+            case EVERY_SIX_MONTH -> initialTime.plusMonths(6 * cycleIndex);
+            case EVERY_YEAR -> initialTime.plusMonths(12 * cycleIndex);
         };
 
         if (this.frequency.isFixedTimeCycle()) {

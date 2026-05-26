@@ -51,6 +51,10 @@ public class ItemCountAnswer extends Answer {
     @Size(max = FItemCountControl.MAX_MAX_ITEM_SIZE)
     private List<@Valid CountedItem> items;
 
+    public static ItemCountAnswer.ItemCountAnswerBuilder<?, ?> answerBuilder(FItemCountControl control) {
+        return ItemCountAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
         if (isDuplicated(items)) {
@@ -118,10 +122,6 @@ public class ItemCountAnswer extends Answer {
                     return textOption == null ? 0.0 : textOption.getNumericalValue() * item.getNumber();
                 })
                 .mapToDouble(Double::doubleValue).sum();
-    }
-
-    public static ItemCountAnswer.ItemCountAnswerBuilder<?, ?> answerBuilder(FItemCountControl control) {
-        return ItemCountAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

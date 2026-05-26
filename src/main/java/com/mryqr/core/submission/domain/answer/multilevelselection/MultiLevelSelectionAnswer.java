@@ -36,6 +36,10 @@ public class MultiLevelSelectionAnswer extends Answer {
     @NotNull
     private MultiLevelSelection selection;
 
+    public static MultiLevelSelectionAnswer.MultiLevelSelectionAnswerBuilder<?, ?> answerBuilder(FMultiLevelSelectionControl control) {
+        return MultiLevelSelectionAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -108,10 +112,6 @@ public class MultiLevelSelectionAnswer extends Answer {
                 .filter(thirdLevel -> Objects.equals(thirdLevel.getName(), level3)).findFirst());
 
         return thirdLevelOption.map(MultiLevelOption::getNumericalValue).orElse(null);
-    }
-
-    public static MultiLevelSelectionAnswer.MultiLevelSelectionAnswerBuilder<?, ?> answerBuilder(FMultiLevelSelectionControl control) {
-        return MultiLevelSelectionAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

@@ -68,13 +68,13 @@ public class SetupApi {
 
     public PreparedAppResponse registerWithApp(String mobileOrEmail, String password) {
         LoginResponse response = registerWithLogin(mobileOrEmail, password);
-        CreateAppResponse appResponse = AppApi.createApp(response.getJwt(), rAppName());
-        return new PreparedAppResponse(response.getTenantId(),
-                response.getMemberId(),
+        CreateAppResponse appResponse = AppApi.createApp(response.jwt(), rAppName());
+        return new PreparedAppResponse(response.tenantId(),
+                response.memberId(),
                 appResponse.getAppId(),
                 appResponse.getDefaultGroupId(),
                 appResponse.getHomePageId(),
-                response.getJwt());
+                response.jwt());
     }
 
     public PreparedAppResponse registerWithApp() {
@@ -83,15 +83,15 @@ public class SetupApi {
 
     public PreparedQrResponse registerWithQr(String mobileOrEmail, String password) {
         PreparedAppResponse response = registerWithApp(mobileOrEmail, password);
-        CreateQrResponse createQrResponse = QrApi.createQr(response.getJwt(), rQrName(), response.getDefaultGroupId());
-        return new PreparedQrResponse(response.getTenantId(),
-                response.getMemberId(),
-                response.getAppId(),
-                response.getDefaultGroupId(),
-                response.getHomePageId(),
+        CreateQrResponse createQrResponse = QrApi.createQr(response.jwt(), rQrName(), response.defaultGroupId());
+        return new PreparedQrResponse(response.tenantId(),
+                response.memberId(),
+                response.appId(),
+                response.defaultGroupId(),
+                response.homePageId(),
                 createQrResponse.getQrId(),
                 createQrResponse.getPlateId(),
-                response.getJwt());
+                response.jwt());
     }
 
     public PreparedQrResponse registerWithQr() {

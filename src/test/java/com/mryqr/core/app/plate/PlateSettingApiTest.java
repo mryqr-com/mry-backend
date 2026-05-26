@@ -38,9 +38,9 @@ public class PlateSettingApiTest extends BaseApiTest {
     public void update_app_setting_should_also_update_plate_setting() {
         PreparedAppResponse response = setupApi.registerWithApp();
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(DIRECT_INPUT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         PlateSetting plateSetting = setting.getPlateSetting();
@@ -146,7 +146,7 @@ public class PlateSettingApiTest extends BaseApiTest {
         plateSetting.getControls().add(singleRowTextControl);
         plateSetting.getControls().add(tableControl);
         plateSetting.getControls().add(headerImageControl);
-        AppApi.updateAppSetting(response.getJwt(), appId, app.getVersion(), setting);
+        AppApi.updateAppSetting(response.jwt(), appId, app.getVersion(), setting);
 
         App updatedApp = appRepository.byId(appId);
         PlateSetting updatedSetting = updatedApp.getSetting().getPlateSetting();
@@ -165,13 +165,13 @@ public class PlateSettingApiTest extends BaseApiTest {
     public void should_create_default_control_if_no_control() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         PlateSetting plateSetting = setting.getPlateSetting();
         plateSetting.getControls().clear();
 
-        AppApi.updateAppSetting(response.getJwt(), appId, app.getVersion(), setting);
+        AppApi.updateAppSetting(response.jwt(), appId, app.getVersion(), setting);
         App updatedApp = appRepository.byId(appId);
         PlateSetting updatedSetting = updatedApp.getSetting().getPlateSetting();
         assertEquals(MM_60x60, updatedSetting.getConfig().getSize());
@@ -183,7 +183,7 @@ public class PlateSettingApiTest extends BaseApiTest {
     public void should_fail_update_plate_setting_if_control_id_duplicated() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         PlateSetting plateSetting = setting.getPlateSetting();
@@ -213,14 +213,14 @@ public class PlateSettingApiTest extends BaseApiTest {
                 .build();
 
         plateSetting.getControls().addAll(List.of(qrImageControl1, qrImageControl2));
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), PLATE_CONTROL_ID_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), PLATE_CONTROL_ID_DUPLICATED);
     }
 
     @Test
     public void should_fail_create_plate_setting_if_attribute_not_exist() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         PlateSetting plateSetting = setting.getPlateSetting();
@@ -242,7 +242,7 @@ public class PlateSettingApiTest extends BaseApiTest {
                 .build();
 
         plateSetting.getControls().add(singleRowTextControl);
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), VALIDATION_ATTRIBUTE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), VALIDATION_ATTRIBUTE_NOT_EXIST);
     }
 
 }

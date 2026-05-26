@@ -24,9 +24,9 @@ public class InstanceListControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PInstanceListControl control = defaultInstanceListControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -37,15 +37,15 @@ public class InstanceListControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PInstanceListControl control = defaultInstanceListControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
 
-        CreateQrResponse response1 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
-        CreateQrResponse response2 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse response1 = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse response2 = QrApi.createQr(response.jwt(), response.defaultGroupId());
 
         QR qr1 = qrRepository.byId(response1.getQrId());
         QR qr2 = qrRepository.byId(response2.getQrId());
 
-        QInstanceListPresentation presentation = (QInstanceListPresentation) PresentationApi.fetchPresentation(response.getJwt(), response1.getQrId(), response.getHomePageId(), control.getId());
+        QInstanceListPresentation presentation = (QInstanceListPresentation) PresentationApi.fetchPresentation(response.jwt(), response1.getQrId(), response.homePageId(), control.getId());
 
         assertEquals(qr2.getPlateId(), presentation.getInstances().get(0).getPlateId());
         assertEquals(qr2.getName(), presentation.getInstances().get(0).getName());

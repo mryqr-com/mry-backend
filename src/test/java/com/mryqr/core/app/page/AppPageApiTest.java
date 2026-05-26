@@ -68,8 +68,8 @@ public class AppPageApiTest extends BaseApiTest {
                 .actionName(rPageActionName())
                 .showAsterisk(true)
                 .build();
-        String appId = response.getAppId();
-        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), appId, pageSetting, newArrayList());
+        String appId = response.appId();
+        AppApi.updateAppHomePageSettingAndControls(response.jwt(), appId, pageSetting, newArrayList());
 
         App app = appRepository.byId(appId);
         PageSetting setting = app.getSetting().homePage().getSetting();
@@ -93,8 +93,8 @@ public class AppPageApiTest extends BaseApiTest {
                 .submitType(ONCE_PER_MEMBER)
                 .permission(PUBLIC)
                 .build();
-        String appId = response.getAppId();
-        AppApi.updateAppHomePageSetting(response.getJwt(), appId, pageSetting);
+        String appId = response.appId();
+        AppApi.updateAppHomePageSetting(response.jwt(), appId, pageSetting);
 
         App app = appRepository.byId(appId);
         PageSetting setting = app.getSetting().homePage().getSetting();
@@ -111,8 +111,8 @@ public class AppPageApiTest extends BaseApiTest {
                 .submitterUpdatable(true)
                 .submitterUpdateRange(NO_RESTRICTION)
                 .build();
-        String appId = response.getAppId();
-        AppApi.updateAppHomePageSetting(response.getJwt(), appId, pageSetting);
+        String appId = response.appId();
+        AppApi.updateAppHomePageSetting(response.jwt(), appId, pageSetting);
 
         App app = appRepository.byId(appId);
         PageSetting setting = app.getSetting().homePage().getSetting();
@@ -123,22 +123,22 @@ public class AppPageApiTest extends BaseApiTest {
     @Test
     public void delete_page_should_raise_event() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
         FRadioControl control = defaultRadioControl();
         Page newPage = defaultPage(control);
         setting.getPages().add(newPage);
-        AppApi.updateAppSetting(response.getJwt(), appId, setting);
+        AppApi.updateAppSetting(response.jwt(), appId, setting);
 
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), newPage.getId(), rAnswer(control));
-        assertEquals(1, submissionRepository.count(response.getTenantId()));
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), newPage.getId(), rAnswer(control));
+        assertEquals(1, submissionRepository.count(response.tenantId()));
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(1, tenant.getResourceUsage().getSubmissionCountForApp(appId));
 
         setting.getPages().remove(newPage);
-        AppApi.updateAppSetting(response.getJwt(), appId, setting);
+        AppApi.updateAppSetting(response.jwt(), appId, setting);
 
         AppPagesDeletedEvent appPagesDeletedEvent = latestEventFor(appId, APP_PAGES_DELETED, AppPagesDeletedEvent.class);
         assertEquals(1, appPagesDeletedEvent.getPages().size());
@@ -154,8 +154,8 @@ public class AppPageApiTest extends BaseApiTest {
                 AppControlOptionsDeletedEvent.class);
         assertNull(optionsDeletedEvent);
 
-        assertEquals(0, submissionRepository.count(response.getTenantId()));
-        Tenant updatedTenant = tenantRepository.byId(response.getTenantId());
+        assertEquals(0, submissionRepository.count(response.tenantId()));
+        Tenant updatedTenant = tenantRepository.byId(response.tenantId());
         assertEquals(0, updatedTenant.getResourceUsage().getSubmissionCountForApp(appId));
     }
 
@@ -164,10 +164,10 @@ public class AppPageApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         Page page = defaultPage();
-        App app = appRepository.byId(response.getAppId());
+        App app = appRepository.byId(response.appId());
         AppSetting setting = app.getSetting();
         setting.getPages().add(page);
-        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
+        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
 
         PageNumberReport pageNumberReport = PageNumberReport.builder()
                 .id(newShortUuid())
@@ -187,28 +187,28 @@ public class AppPageApiTest extends BaseApiTest {
                         .numberReportSetting(NumberReportSetting.builder().reports(reports)
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
-        AppApi.updateAppReportSetting(response.getJwt(), response.getAppId(), command);
-        assertEquals(1, appRepository.byId(response.getAppId())
+        AppApi.updateAppReportSetting(response.jwt(), response.appId(), command);
+        assertEquals(1, appRepository.byId(response.appId())
                 .getReportSetting().getNumberReportSetting().getReports().size());
 
         setting.getPages().remove(page);
-        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
+        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
 
-        assertEquals(0, appRepository.byId(response.getAppId())
+        assertEquals(0, appRepository.byId(response.appId())
                 .getReportSetting().getNumberReportSetting().getReports().size());
     }
 
     @Test
     public void page_change_to_per_instance_should_raise_event() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String appId = response.getAppId();
+        String appId = response.appId();
 
         FRadioControl control = defaultRadioControl();
         Page newPage = defaultPage(control);
-        AppApi.updateAppPage(response.getJwt(), appId, newPage);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), newPage.getId(), rAnswer(control));
-        assertEquals(1, submissionRepository.count(response.getTenantId()));
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        AppApi.updateAppPage(response.jwt(), appId, newPage);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), newPage.getId(), rAnswer(control));
+        assertEquals(1, submissionRepository.count(response.tenantId()));
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(1, tenant.getResourceUsage().getSubmissionCountForApp(appId));
 
         App app = appRepository.byId(appId);
@@ -216,7 +216,7 @@ public class AppPageApiTest extends BaseApiTest {
         PageSetting pageSetting = setting.homePage().getSetting();
         ReflectionTestUtils.setField(pageSetting, "submitType", ONCE_PER_INSTANCE);
 
-        AppApi.updateAppSetting(response.getJwt(), appId, setting);
+        AppApi.updateAppSetting(response.jwt(), appId, setting);
 
         AppPageChangedToSubmitPerInstanceEvent event = latestEventFor(appId, APP_PAGE_CHANGED_TO_SUBMIT_PER_INSTANCE,
                 AppPageChangedToSubmitPerInstanceEvent.class);
@@ -224,8 +224,8 @@ public class AppPageApiTest extends BaseApiTest {
         assertEquals(1, event.getPageIds().size());
         assertTrue(event.getPageIds().contains(newPage.getId()));
 
-        assertEquals(0, submissionRepository.count(response.getTenantId()));
-        Tenant updatedTenant = tenantRepository.byId(response.getTenantId());
+        assertEquals(0, submissionRepository.count(response.tenantId()));
+        Tenant updatedTenant = tenantRepository.byId(response.tenantId());
         assertEquals(0, updatedTenant.getResourceUsage().getSubmissionCountForApp(appId));
     }
 
@@ -233,16 +233,16 @@ public class AppPageApiTest extends BaseApiTest {
     public void page_changed_to_per_instance_should_delete_page_related_attribute_values() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FRadioControl control = defaultRadioControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(control.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+                .pageId(response.homePageId()).controlId(control.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         final RadioAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
-        App app = appRepository.byId(response.getAppId());
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         RadioAttributeValue attributeValue = (RadioAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getOptionId(), attributeValue.getOptionId());
         Set<String> textValues = qr.getIndexedValues().valueOf(indexedField).getTv();
@@ -252,8 +252,8 @@ public class AppPageApiTest extends BaseApiTest {
         PageSetting pageSetting = setting.homePage().getSetting();
         ReflectionTestUtils.setField(pageSetting, "submitType", ONCE_PER_INSTANCE);
 
-        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
-        QR updatedQr = qrRepository.byId(response.getQrId());
+        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
+        QR updatedQr = qrRepository.byId(response.qrId());
         assertNull(updatedQr.getAttributeValues().get(attribute.getId()));
         assertNull(updatedQr.getIndexedValues().valueOf(indexedField));
     }
@@ -261,14 +261,14 @@ public class AppPageApiTest extends BaseApiTest {
     @Test
     public void page_change_to_per_member_should_raise_event() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String appId = response.getAppId();
+        String appId = response.appId();
 
         FRadioControl control = defaultRadioControl();
         Page newPage = defaultPage(control);
-        AppApi.updateAppPage(response.getJwt(), appId, newPage);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), newPage.getId(), rAnswer(control));
-        assertEquals(1, submissionRepository.count(response.getTenantId()));
-        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        AppApi.updateAppPage(response.jwt(), appId, newPage);
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), newPage.getId(), rAnswer(control));
+        assertEquals(1, submissionRepository.count(response.tenantId()));
+        Tenant tenant = tenantRepository.byId(response.tenantId());
         assertEquals(1, tenant.getResourceUsage().getSubmissionCountForApp(appId));
 
         App app = appRepository.byId(appId);
@@ -276,7 +276,7 @@ public class AppPageApiTest extends BaseApiTest {
         PageSetting pageSetting = setting.homePage().getSetting();
         ReflectionTestUtils.setField(pageSetting, "submitType", ONCE_PER_MEMBER);
 
-        AppApi.updateAppSetting(response.getJwt(), appId, setting);
+        AppApi.updateAppSetting(response.jwt(), appId, setting);
 
         AppPageChangedToSubmitPerMemberEvent event = latestEventFor(appId, APP_PAGE_CHANGED_TO_SUBMIT_PER_MEMBER,
                 AppPageChangedToSubmitPerMemberEvent.class);
@@ -284,8 +284,8 @@ public class AppPageApiTest extends BaseApiTest {
         assertEquals(1, event.getPageIds().size());
         assertTrue(event.getPageIds().contains(newPage.getId()));
 
-        assertEquals(0, submissionRepository.count(response.getTenantId()));
-        Tenant updatedTenant = tenantRepository.byId(response.getTenantId());
+        assertEquals(0, submissionRepository.count(response.tenantId()));
+        Tenant updatedTenant = tenantRepository.byId(response.tenantId());
         assertEquals(0, updatedTenant.getResourceUsage().getSubmissionCountForApp(appId));
     }
 
@@ -293,16 +293,16 @@ public class AppPageApiTest extends BaseApiTest {
     public void page_changed_to_per_member_should_delete_page_related_attribute_values() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FRadioControl control = defaultRadioControl();
-        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.updateAppControls(response.jwt(), response.appId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.getHomePageId()).controlId(control.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+                .pageId(response.homePageId()).controlId(control.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
 
         final RadioAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
-        App app = appRepository.byId(response.getAppId());
+        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        App app = appRepository.byId(response.appId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.getQrId());
+        QR qr = qrRepository.byId(response.qrId());
         RadioAttributeValue attributeValue = (RadioAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getOptionId(), attributeValue.getOptionId());
         Set<String> textValues = qr.getIndexedValues().valueOf(indexedField).getTv();
@@ -312,8 +312,8 @@ public class AppPageApiTest extends BaseApiTest {
         PageSetting pageSetting = setting.homePage().getSetting();
         ReflectionTestUtils.setField(pageSetting, "submitType", ONCE_PER_MEMBER);
 
-        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
-        QR updatedQr = qrRepository.byId(response.getQrId());
+        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
+        QR updatedQr = qrRepository.byId(response.qrId());
         assertNull(updatedQr.getAttributeValues().get(attribute.getId()));
         assertNull(updatedQr.getIndexedValues().valueOf(indexedField));
     }
@@ -321,7 +321,7 @@ public class AppPageApiTest extends BaseApiTest {
     @Test
     public void should_fail_update_app_setting_if_page_id_duplicated() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
 
         AppSetting setting = app.getSetting();
@@ -330,13 +330,13 @@ public class AppPageApiTest extends BaseApiTest {
         pages.add(newPage);
         pages.add(newPage);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), PAGE_ID_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), PAGE_ID_DUPLICATED);
     }
 
     @Test
     public void should_fail_update_app_if_page_modify_permission_not_allowed() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String appId = response.getAppId();
+        String appId = response.appId();
 
         Page page = defaultPageBuilder().setting(defaultPageSettingBuilder().modifyPermission(AS_TENANT_MEMBER).build()).build();
         App app = appRepository.byId(appId);
@@ -344,13 +344,13 @@ public class AppPageApiTest extends BaseApiTest {
         List<Page> pages = setting.getPages();
         pages.add(page);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), MODIFY_PERMISSION_NOT_ALLOWED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), MODIFY_PERMISSION_NOT_ALLOWED);
     }
 
     @Test
     public void should_fail_update_app_if_page_approve_permission_not_allowed() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String appId = response.getAppId();
+        String appId = response.appId();
 
         Page page = defaultPageBuilder()
                 .setting(defaultPageSettingBuilder()
@@ -360,19 +360,19 @@ public class AppPageApiTest extends BaseApiTest {
         List<Page> pages = setting.getPages();
         pages.add(page);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), APPROVAL_PERMISSION_NOT_ALLOWED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), APPROVAL_PERMISSION_NOT_ALLOWED);
     }
 
     @Test
     public void should_fail_update_app_if_app_operation_permission_not_allowed() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        String appId = response.getAppId();
+        String appId = response.appId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         AppConfig config = setting.getConfig();
         ReflectionTestUtils.setField(config, "operationPermission", PUBLIC);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), OPERATION_PERMISSION_NOT_ALLOWED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), OPERATION_PERMISSION_NOT_ALLOWED);
     }
 }

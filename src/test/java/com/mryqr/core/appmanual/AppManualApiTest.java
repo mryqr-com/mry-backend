@@ -16,9 +16,9 @@ public class AppManualApiTest extends BaseApiTest {
     public void should_fetch_empty_manual_if_no_data() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        assertTrue(isBlank(BaseApiTest.given(response.getJwt())
+        assertTrue(isBlank(BaseApiTest.given(response.jwt())
                 .when()
-                .get("/app-manuals/{appId}", response.getAppId())
+                .get("/app-manuals/{appId}", response.appId())
                 .then()
                 .statusCode(200).extract().body().asString()));
     }
@@ -28,16 +28,16 @@ public class AppManualApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         String content = rSentence(10);
-        AppManualApi.updateAppManual(response.getJwt(), response.getAppId(), UpdateAppManualCommand.builder().content(content).build());
+        AppManualApi.updateAppManual(response.jwt(), response.appId(), UpdateAppManualCommand.builder().content(content).build());
 
-        QAppManual qAppManual = AppManualApi.fetchAppManual(response.getJwt(), response.getAppId());
-        assertEquals(response.getAppId(), qAppManual.getAppId());
+        QAppManual qAppManual = AppManualApi.fetchAppManual(response.jwt(), response.appId());
+        assertEquals(response.appId(), qAppManual.getAppId());
         assertEquals(content, qAppManual.getContent());
         assertNotNull(qAppManual.getId());
 
         String updatedContent = rSentence(10);
-        AppManualApi.updateAppManual(response.getJwt(), response.getAppId(), UpdateAppManualCommand.builder().content(updatedContent).build());
-        QAppManual updatedQAppManual = AppManualApi.fetchAppManual(response.getJwt(), response.getAppId());
+        AppManualApi.updateAppManual(response.jwt(), response.appId(), UpdateAppManualCommand.builder().content(updatedContent).build());
+        QAppManual updatedQAppManual = AppManualApi.fetchAppManual(response.jwt(), response.appId());
         assertEquals(qAppManual.getId(), updatedQAppManual.getId());
         assertEquals(updatedContent, updatedQAppManual.getContent());
     }

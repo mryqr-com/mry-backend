@@ -33,6 +33,10 @@ public class PersonNameAnswer extends Answer {
     @Size(max = MAX_PERSON_NAME_LENGTH)
     private String name;
 
+    public static PersonNameAnswer.PersonNameAnswerBuilder<?, ?> answerBuilder(FPersonNameControl control) {
+        return PersonNameAnswer.builder().controlId(control.getId()).controlType(control.getType());
+    }
+
     @Override
     public void correctAndValidate() {
     }
@@ -79,10 +83,6 @@ public class PersonNameAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
-    }
-
-    public static PersonNameAnswer.PersonNameAnswerBuilder<?, ?> answerBuilder(FPersonNameControl control) {
-        return PersonNameAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

@@ -239,16 +239,16 @@ public class QR extends AggregateRoot {
         this.lastAccessedAt = now();
     }
 
+    public IndexedValues getIndexedValues() {
+        return ivs;
+    }
+
     public void setIndexedValues(IndexedValues values) {
         if (values == null || values.isEmpty()) {
             this.ivs = null;
         } else {
             this.ivs = values;
         }
-    }
-
-    public IndexedValues getIndexedValues() {
-        return ivs;
     }
 
     public void putAttributeValues(Map<String, AttributeValue> values, User user) {
@@ -270,12 +270,12 @@ public class QR extends AggregateRoot {
         }
     }
 
-    public void setSearchableValues(Set<String> values) {
-        this.svs = isNotEmpty(values) ? values : null;
-    }
-
     public Set<String> getSearchableValues() {
         return svs;
+    }
+
+    public void setSearchableValues(Set<String> values) {
+        this.svs = isNotEmpty(values) ? values : null;
     }
 
     public AttributeValue attributeValueOf(String attributeId) {

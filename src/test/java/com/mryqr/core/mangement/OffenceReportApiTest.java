@@ -50,12 +50,12 @@ public class OffenceReportApiTest extends BaseApiTest {
 
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        Tenant targetTenant = tenantRepository.byId(response.getTenantId());
-        App targetApp = appRepository.byId(response.getAppId());
-        QR targetQr = qrRepository.byId(response.getQrId());
+        Tenant targetTenant = tenantRepository.byId(response.tenantId());
+        App targetApp = appRepository.byId(response.appId());
+        QR targetQr = qrRepository.byId(response.qrId());
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), PUBLIC, control);
+        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), PUBLIC, control);
 
         QR offenceTemplateQr = qrRepository.byPlateIdOptional(OFFENCE_TEMPLATE_PLATE_ID).get();
         App offenceApp = appRepository.byId(MRY_OFFENCE_APP_ID);
@@ -68,7 +68,7 @@ public class OffenceReportApiTest extends BaseApiTest {
                 .qrId(offenceTemplateQr.getId())
                 .pageId(OFFENCE_FORM_PAGE_ID)
                 .answers(Set.of(rAnswer(reasonControl), rAnswer(detailControl), rAnswer(filesControl), rAnswer(mobileControl)))
-                .referenceData("http://m.mryqr.com/r/" + targetQr.getPlateId() + "/pages/" + response.getHomePageId())
+                .referenceData("http://m.mryqr.com/r/" + targetQr.getPlateId() + "/pages/" + response.homePageId())
                 .build();
         String submissionId = SubmissionApi.newSubmission(null, submissionCommand);
 

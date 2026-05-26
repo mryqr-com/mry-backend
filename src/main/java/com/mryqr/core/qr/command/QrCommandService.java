@@ -60,13 +60,13 @@ public class QrCommandService {
         packagesStatus.validateAddPlate();
 
         PlatedQr platedQr = qrFactory.createPlatedQr(name, group, app, user);
-        qrRepository.save(platedQr.getQr());
-        plateRepository.save(platedQr.getPlate());
-        log.info("Created qr[{}] of group[{}] of app[{}].", platedQr.getQr().getId(), groupId, appId);
+        qrRepository.save(platedQr.qr());
+        plateRepository.save(platedQr.plate());
+        log.info("Created qr[{}] of group[{}] of app[{}].", platedQr.qr().getId(), groupId, appId);
 
         return CreateQrResponse.builder()
-                .qrId(platedQr.getQr().getId())
-                .plateId(platedQr.getPlate().getId())
+                .qrId(platedQr.qr().getId())
+                .plateId(platedQr.plate().getId())
                 .groupId(groupId)
                 .appId(appId)
                 .build();
@@ -265,8 +265,8 @@ public class QrCommandService {
         mryRateLimiter.applyFor(user.getTenantId(), "QR:UpdateBaseSetting", 20);
 
         AppedQr appedQr = qrRepository.appedQrByIdAndCheckTenantShip(qrId, user);
-        QR qr = appedQr.getQr();
-        App app = appedQr.getApp();
+        QR qr = appedQr.qr();
+        App app = appedQr.app();
         managePermissionChecker.checkCanManageQr(user, qr, app);
 
         qrDomainService.updateQrBaseSetting(qr,

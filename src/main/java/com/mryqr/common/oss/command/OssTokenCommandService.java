@@ -75,7 +75,7 @@ public class OssTokenCommandService {
 
             case SUBMISSION -> {
                 AppedQr appedQr = qrRepository.appedQrById(command.getQrId());
-                App app = appedQr.getApp();
+                App app = appedQr.app();
                 tenantId = app.getTenantId();
 
                 if (!Objects.equals(app.getId(), command.getAppId())) {

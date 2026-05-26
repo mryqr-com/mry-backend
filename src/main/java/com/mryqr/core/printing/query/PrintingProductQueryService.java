@@ -9,10 +9,8 @@ import com.mryqr.core.qr.domain.QR;
 import com.mryqr.core.qr.domain.attribute.DropdownAttributeValue;
 import com.mryqr.core.qr.domain.attribute.MultiLineTextAttributeValue;
 import com.mryqr.core.qr.domain.attribute.TextAttributeValue;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
@@ -26,7 +24,6 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.mryqr.management.printingproduct.PrintingProductApp.*;
 import static java.util.function.Function.identity;
-import static lombok.AccessLevel.PRIVATE;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -55,12 +52,12 @@ public class PrintingProductQueryService {
                     }
 
                     return QPrintingProduct.builder()
-                            .id(qrProductInfo.getId())
+                            .id(qrProductInfo.id())
                             .name(materialType.getName())
                             .materialType(materialType)
-                            .description(qrProductInfo.getDescription())
-                            .introduction(qrProductInfo.getIntroduction())
-                            .image(qrProductInfo.getImage())
+                            .description(qrProductInfo.description())
+                            .introduction(qrProductInfo.introduction())
+                            .image(qrProductInfo.image())
                             .printingTypes(toPrintTypes(materialType))
                             .build();
                 }).filter(Objects::nonNull)
@@ -98,7 +95,7 @@ public class PrintingProductQueryService {
                             .image(qr.getHeaderImage())
                             .build();
                 }).filter(Objects::nonNull)
-                .collect(toImmutableMap(QrProductInfo::getMaterialType, identity(), (v1, v2) -> v1));
+                .collect(toImmutableMap(QrProductInfo::materialType, identity(), (v1, v2) -> v1));
     }
 
     private List<QPlatePrintingType> toPrintTypes(MaterialType materialType) {
@@ -114,14 +111,11 @@ public class PrintingProductQueryService {
                 .collect(toImmutableList());
     }
 
-    @Value
     @Builder
-    @AllArgsConstructor(access = PRIVATE)
-    private static class QrProductInfo {
-        private final String id;
-        private final MaterialType materialType;
-        private final String description;
-        private final String introduction;
-        private final UploadedFile image;
+    private record QrProductInfo(String id,
+                                 MaterialType materialType,
+                                 String description,
+                                 String introduction,
+                                 UploadedFile image) {
     }
 }

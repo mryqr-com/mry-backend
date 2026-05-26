@@ -11,6 +11,10 @@ public class MemberIdValidator implements ConstraintValidator<MemberId, String> 
 
     private static final Pattern PATTERN = Pattern.compile("^MBR[0-9]{17,19}$");
 
+    public static boolean isMemberId(String memberId) {
+        return PATTERN.matcher(memberId).matches();
+    }
+
     @Override
     public void initialize(MemberId constraintAnnotation) {
     }
@@ -22,10 +26,6 @@ public class MemberIdValidator implements ConstraintValidator<MemberId, String> 
         }
 
         return isMemberId(memberId);
-    }
-
-    public static boolean isMemberId(String memberId) {
-        return PATTERN.matcher(memberId).matches();
     }
 
 }
