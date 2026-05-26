@@ -15,16 +15,15 @@
 ## 本地运行
 
 - 确保本地已安装Java 17及以上版本，以及Docker；
-- 本地启动：`./local-run.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再启动Spring Boot主程序，启动后访问 http://localhost:8080/about, 如可正常访问则表示启动成功；
-- 本地构建：`./ci-build.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再运行单元测试，API测试以及动态代码检查等构建步骤。
+- 本地启动：`./run.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再启动Spring Boot主程序，启动后访问 http://localhost:8080/about, 如可正常访问则表示启动成功；
+- 本地构建：`./build.sh`，该命令将通过docker-compose自动运行MongoDB和Redis，再运行单元测试，API测试以及动态代码检查等构建步骤。
 
 ## 常用命令
 
 | 功能                 | 命令                      | 说明                                         |
 |--------------------|-------------------------|--------------------------------------------|
-| 本地启动               | `./local-run.sh`        | API端口：8080, 调试端口：5005                      |
-| 清空所有本地数据后再启动       | `clear-and-local-run.sh` | API端口：8080, 调试端口：5005                      |
-| 本地构建               | `./ci-build.sh`         | 将运行单元测试，API测试以及静态代码检查                      |
+| 本地启动               | `./run.sh`        | API端口：8080, 调试端口：5005                      |
+| 本地构建               | `./build.sh`         | 将运行单元测试，API测试以及静态代码检查                      |
 | 单独启动docker-compose | `./start-docker-compose` | 通过`docker compose`启动MongoDB和Redis，如已经启动则跳过 |
 | 单独停止docker-compose | `./stop-docker-compose` | 将清除`docker compose`的所有本地数据，包括MongoDB和Redis |
 
