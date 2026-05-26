@@ -44,20 +44,6 @@ mry:
     secret: 3740243432434gegewf
     expire: 7200
     aheadAutoRefresh: 60
-  wx:
-    mobileWxEnabled: false
-    mobileAppId: your-wx-mobile-app-id
-    mobileAppSecret: your-wx-mobile-app-secret
-    pcAppId: your-pc-mobile-app-id
-    pcAppSecret: your-pc-mobile-app-secret
-    submissionCreatedTemplateId: notapplicable
-    submissionUpdatedTemplateId: notapplicable
-    submissionApprovedTemplateId: notapplicable
-    assignmentNearExpireTemplateId: notapplicable
-  pay:
-    wxMerchantId: notapplicable
-    wxMerchantSerialNumber: notapplicable
-    wxApiV3Key: notapplicable
   common:
     httpsEnabled: false
     baseDomainName: ci.mryqr.com

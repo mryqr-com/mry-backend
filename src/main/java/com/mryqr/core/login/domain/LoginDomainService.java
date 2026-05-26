@@ -26,8 +26,7 @@ public class LoginDomainService {
     private final MemberDomainService memberDomainService;
 
     public String loginWithMobileOrEmail(String mobileOrEmail,
-                                         String password,
-                                         WxIdInfo wxIdInfo) {
+                                         String password) {
         Member member = memberRepository.byMobileOrEmailOptional(mobileOrEmail)
                 .orElseThrow(() -> authenticationException("手机号或邮箱登录失败", mapOf("mobileOrEmail", maskMobileOrEmail(mobileOrEmail))));
 
@@ -37,21 +36,16 @@ public class LoginDomainService {
         }
 
         member.checkActive();
-        return generateJwtAndTryBindWx(member, wxIdInfo);
+        return jwtService.generateJwt(member.getId());
     }
 
     public String loginWithVerificationCode(String mobileOrEmail,
-                                            String verificationCode,
-                                            WxIdInfo wxIdInfo) {
+                                            String verificationCode) {
         verificationCodeChecker.check(mobileOrEmail, verificationCode, LOGIN);
         Member member = memberRepository.byMobileOrEmailOptional(mobileOrEmail)
                 .orElseThrow(() -> authenticationException("验证码登录失败", mapOf("mobileOrEmail", maskMobileOrEmail(mobileOrEmail))));
 
         member.checkActive();
-        return generateJwtAndTryBindWx(member, wxIdInfo);
-    }
-
-    private String generateJwtAndTryBindWx(Member member, WxIdInfo wxIdInfo) {
         return jwtService.generateJwt(member.getId());
     }
 
