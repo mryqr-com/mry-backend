@@ -35,14 +35,6 @@ public class PropertyService {
         return protocol() + "://" + subdomainFor("m");
     }
 
-    public String mobileWxAuthRedirectUrl() {
-        return apiBaseUrl() + "/mobile-wx/auth2-callback";
-    }
-
-    public String pcWxAuthRedirectUrl() {
-        return apiBaseUrl() + "/pc-wx/auth2-callback";
-    }
-
     public String consoleDefaultHomeUrl() {
         return consoleBaseUrl() + "/management/my-apps";
     }
@@ -57,10 +49,6 @@ public class PropertyService {
 
     public String clientLoginUrl() {
         return clientBaseUrl() + "/login";
-    }
-
-    public String wxPayNotifyUrl() {
-        return apiBaseUrl() + "/preorders/pay-callback/wxpay";
     }
 
     public String submissionUrlOf(String submissionId, String pageId, String plateId) {
