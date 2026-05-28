@@ -64,7 +64,7 @@ public class IntegrationMemberCommandService {
         Member member = memberRepository.byIdAndCheckTenantShip(memberId, user);
         member.onDelete(user);
         memberRepository.delete(member);
-        memberDomainService.checkMinTenantAdminLimit(member.getTenantId());
+        memberDomainService.checkMinActiveTenantAdminLimit(member.getTenantId());
         log.info("Integration deleted member[{}].", memberId);
     }
 
@@ -75,7 +75,7 @@ public class IntegrationMemberCommandService {
         Member member = memberRepository.byCustomIdAndCheckTenantShip(user.getTenantId(), customId, user);
         member.onDelete(user);
         memberRepository.delete(member);
-        memberDomainService.checkMinTenantAdminLimit(member.getTenantId());
+        memberDomainService.checkMinActiveTenantAdminLimit(member.getTenantId());
         log.info("Integration deleted member[customId={}].", customId);
     }
 
@@ -126,7 +126,7 @@ public class IntegrationMemberCommandService {
         Member member = memberRepository.byIdAndCheckTenantShip(memberId, user);
         member.deactivate(user);
         memberRepository.save(member);
-        memberDomainService.checkMinTenantAdminLimit(member.getTenantId());
+        memberDomainService.checkMinActiveTenantAdminLimit(member.getTenantId());
         log.info("Integration deactivated member[{}].", memberId);
     }
 
@@ -137,7 +137,7 @@ public class IntegrationMemberCommandService {
         Member member = memberRepository.byCustomIdAndCheckTenantShip(user.getTenantId(), customId, user);
         member.deactivate(user);
         memberRepository.save(member);
-        memberDomainService.checkMinTenantAdminLimit(member.getTenantId());
+        memberDomainService.checkMinActiveTenantAdminLimit(member.getTenantId());
         log.info("Integration deactivated  member[customId={}].", customId);
     }
 

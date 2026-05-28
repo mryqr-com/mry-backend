@@ -32,9 +32,7 @@ public interface MemberRepository {
 
     Set<String> cachedMemberIdsOfDepartment(String tenantId, String departmentId);
 
-    int cachedActiveTenantAdminCountFor(String tenantId);
-
-    int cachedTenantAdminCountFor(String tenantId);
+    int activeTenantAdminCountFor(String tenantId);
 
     String cachedMemberNameOf(String memberId);
 

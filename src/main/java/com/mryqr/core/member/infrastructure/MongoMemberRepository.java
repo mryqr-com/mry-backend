@@ -28,6 +28,7 @@ import java.util.*;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static com.google.common.collect.ImmutableSet.toImmutableSet;
+import static com.mryqr.common.domain.user.Role.TENANT_ADMIN;
 import static com.mryqr.common.exception.ErrorCode.AR_NOT_FOUND;
 import static com.mryqr.common.exception.ErrorCode.MEMBER_NOT_FOUND;
 import static com.mryqr.common.utils.CommonUtils.requireNonBlank;
@@ -154,23 +155,13 @@ public class MongoMemberRepository extends MongoBaseRepository<Member> implement
                 .collect(toImmutableSet());
     }
 
-    @Override
-    public int cachedActiveTenantAdminCountFor(String tenantId) {
+    public int activeTenantAdminCountFor(String tenantId) {
         requireNonBlank(tenantId, "Tenant ID must not be blank.");
+        Query query = query(where("tenantId").is(tenantId)
+                .and("active").is(true)
+                .and("role").is(TENANT_ADMIN));
 
-        return (int) cachedMemberRepository.cachedTenantAllMembers(tenantId).getMembers()
-                .stream()
-                .filter(member -> member.isTenantAdmin() && member.isActive())
-                .count();
-    }
-
-    @Override
-    public int cachedTenantAdminCountFor(String tenantId) {
-        requireNonBlank(tenantId, "Tenant ID must not be blank.");
-
-        return (int) cachedMemberRepository.cachedTenantAllMembers(tenantId).getMembers()
-                .stream().filter(TenantCachedMember::isTenantAdmin)
-                .count();
+        return (int) mongoTemplate.count(query, Member.class);
     }
 
     @Override
