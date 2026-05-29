@@ -24,7 +24,7 @@ public class WxAccessTokenService {
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
 
-    @Retryable(delay = 1000, multiplier = 3)
+    @Retryable(delay = 1000, multiplier = 3, maxRetries = 2)
     public void refreshAccessToken() {
         if (!wxProperties.isMobileWxEnabled()) {
             return;

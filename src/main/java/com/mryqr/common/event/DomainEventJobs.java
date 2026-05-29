@@ -24,7 +24,7 @@ public class DomainEventJobs {
     private final StringRedisTemplate stringRedisTemplate;
     private final MryRedisProperties mryRedisProperties;
 
-    @Retryable(delay = 1000, multiplier = 3)
+    @Retryable(delay = 1000, multiplier = 3, maxRetries = 2)
     public void removeOldPublishingDomainEventsFromMongo(int days) {
         log.info("Start remove old publishing domain events from mongodb.");
         Query query = Query.query(where("raisedAt").lt(now().minus(days, DAYS)));
@@ -32,7 +32,7 @@ public class DomainEventJobs {
         log.info("Removed {} old publishing domain events from mongodb which are more than 100 days old.", result.getDeletedCount());
     }
 
-    @Retryable(delay = 1000, multiplier = 3)
+    @Retryable(delay = 1000, multiplier = 3, maxRetries = 2)
     public void removeOldConsumingDomainEventsFromMongo(int days) {
         log.info("Start remove old consuming domain events from mongodb.");
         Query query = Query.query(where("consumedAt").lt(now().minus(days, DAYS)));
@@ -40,7 +40,7 @@ public class DomainEventJobs {
         log.info("Removed {} old consuming domain events from mongodb which are more than 100 days old.", result.getDeletedCount());
     }
 
-    @Retryable(delay = 1000, multiplier = 3)
+    @Retryable(delay = 1000, multiplier = 3, maxRetries = 2)
     public void removeOldDomainEventsFromRedis(int count, boolean approximate) {
         log.info("Start remove old domain events from redis stream.");
         mryRedisProperties.allDomainEventStreams().forEach(stream -> {
@@ -51,7 +51,7 @@ public class DomainEventJobs {
         });
     }
 
-    @Retryable(delay = 1000, multiplier = 3)
+    @Retryable(delay = 1000, multiplier = 3, maxRetries = 2)
     public void removeOldWebhookEventsFromRedis(int count, boolean approximate) {
         log.info("Start remove old webhook events from redis stream.");
         Long webhookEventCount = stringRedisTemplate.opsForStream().trim(mryRedisProperties.getWebhookStream(), count, approximate);
@@ -60,7 +60,7 @@ public class DomainEventJobs {
         }
     }
 
-    @Retryable(delay = 1000, multiplier = 3)
+    @Retryable(delay = 1000, multiplier = 3, maxRetries = 2)
     public void removeOldNotificationEventsFromRedis(int count, boolean approximate) {
         log.info("Start remove old notification events from redis stream.");
         Long notificationEventCount = stringRedisTemplate.opsForStream().trim(mryRedisProperties.getNotificationStream(), count, approximate);

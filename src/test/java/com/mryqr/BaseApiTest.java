@@ -53,7 +53,6 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.function.Supplier;
 
-import static com.fasterxml.jackson.databind.SerializationFeature.INDENT_OUTPUT;
 import static com.mryqr.common.utils.MryConstants.AUTHORIZATION;
 import static com.mryqr.common.utils.MryConstants.AUTH_COOKIE_NAME;
 import static io.restassured.config.RestAssuredConfig.config;
@@ -72,7 +71,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 @Execution(CONCURRENT)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 public abstract class BaseApiTest {
-    private static ObjectMapper staticObjectMapper; // todo: 看看如何共享同一个ObjectMapper
+    private static ObjectMapper staticObjectMapper;
 
     @Autowired
     protected CommonProperties commonProperties;

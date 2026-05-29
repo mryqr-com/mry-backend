@@ -30,7 +30,7 @@ public class WebhookCaller {
                 .build();
     }
 
-    @Retryable(delay = 500, multiplier = 2, maxDelay = 2000)
+    @Retryable(delay = 500, multiplier = 2, maxDelay = 2000, maxRetries = 2)
     public void call(WebhookPayload payload, WebhookSetting setting) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(APPLICATION_JSON);

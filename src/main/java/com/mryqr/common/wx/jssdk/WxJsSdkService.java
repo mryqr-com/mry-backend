@@ -30,7 +30,7 @@ public class WxJsSdkService {
     private final ObjectMapper objectMapper;
     private final WxAccessTokenService wxAccessTokenService;
 
-    @Retryable(delay = 1000, multiplier = 3)
+    @Retryable(delay = 1000, multiplier = 3, maxRetries = 2)
     public void refreshJsApiTicket() {
         if (!wxProperties.isMobileWxEnabled()) {
             return;
