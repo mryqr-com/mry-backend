@@ -1,10 +1,8 @@
 package com.mryqr.common.wx.pay;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.mryqr.common.properties.PayProperties;
 import com.mryqr.common.properties.PropertyService;
 import com.mryqr.common.properties.WxProperties;
-import com.mryqr.common.utils.MryObjectMapper;
 import com.mryqr.common.wx.pay.notify.WxNotifyResult;
 import com.mryqr.common.wx.pay.notify.WxPayNotifyRequest;
 import com.mryqr.core.order.domain.Order;
@@ -17,6 +15,8 @@ import com.wechat.pay.java.service.payments.nativepay.model.PrepayRequest;
 import com.wechat.pay.java.service.payments.nativepay.model.PrepayResponse;
 import org.apache.commons.io.IOUtils;
 import org.springframework.core.io.ResourceLoader;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -37,14 +37,14 @@ public class DefaultWxPayService implements WxPayService {
     private final PayProperties payProperties;
     private final PropertyService propertyService;
     private final WxProperties wxProperties;
-    private final MryObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     public DefaultWxPayService(
             PayProperties payProperties,
             ResourceLoader resourceLoader,
             PropertyService propertyService,
             WxProperties wxProperties,
-            MryObjectMapper objectMapper) {
+            ObjectMapper objectMapper) {
         this.payProperties = payProperties;
         this.propertyService = propertyService;
         this.wxProperties = wxProperties;
@@ -98,9 +98,9 @@ public class DefaultWxPayService implements WxPayService {
 
         String decrypted = decrypt(ciphertext, associatedData, nonce);
         JsonNode jsonNode = objectMapper.readTree(decrypted);
-        String wxTxnId = jsonNode.get("transaction_id").textValue();
-        String successTime = jsonNode.get("success_time").textValue();
-        String orderId = jsonNode.get("out_trade_no").textValue();
+        String wxTxnId = jsonNode.get("transaction_id").stringValue();
+        String successTime = jsonNode.get("success_time").stringValue();
+        String orderId = jsonNode.get("out_trade_no").stringValue();
 
         return WxNotifyResult.builder()
                 .orderId(orderId)

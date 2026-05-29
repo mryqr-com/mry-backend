@@ -3,7 +3,6 @@ package com.mryqr.core.order.query;
 import com.mryqr.common.domain.user.User;
 import com.mryqr.common.properties.AliyunProperties;
 import com.mryqr.common.ratelimit.MryRateLimiter;
-import com.mryqr.common.utils.MryObjectMapper;
 import com.mryqr.common.utils.PagedList;
 import com.mryqr.common.utils.Pagination;
 import com.mryqr.core.order.domain.Order;
@@ -27,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Objects;
@@ -57,7 +57,7 @@ public class OrderQueryService {
     private final MongoTemplate mongoTemplate;
     private final RestTemplate restTemplate;
     private final AliyunProperties aliyunProperties;
-    private final MryObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     public QPriceQuotation quoteOrderPrice(QuotePriceQuery queryCommand, User user) {
         user.checkIsTenantAdmin();

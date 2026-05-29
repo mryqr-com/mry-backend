@@ -1,15 +1,15 @@
 package com.mryqr.common.wx.auth.pc;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.mryqr.common.exception.MryException;
 import com.mryqr.common.properties.WxProperties;
-import com.mryqr.common.utils.MryObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +26,7 @@ public class DefaultPcWxAuthService implements PcWxAuthService {
     private static final String PC_WX_AUTH_ACCESS_TOKEN_PREFIX = "PcWxAuthAccessToken:";
     private final RestTemplate restTemplate;
     private final WxProperties wxProperties;
-    private final MryObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
@@ -64,14 +64,14 @@ public class DefaultPcWxAuthService implements PcWxAuthService {
 
         JsonNode nicknameNode = jsonNode.get("nickname");
         JsonNode headImageNode = jsonNode.get("headimgurl");
-        if (nicknameNode == null || isBlank(nicknameNode.textValue())) {
+        if (nicknameNode == null || isBlank(nicknameNode.stringValue())) {
             throw new MryException(SYSTEM_ERROR, "Failed to get pc wx user info.", mapOf("response", resultString));
         }
 
         return PcWxAuthUserInfo.builder()
                 .openId(pcWxOpenId)
-                .nickname(nicknameNode.textValue())
-                .headerImageUrl(headImageNode != null ? headImageNode.textValue() : null)
+                .nickname(nicknameNode.stringValue())
+                .headerImageUrl(headImageNode != null ? headImageNode.stringValue() : null)
                 .build();
     }
 

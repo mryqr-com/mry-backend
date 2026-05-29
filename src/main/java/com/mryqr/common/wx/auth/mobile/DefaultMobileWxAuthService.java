@@ -1,15 +1,15 @@
 package com.mryqr.common.wx.auth.mobile;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.mryqr.common.exception.MryException;
 import com.mryqr.common.properties.WxProperties;
-import com.mryqr.common.utils.MryObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +26,7 @@ public class DefaultMobileWxAuthService implements MobileWxAuthService {
     private static final String MOBILE_WX_AUTH_ACCESS_TOKEN_PREFIX = "MobileWxAuthAccessToken:";
     private final RestTemplate restTemplate;
     private final WxProperties wxProperties;
-    private final MryObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
 
     @Override
@@ -63,14 +63,14 @@ public class DefaultMobileWxAuthService implements MobileWxAuthService {
 
         JsonNode nicknameNode = jsonNode.get("nickname");
         JsonNode headImageNode = jsonNode.get("headimgurl");
-        if (nicknameNode == null || isBlank(nicknameNode.textValue())) {
+        if (nicknameNode == null || isBlank(nicknameNode.stringValue())) {
             throw new MryException(SYSTEM_ERROR, "Failed to get mobile wx user info.", mapOf("response", resultString));
         }
 
         return MobileWxAuthUserInfo.builder()
                 .openId(mobileWxOpenId)
-                .nickname(nicknameNode.textValue())
-                .headerImageUrl(headImageNode != null ? headImageNode.textValue() : null)
+                .nickname(nicknameNode.stringValue())
+                .headerImageUrl(headImageNode != null ? headImageNode.stringValue() : null)
                 .build();
     }
 
