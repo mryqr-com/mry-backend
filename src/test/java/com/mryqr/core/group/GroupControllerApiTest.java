@@ -679,28 +679,28 @@ class GroupControllerApiTest extends BaseApiTest {
     public void should_cache_group() {
         PreparedAppResponse response = setupApi.registerWithApp();
         String key = "Cache:GROUP::" + response.getDefaultGroupId();
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         groupRepository.cachedById(response.getDefaultGroupId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         Group group = groupRepository.byId(response.getDefaultGroupId());
         groupRepository.save(group);
-        PollingAssertion.pollAssert().run(() ->   assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
     public void should_cache_groups() {
         PreparedAppResponse response = setupApi.registerWithApp();
         String key = "Cache:APP_GROUPS::" + response.getAppId();
-        PollingAssertion.pollAssert().run(() ->   assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         groupRepository.cachedAllGroupFullNames(response.getAppId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         Group group = groupRepository.byId(response.getDefaultGroupId());
         groupRepository.save(group);
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
@@ -724,7 +724,7 @@ class GroupControllerApiTest extends BaseApiTest {
 
         PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(groupsKey)));
         PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(groupKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(anotherGroupKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(anotherGroupKey)));
     }
 
     @Test
@@ -745,7 +745,7 @@ class GroupControllerApiTest extends BaseApiTest {
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(groupsKey)));
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(groupKey)));
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(anotherGroupKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(yetAnotherGroupKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(yetAnotherGroupKey)));
 
         Group group = groupRepository.byId(response.getDefaultGroupId());
         Group yetAnotherGroup = groupRepository.byId(yetAnotherGroupId);
@@ -796,7 +796,7 @@ class GroupControllerApiTest extends BaseApiTest {
 
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(groupsKey)));
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(defaultGroupKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(anotherGroupKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(anotherGroupKey)));
 
         Group group = groupRepository.byId(response.getDefaultGroupId());
         group.onDelete(User.NO_USER);

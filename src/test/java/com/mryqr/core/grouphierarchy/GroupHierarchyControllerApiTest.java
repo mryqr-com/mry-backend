@@ -171,13 +171,13 @@ public class GroupHierarchyControllerApiTest extends BaseApiTest {
     public void should_cache_group_hierarchy() {
         PreparedAppResponse response = setupApi.registerWithApp();
         String key = "Cache:GROUP_HIERARCHY::" + response.getAppId();
-        PollingAssertion.pollAssert().run(() ->   assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         groupHierarchyRepository.cachedByAppId(response.getAppId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         GroupHierarchy groupHierarchy = groupHierarchyRepository.byAppId(response.getAppId());
         groupHierarchyRepository.save(groupHierarchy);
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 }

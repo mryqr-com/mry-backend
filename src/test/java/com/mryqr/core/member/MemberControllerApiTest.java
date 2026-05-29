@@ -594,13 +594,13 @@ class MemberControllerApiTest extends BaseApiTest {
         List<TenantCachedApp> cachedApps = appRepository.cachedTenantAllApps(response.getTenantId());
         String appsKey = "Cache:TENANT_APPS::" + response.getTenantId();
         String appKey = "Cache:APP::" + response.getAppId();
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
 
         MemberApi.deleteMember(response.getJwt(), memberId);
         assertFalse(appRepository.byId(response.getAppId()).getManagers().contains(memberId));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(FALSE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(FALSE, stringRedisTemplate.hasKey(appsKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(FALSE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(FALSE, stringRedisTemplate.hasKey(appsKey)));
     }
 
     @Test
@@ -620,11 +620,11 @@ class MemberControllerApiTest extends BaseApiTest {
 
         departmentRepository.cachedTenantAllDepartments(response.getTenantId());
         String key = "Cache:TENANT_DEPARTMENTS::" + response.getTenantId();
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         MemberApi.deleteMember(response.getJwt(), memberId);
         assertFalse(departmentRepository.byId(departmentId).getManagers().contains(memberId));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(FALSE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(FALSE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
@@ -1244,12 +1244,12 @@ class MemberControllerApiTest extends BaseApiTest {
     public void should_cache_member() {
         LoginResponse response = setupApi.registerWithLogin();
         String key = "Cache:MEMBER::" + response.getMemberId();
-        PollingAssertion.pollAssert().run(() ->   assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
         Member member = memberRepository.cachedById(response.getMemberId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         memberRepository.save(member);
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
@@ -1257,13 +1257,13 @@ class MemberControllerApiTest extends BaseApiTest {
         LoginResponse response = setupApi.registerWithLogin();
         memberRepository.save(memberRepository.byId(response.getMemberId()));
         String key = "Cache:TENANT_MEMBERS::" + response.getTenantId();
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         memberRepository.cachedAllMemberReferences(response.getTenantId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         memberRepository.save(memberRepository.byId(response.getMemberId()));
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
@@ -1278,14 +1278,14 @@ class MemberControllerApiTest extends BaseApiTest {
         memberRepository.cachedById(newMemberId);
         memberRepository.cachedTenantAllMembers(response.getTenantId());
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
 
         Member member = memberRepository.byId(newMemberId);
         memberRepository.save(member);
 
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
         PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
     }
 
@@ -1300,16 +1300,16 @@ class MemberControllerApiTest extends BaseApiTest {
         memberRepository.cachedById(response.getMemberId());
         memberRepository.cachedById(newMemberId);
         memberRepository.cachedTenantAllMembers(response.getTenantId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
 
         Member member = memberRepository.byId(newMemberId);
         member.onDelete(User.NO_USER);
         memberRepository.delete(member);
 
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
     }
 }

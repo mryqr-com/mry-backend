@@ -325,12 +325,12 @@ class TenantControllerApiTest extends BaseApiTest {
     public void should_cache_tenant() {
         LoginResponse response = setupApi.registerWithLogin();
         String key = "Cache:TENANT::" + response.getTenantId();
-        PollingAssertion.pollAssert().run(() ->assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
         Tenant tenant = tenantRepository.cachedById(response.getTenantId());
-        PollingAssertion.pollAssert().run(() ->assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         tenantRepository.save(tenant);
-        PollingAssertion.pollAssert().run(() ->assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test

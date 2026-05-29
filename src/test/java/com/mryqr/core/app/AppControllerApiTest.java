@@ -1892,14 +1892,14 @@ class AppControllerApiTest extends BaseApiTest {
     public void should_cache_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
         String key = "Cache:APP::" + response.getAppId();
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
         appRepository.cachedById(response.getAppId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         App app = appRepository.byId(response.getAppId());
         appRepository.save(app);
 
-        PollingAssertion.pollAssert().run(() ->   assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
@@ -1914,7 +1914,7 @@ class AppControllerApiTest extends BaseApiTest {
         App app = appRepository.byId(response.getAppId());
         appRepository.save(app);
 
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
@@ -1928,9 +1928,9 @@ class AppControllerApiTest extends BaseApiTest {
         appRepository.cachedById(response.getAppId());
         appRepository.cachedById(anotherApp.getAppId());
         appRepository.cachedTenantAllApps(response.getTenantId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(anotherAppKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(anotherAppKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
 
         App app = appRepository.byId(response.getAppId());
         appRepository.save(app);
@@ -1950,16 +1950,16 @@ class AppControllerApiTest extends BaseApiTest {
         appRepository.cachedById(response.getAppId());
         appRepository.cachedById(newApp.getAppId());
         appRepository.cachedTenantAllApps(response.getTenantId());
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() ->   assertEquals(TRUE, stringRedisTemplate.hasKey(newAppKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(newAppKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
 
         App app = appRepository.byId(response.getAppId());
         app.onDelete(NO_USER);
         appRepository.delete(app);
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(newAppKey)));
-        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(newAppKey)));
+        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
     }
 
     @Test

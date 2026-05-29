@@ -25,8 +25,6 @@ import static com.mryqr.common.utils.MryConstants.MAX_GENERIC_NAME_LENGTH;
 import static com.mryqr.common.utils.MryConstants.MRY_DATE_TIME_FORMATTER;
 import static com.mryqr.core.assignmentplan.domain.AssignmentFrequency.EVERY_DAY;
 import static com.mryqr.core.assignmentplan.domain.AssignmentFrequency.EVERY_WEEK;
-import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.MONTHS;
 import static java.time.temporal.TemporalAdjusters.lastDayOfMonth;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.IntStream.range;
