@@ -116,19 +116,19 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_create_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         SingleLineTextAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         assertEquals(1, submission.allAnswers().size());
-        assertEquals(response.appId(), submission.getAppId());
-        assertEquals(response.qrId(), submission.getQrId());
-        assertEquals(response.homePageId(), submission.getPageId());
-        assertEquals(response.memberId(), submission.getCreatedBy());
-        assertEquals(response.defaultGroupId(), submission.getGroupId());
-        assertEquals(response.tenantId(), submission.getTenantId());
+        assertEquals(response.getAppId(), submission.getAppId());
+        assertEquals(response.getQrId(), submission.getQrId());
+        assertEquals(response.getHomePageId(), submission.getPageId());
+        assertEquals(response.getMemberId(), submission.getCreatedBy());
+        assertEquals(response.getDefaultGroupId(), submission.getGroupId());
+        assertEquals(response.getTenantId(), submission.getTenantId());
         assertEquals(control.getId(), submission.allAnswers().values().stream().findAny().get().getControlId());
         assertNull(submission.getApproval());
     }
@@ -137,23 +137,23 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_raise_event_when_create_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(PAGE_SUBMIT_COUNT)
-                .pageId(response.homePageId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         SingleLineTextAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
         SubmissionCreatedEvent submissionCreatedEvent = latestEventFor(submissionId, SUBMISSION_CREATED, SubmissionCreatedEvent.class);
         assertEquals(submissionId, submissionCreatedEvent.getSubmissionId());
-        assertEquals(response.appId(), submissionCreatedEvent.getAppId());
-        assertEquals(response.homePageId(), submissionCreatedEvent.getPageId());
-        assertEquals(response.qrId(), submissionCreatedEvent.getQrId());
-        IntegerAttributeValue attributeValue = (IntegerAttributeValue) qrRepository.byId(response.qrId())
+        assertEquals(response.getAppId(), submissionCreatedEvent.getAppId());
+        assertEquals(response.getHomePageId(), submissionCreatedEvent.getPageId());
+        assertEquals(response.getQrId(), submissionCreatedEvent.getQrId());
+        IntegerAttributeValue attributeValue = (IntegerAttributeValue) qrRepository.byId(response.getQrId())
                 .attributeValueOf(attribute.getId());
         assertEquals(1, attributeValue.getNumber());
-        assertEquals(1, tenantRepository.byId(response.tenantId()).getResourceUsage().getSubmissionCountForApp(response.appId()));
+        assertEquals(1, tenantRepository.byId(response.getTenantId()).getResourceUsage().getSubmissionCountForApp(response.getAppId()));
     }
 
     @Test
@@ -165,18 +165,18 @@ class SubmissionControllerApiTest extends BaseApiTest {
         CirculationStatusSetting setting = CirculationStatusSetting.builder()
                 .options(List.of(option1, option2))
                 .statusAfterSubmissions(
-                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.homePageId()).build()))
+                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.getHomePageId()).build()))
                 .statusPermissions(List.of())
                 .build();
-        AppApi.updateCirculationStatusSetting(response.jwt(), response.appId(), setting);
+        AppApi.updateCirculationStatusSetting(response.getJwt(), response.getAppId(), setting);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CIRCULATION_STATUS).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         assertEquals(option1.getId(), qr.getCirculationOptionId());
         CirculationStatusAttributeValue attributeValue = (CirculationStatusAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -190,17 +190,17 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
         FRadioControl radioControl = defaultRadioControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, radioControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, radioControl);
 
         NumberInputAnswer numberInputAnswer = rAnswer(numberInputControl);
         RadioAnswer radioAnswer = rAnswer(radioControl);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), numberInputAnswer,
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), numberInputAnswer,
                 radioAnswer);
 
         Submission submission = submissionRepository.byId(submissionId);
-        App app = appRepository.byId(response.appId());
-        IndexedField numberInputIndexedField = app.indexedFieldForControlOptional(response.homePageId(), numberInputControl.getId()).get();
-        IndexedField radioIndexedField = app.indexedFieldForControlOptional(response.homePageId(), radioControl.getId()).get();
+        App app = appRepository.byId(response.getAppId());
+        IndexedField numberInputIndexedField = app.indexedFieldForControlOptional(response.getHomePageId(), numberInputControl.getId()).get();
+        IndexedField radioIndexedField = app.indexedFieldForControlOptional(response.getHomePageId(), radioControl.getId()).get();
         assertEquals(numberInputAnswer.getNumber(), submission.getIndexedValues().valueOf(numberInputIndexedField).getSv());
         assertTrue(submission.getIndexedValues().valueOf(radioIndexedField).getTv().contains(radioAnswer.getOptionId()));
     }
@@ -208,20 +208,20 @@ class SubmissionControllerApiTest extends BaseApiTest {
     @Test
     public void should_create_both_submission_and_qr_for_template_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        QrApi.markTemplate(response.jwt(), response.qrId());
+        QrApi.markTemplate(response.getJwt(), response.getQrId());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         Submission submission = submissionRepository.byId(submissionId);
-        assertNotEquals(response.qrId(), submission.getQrId());
+        assertNotEquals(response.getQrId(), submission.getQrId());
         QR qr = qrRepository.byId(submission.getQrId());
-        assertEquals(response.appId(), qr.getAppId());
-        assertEquals(response.defaultGroupId(), qr.getGroupId());
-        assertNotEquals(response.plateId(), qr.getPlateId());
+        assertEquals(response.getAppId(), qr.getAppId());
+        assertEquals(response.getDefaultGroupId(), qr.getGroupId());
+        assertNotEquals(response.getPlateId(), qr.getPlateId());
         Plate plate = plateRepository.byId(qr.getPlateId());
-        assertEquals(response.defaultGroupId(), plate.getGroupId());
+        assertEquals(response.getDefaultGroupId(), plate.getGroupId());
         assertEquals(qr.getId(), plate.getQrId());
         assertEquals(qr.getAppId(), plate.getAppId());
     }
@@ -230,10 +230,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_not_track_submitter_for_public_pages() {
         PreparedQrResponse loginResponse = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(loginResponse.jwt(), loginResponse.appId(), PUBLIC, control);
+        AppApi.updateAppPermissionAndControls(loginResponse.getJwt(), loginResponse.getAppId(), PUBLIC, control);
 
-        NewSubmissionCommand submissionCommand = newSubmissionCommand(loginResponse.qrId(), loginResponse.homePageId(), rAnswer(control));
-        String submissionId = SubmissionApi.newSubmission(loginResponse.jwt(), submissionCommand);
+        NewSubmissionCommand submissionCommand = newSubmissionCommand(loginResponse.getQrId(), loginResponse.getHomePageId(), rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(loginResponse.getJwt(), submissionCommand);
 
         Submission submission = submissionRepository.byId(submissionId);
         assertEquals(1, submission.allAnswers().size());
@@ -244,9 +244,9 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void non_login_user_should_create_submission_for_public_page() {
         PreparedQrResponse loginResponse = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(loginResponse.jwt(), loginResponse.appId(), PUBLIC, newArrayList(control));
+        AppApi.updateAppPermissionAndControls(loginResponse.getJwt(), loginResponse.getAppId(), PUBLIC, newArrayList(control));
 
-        NewSubmissionCommand submissionCommand = newSubmissionCommand(loginResponse.qrId(), loginResponse.homePageId(), rAnswer(control));
+        NewSubmissionCommand submissionCommand = newSubmissionCommand(loginResponse.getQrId(), loginResponse.getHomePageId(), rAnswer(control));
         String submissionId = SubmissionApi.newSubmission(null, submissionCommand);
 
         Submission submission = submissionRepository.byId(submissionId);
@@ -257,17 +257,17 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_track_reference_id_when_new_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         SingleLineTextAnswer answer = rAnswer(control);
         NewSubmissionCommand command = NewSubmissionCommand.builder()
-                .qrId(response.qrId())
-                .pageId(response.homePageId())
+                .qrId(response.getQrId())
+                .pageId(response.getHomePageId())
                 .answers(Set.of(answer))
                 .referenceData("someReferenceData")
                 .build();
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), command);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), command);
 
         Submission submission = submissionRepository.byId(submissionId);
         assertEquals("someReferenceData", submission.getReferenceData());
@@ -277,10 +277,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_not_save_answer_at_all_if_not_filled() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         SingleLineTextAnswer answer = rAnswerBuilder(control).content(null).build();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         assertEquals(0, submission.allAnswers().size());
@@ -290,56 +290,56 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fail_create_submission_if_count_exceeds_packages_limit() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
-        theTenant.setSubmissionCountForApp(response.appId(), theTenant.currentPlan().getMaxSubmissionCount());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
+        theTenant.setSubmissionCountForApp(response.getAppId(), theTenant.currentPlan().getMaxSubmissionCount());
         tenantRepository.save(theTenant);
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), SUBMISSION_COUNT_LIMIT_REACHED);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), SUBMISSION_COUNT_LIMIT_REACHED);
     }
 
     @Test
     public void should_fail_create_submission_if_answer_duplicated() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control), rAnswer(control));
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control), rAnswer(control));
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), ANSWERS_DUPLICATED);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), ANSWERS_DUPLICATED);
     }
 
     @Test
     public void should_fail_create_submission_for_no_fillable_page() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId());
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
-        assertError(() -> newSubmissionRaw(response.jwt(), command), PAGE_NOT_FILLABLE);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), PAGE_NOT_FILLABLE);
     }
 
     @Test
     public void should_fail_create_submission_if_no_control_exists_for_answer() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), defaultSingleLineTextControl());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), defaultSingleLineTextControl());
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
-        assertError(() -> newSubmissionRaw(response.jwt(), command), CONTROL_NOT_EXIST_FOR_ANSWER);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), CONTROL_NOT_EXIST_FOR_ANSWER);
     }
 
     @Test
     public void should_fail_create_submission_if_app_is_inactive() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        AppApi.deactivateApp(response.jwt(), response.appId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        AppApi.deactivateApp(response.getJwt(), response.getAppId());
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
-        assertError(() -> newSubmissionRaw(response.jwt(), command), APP_NOT_ACTIVE);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), APP_NOT_ACTIVE);
     }
 
     @Test
@@ -347,12 +347,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
         PageSetting pageSetting = defaultPageSettingBuilder().submitType(ONCE_PER_INSTANCE).build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), SUBMISSION_ALREADY_EXISTS_FOR_INSTANCE);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), SUBMISSION_ALREADY_EXISTS_FOR_INSTANCE);
     }
 
     @Test
@@ -360,12 +360,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
         PageSetting pageSetting = defaultPageSettingBuilder().submitType(ONCE_PER_MEMBER).build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), SUBMISSION_ALREADY_EXISTS_FOR_MEMBER);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), SUBMISSION_ALREADY_EXISTS_FOR_MEMBER);
     }
 
     @Test
@@ -373,20 +373,20 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId());
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId());
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_fail_create_submission_if_member_not_login_but_required() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, newArrayList(control));
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, newArrayList(control));
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         assertError(() -> newSubmissionRaw(null, command), AUTHENTICATION_FAILED);
     }
@@ -395,10 +395,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fail_create_submission_if_permission_for_page_not_enough() {
         PreparedQrResponse loginResponse = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(loginResponse.jwt(), loginResponse.appId(), AS_GROUP_MEMBER, newArrayList(control));
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.updateAppPermissionAndControls(loginResponse.getJwt(), loginResponse.getAppId(), AS_GROUP_MEMBER, newArrayList(control));
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        NewSubmissionCommand command = newSubmissionCommand(loginResponse.qrId(), loginResponse.homePageId(), rAnswer(control));
+        NewSubmissionCommand command = newSubmissionCommand(loginResponse.getQrId(), loginResponse.getHomePageId(), rAnswer(control));
 
         assertError(() -> newSubmissionRaw(memberResponse.getJwt(), command), ACCESS_DENIED);
     }
@@ -406,11 +406,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_create_submission_if_permission_for_control_not_enough() {
         PreparedQrResponse loginResponse = setupApi.registerWithQr(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_APP).build();
-        AppApi.updateAppControls(loginResponse.jwt(), loginResponse.appId(), control);
+        AppApi.updateAppControls(loginResponse.getJwt(), loginResponse.getAppId(), control);
 
-        NewSubmissionCommand command = newSubmissionCommand(loginResponse.qrId(), loginResponse.homePageId(), rAnswer(control));
+        NewSubmissionCommand command = newSubmissionCommand(loginResponse.getQrId(), loginResponse.getHomePageId(), rAnswer(control));
 
         assertError(() -> newSubmissionRaw(memberResponse.getJwt(), command), ACCESS_DENIED);
     }
@@ -418,25 +418,25 @@ class SubmissionControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_create_submission_if_qr_inactive() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        QrApi.deactivate(response.jwt(), response.qrId());
+        QrApi.deactivate(response.getJwt(), response.getQrId());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), QR_NOT_ACTIVE);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), QR_NOT_ACTIVE);
     }
 
     @Test
     public void should_fail_create_submission_if_group_inactive() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        GroupApi.createGroup(response.jwt(), response.appId());
+        GroupApi.createGroup(response.getJwt(), response.getAppId());
 
-        GroupApi.deactivateGroup(response.jwt(), response.defaultGroupId());
+        GroupApi.deactivateGroup(response.getJwt(), response.getDefaultGroupId());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), GROUP_NOT_ACTIVE);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), GROUP_NOT_ACTIVE);
     }
 
     @Test
@@ -444,7 +444,7 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
         Page page1 = defaultPageBuilder().build();
         Page page2 = defaultPageBuilder().build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), page1, page2);
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), page1, page2);
 
         TextOption option1 = TextOption.builder().id(newShortUuid()).name(randomAlphabetic(10) + "选项").build();
         TextOption option2 = TextOption.builder().id(newShortUuid()).name(randomAlphabetic(10) + "选项").build();
@@ -455,25 +455,25 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .statusPermissions(List.of(
                         StatusPermission.builder().id(newShortUuid()).optionId(option1.getId()).notAllowedPageIds(List.of(page1.getId())).build()))
                 .build();
-        AppApi.updateCirculationStatusSetting(response.jwt(), response.appId(), setting);
+        AppApi.updateCirculationStatusSetting(response.getJwt(), response.getAppId(), setting);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
         NewSubmissionCommand command = newSubmissionCommand(qrResponse.getQrId(), page1.getId());
-        assertError(() -> newSubmissionRaw(response.jwt(), command), SUBMISSION_NOT_ALLOWED_BY_CIRCULATION);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), SUBMISSION_NOT_ALLOWED_BY_CIRCULATION);
     }
 
     @Test
     public void should_update_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
         SingleLineTextAnswer updateAnswer = rAnswer(control);
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, updateAnswer);
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, updateAnswer);
 
         Submission submission = submissionRepository.byId(submissionId);
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertEquals(updateAnswer, submission.answerForControlOptional(control.getId()).get());
         assertEquals(member.getId(), submission.getUpdatedBy());
         assertEquals(member.getName(), submission.getUpdater());
@@ -492,12 +492,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        SubmissionApi.approveSubmission(response.jwt(), submissionId, true);
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.approveSubmission(response.getJwt(), submissionId, true);
 
         SingleLineTextAnswer updateAnswer = rAnswer(control);
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, updateAnswer);
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, updateAnswer);
 
         Submission submission = submissionRepository.byId(submissionId);
         assertEquals(updateAnswer, submission.answerForControlOptional(control.getId()).get());
@@ -507,10 +507,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_not_update_answer_if_answer_not_provided() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        SubmissionApi.updateSubmission(response.jwt(), submissionId);
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId);
 
         Submission submission = submissionRepository.byId(submissionId);
         assertFalse(submission.allAnswers().isEmpty());
@@ -520,11 +520,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_update_answer_with_answer_provided_but_not_filled() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         SingleLineTextAnswer updateAnswer = rAnswerBuilder(control).content(null).build();
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, updateAnswer);
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, updateAnswer);
 
         Submission submission = submissionRepository.byId(submissionId);
         assertTrue(submission.allAnswers().isEmpty());
@@ -534,18 +534,18 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_raise_event_when_update_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+                .pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         SingleLineTextAnswer updateAnswer = rAnswer(control);
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, updateAnswer);
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, updateAnswer);
 
         SubmissionUpdatedEvent submissionUpdatedEvent = latestEventFor(submissionId, SUBMISSION_UPDATED, SubmissionUpdatedEvent.class);
         assertEquals(submissionId, submissionUpdatedEvent.getSubmissionId());
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         TextAttributeValue attributeValue = (TextAttributeValue) qr.attributeValueOf(attribute.getId());
         assertEquals(updateAnswer.getContent(), attributeValue.getText());
     }
@@ -562,9 +562,9 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(false).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         SingleLineTextAnswer updatedAnswer = rAnswer(control);
@@ -587,9 +587,9 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(false).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         UpdateSubmissionCommand updateSubmissionCommand = updateSubmissionCommand(rAnswer(control));
@@ -610,9 +610,9 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(false).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
         Submission submission = submissionRepository.byId(submissionId);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minusSeconds(7200));
@@ -636,9 +636,9 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(false).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
         UpdateSubmissionCommand updateSubmissionCommand = updateSubmissionCommand(rAnswer(control));
 
         assertError(() -> SubmissionApi.updateSubmissionRaw(null, submissionId, updateSubmissionCommand), AUTHENTICATION_FAILED);
@@ -657,10 +657,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(false).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
         UpdateSubmissionCommand updateSubmissionCommand = updateSubmissionCommand(rAnswer(control));
 
         assertError(() -> SubmissionApi.updateSubmissionRaw(memberResponse.getJwt(), submissionId, updateSubmissionCommand), ACCESS_DENIED);
@@ -679,11 +679,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        SubmissionApi.approveSubmission(response.jwt(), submissionId, true);
+        SubmissionApi.approveSubmission(response.getJwt(), submissionId, true);
 
         UpdateSubmissionCommand updateSubmissionCommand = updateSubmissionCommand(rAnswer(control));
 
@@ -695,13 +695,13 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fail_update_submission_if_qr_inactive() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        QrApi.deactivate(response.jwt(), response.qrId());
+        QrApi.deactivate(response.getJwt(), response.getQrId());
 
         UpdateSubmissionCommand updateSubmissionCommand = updateSubmissionCommand(rAnswer(control));
-        assertError(() -> updateSubmissionRaw(response.jwt(), submissionId, updateSubmissionCommand), QR_NOT_ACTIVE);
+        assertError(() -> updateSubmissionRaw(response.getJwt(), submissionId, updateSubmissionCommand), QR_NOT_ACTIVE);
     }
 
     @Test
@@ -717,11 +717,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
-        SubmissionApi.approveSubmission(response.jwt(), submissionId, command);
+        SubmissionApi.approveSubmission(response.getJwt(), submissionId, command);
         SubmissionApprovedEvent approvedEvent = latestEventFor(submissionId, SUBMISSION_APPROVED, SubmissionApprovedEvent.class);
         assertEquals(submissionId, approvedEvent.getSubmissionId());
 
@@ -730,14 +730,14 @@ class SubmissionControllerApiTest extends BaseApiTest {
         assertNotNull(approval);
         assertEquals(command.isPassed(), approval.isPassed());
         assertEquals(command.getNote(), approval.getNote());
-        assertEquals(response.memberId(), approval.getApprovedBy());
+        assertEquals(response.getMemberId(), approval.getApprovedBy());
     }
 
     @Test
     public void un_permissioned_member_should_fail_approve_submission() {
         PreparedQrResponse response = setupApi.registerWithQr(rEmail(), rPassword());
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .permission(AS_TENANT_MEMBER)
@@ -747,8 +747,8 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
@@ -769,12 +769,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
-        SubmissionApi.approveSubmission(response.jwt(), submissionId, command);
+        SubmissionApi.approveSubmission(response.getJwt(), submissionId, command);
 
-        assertError(() -> SubmissionApi.approveSubmissionRaw(response.jwt(), submissionId, command), SUBMISSION_ALREADY_APPROVED);
+        assertError(() -> SubmissionApi.approveSubmissionRaw(response.getJwt(), submissionId, command), SUBMISSION_ALREADY_APPROVED);
     }
 
     @Test
@@ -790,18 +790,18 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(false).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
 
-        assertError(() -> SubmissionApi.approveSubmissionRaw(response.jwt(), submissionId, command), APPROVAL_NOT_ENABLED);
+        assertError(() -> SubmissionApi.approveSubmissionRaw(response.getJwt(), submissionId, command), APPROVAL_NOT_ENABLED);
     }
 
     @Test
     public void should_fail_to_approve_submission_if_package_approval_not_enabled() {
         PreparedQrResponse response = setupApi.registerWithQr(rEmail(), rPassword());
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withSubmissionApprovalAllowed(false));
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
@@ -813,12 +813,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(false).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
 
-        assertError(() -> SubmissionApi.approveSubmissionRaw(response.jwt(), submissionId, command), SUBMISSION_APPROVE_NOT_ALLOWED);
+        assertError(() -> SubmissionApi.approveSubmissionRaw(response.getJwt(), submissionId, command), SUBMISSION_APPROVE_NOT_ALLOWED);
     }
 
     @Test
@@ -834,25 +834,25 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterUpdateRange(IN_1_HOUR)
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        QrApi.deactivate(response.jwt(), response.qrId());
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        QrApi.deactivate(response.getJwt(), response.getQrId());
 
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
-        assertError(() -> SubmissionApi.approveSubmissionRaw(response.jwt(), submissionId, command), QR_NOT_ACTIVE);
+        assertError(() -> SubmissionApi.approveSubmissionRaw(response.getJwt(), submissionId, command), QR_NOT_ACTIVE);
     }
 
     @Test
     public void should_delete_submission() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
         Submission submission = submissionRepository.byId(submissionId);
         assertEquals(1, submission.allAnswers().size());
-        assertEquals(response.appId(), submission.getAppId());
+        assertEquals(response.getAppId(), submission.getAppId());
 
-        SubmissionApi.deleteSubmission(response.jwt(), submissionId);
+        SubmissionApi.deleteSubmission(response.getJwt(), submissionId);
 
         Optional<Submission> deleted = submissionRepository.byIdOptional(submissionId);
         assertTrue(deleted.isEmpty());
@@ -862,53 +862,53 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_raise_event_when_delete_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(PAGE_SUBMIT_COUNT)
-                .pageId(response.homePageId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+                .pageId(response.getHomePageId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        SubmissionApi.deleteSubmission(response.jwt(), submissionId);
+        SubmissionApi.deleteSubmission(response.getJwt(), submissionId);
 
         SubmissionDeletedEvent submissionDeletedEvent = latestEventFor(submissionId, SUBMISSION_DELETED, SubmissionDeletedEvent.class);
         assertEquals(submissionId, submissionDeletedEvent.getSubmissionId());
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         IntegerAttributeValue attributeValue = (IntegerAttributeValue) qr.attributeValueOf(attribute.getId());
         assertEquals(0, attributeValue.getNumber());
-        Tenant tenant = tenantRepository.byId(response.tenantId());
-        assertEquals(0, tenant.getResourceUsage().getSubmissionCountForApp(response.appId()));
+        Tenant tenant = tenantRepository.byId(response.getTenantId());
+        assertEquals(0, tenant.getResourceUsage().getSubmissionCountForApp(response.getAppId()));
     }
 
     @Test
     public void should_list_submit_history_submissions() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, newArrayList(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, newArrayList(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
         assertEquals(1, list.getData().size());
     }
 
     @Test
     public void should_list_my_submitted_submissions() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, control);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
@@ -926,19 +926,19 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         PageSetting pageSetting = defaultPageSettingBuilder().approvalSetting(
                 defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        String approvedSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        String approvedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        SubmissionApi.approveSubmission(response.jwt(), approvedSubmissionId, approveSubmissionCommand(true));
+        SubmissionApi.approveSubmission(response.getJwt(), approvedSubmissionId, approveSubmissionCommand(true));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
         assertEquals(1, list.getData().size());
         assertEquals(submissionId, list.getData().get(0).getId());
     }
@@ -947,22 +947,22 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_my_submissions_for_group() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, control);
-        String newGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), newGroupId);
-        String defaultGroupedSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, control);
+        String newGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), newGroupId);
+        String defaultGroupedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String newGroupedSubmissionId = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        String newGroupedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .groupId(newGroupId)
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         assertEquals(newGroupedSubmissionId, list.getData().get(0).getId());
@@ -972,27 +972,27 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_my_submissions_with_group_filters() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(appResponse.jwt(), appResponse.appId(), AS_TENANT_MEMBER, control);
+        AppApi.updateAppPermissionAndControls(appResponse.getJwt(), appResponse.getAppId(), AS_TENANT_MEMBER, control);
 
-        String groupId1 = GroupApi.createGroup(appResponse.jwt(), appResponse.appId());
-        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.jwt(), groupId1);
-        String submissionId1 = SubmissionApi.newSubmission(appResponse.jwt(), qrResponse1.getQrId(), appResponse.homePageId(),
+        String groupId1 = GroupApi.createGroup(appResponse.getJwt(), appResponse.getAppId());
+        CreateQrResponse qrResponse1 = QrApi.createQr(appResponse.getJwt(), groupId1);
+        String submissionId1 = SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse1.getQrId(), appResponse.getHomePageId(),
                 rAnswer(control));
 
-        String groupId2 = GroupApi.createGroup(appResponse.jwt(), appResponse.appId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.jwt(), groupId2);
-        String submissionId2 = SubmissionApi.newSubmission(appResponse.jwt(), qrResponse2.getQrId(), appResponse.homePageId(),
+        String groupId2 = GroupApi.createGroup(appResponse.getJwt(), appResponse.getAppId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(appResponse.getJwt(), groupId2);
+        String submissionId2 = SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse2.getQrId(), appResponse.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(appResponse.appId())
+                .appId(appResponse.getAppId())
                 .type(SUBMITTER_SUBMISSION)
                 .filterables(Map.of("groupId", newHashSet(groupId1)))
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(appResponse.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(appResponse.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         assertEquals(submissionId1, list.getData().get(0).getId());
@@ -1002,25 +1002,25 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_my_submissions_with_created_filters() {
         PreparedAppResponse appResponse = setupApi.registerWithApp();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(appResponse.jwt(), appResponse.appId(), AS_TENANT_MEMBER, control);
+        AppApi.updateAppPermissionAndControls(appResponse.getJwt(), appResponse.getAppId(), AS_TENANT_MEMBER, control);
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(appResponse.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(appResponse.getJwt());
 
-        CreateQrResponse qrResponse = QrApi.createQr(appResponse.jwt(), appResponse.defaultGroupId());
-        String submissionId1 = SubmissionApi.newSubmission(appResponse.jwt(), qrResponse.getQrId(), appResponse.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(appResponse.getJwt(), appResponse.getDefaultGroupId());
+        String submissionId1 = SubmissionApi.newSubmission(appResponse.getJwt(), qrResponse.getQrId(), appResponse.getHomePageId(),
                 rAnswer(control));
-        String submissionId2 = SubmissionApi.newSubmission(memberResponse.getJwt(), qrResponse.getQrId(), appResponse.homePageId(),
+        String submissionId2 = SubmissionApi.newSubmission(memberResponse.getJwt(), qrResponse.getQrId(), appResponse.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(appResponse.appId())
+                .appId(appResponse.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .filterables(Map.of("createdBy", newHashSet(memberResponse.getMemberId())))
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(appResponse.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(appResponse.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         assertEquals(submissionId2, list.getData().get(0).getId());
@@ -1030,22 +1030,22 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_my_submissions_for_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, control);
-        String newGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), newGroupId);
-        String defaultGroupedSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, control);
+        String newGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), newGroupId);
+        String defaultGroupedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String newGroupedSubmissionId = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        String newGroupedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .qrId(qrResponse.getQrId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         QListSubmission submission = list.getData().get(0);
@@ -1060,20 +1060,20 @@ class SubmissionControllerApiTest extends BaseApiTest {
         Page homePage = defaultPageBuilder().controls(newArrayList(homePageControl)).build();
         FSingleLineTextControl childPageControl = defaultSingleLineTextControl();
         Page childPage = defaultPageBuilder().controls(newArrayList(childPageControl)).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), homePage, childPage);
-        String homePageSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), homePage.getId(),
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), homePage, childPage);
+        String homePageSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), homePage.getId(),
                 rAnswer(homePageControl));
-        String childPageSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), childPage.getId(),
+        String childPageSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), childPage.getId(),
                 rAnswer(childPageControl));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .pageId(homePage.getId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         QListSubmission submission = list.getData().get(0);
@@ -1086,12 +1086,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .qrId(response.qrId())
+                .appId(response.getAppId())
+                .qrId(response.getQrId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1106,11 +1106,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1125,12 +1125,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .groupId(response.defaultGroupId())
+                .appId(response.getAppId())
+                .groupId(response.getDefaultGroupId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1144,32 +1144,32 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         Page page = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build())
                 .build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
 
-        assertError(() -> SubmissionApi.listSubmissionsRaw(response.jwt(), command), NO_VIEWABLE_PAGES);
+        assertError(() -> SubmissionApi.listSubmissionsRaw(response.getJwt(), command), NO_VIEWABLE_PAGES);
     }
 
     @Test
     public void should_fail_list_my_submissions_if_no_permission_for_page() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_GROUP_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_GROUP_MEMBER);
         Page homePage = defaultPageBuilder().controls(newArrayList(defaultSingleLineTextControl()))
                 .setting(defaultPageSettingBuilder().permission(AS_TENANT_MEMBER).build()).build();
         Page childPage = defaultPageBuilder().controls(newArrayList(defaultSingleLineTextControl()))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), homePage, childPage);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupMembers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), homePage, childPage);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupMembers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .pageId(childPage.getId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
@@ -1183,22 +1183,22 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_history_submissions_for_group() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, control);
-        String newGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), newGroupId);
-        String defaultGroupedSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, control);
+        String newGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), newGroupId);
+        String defaultGroupedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String newGroupedSubmissionId = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        String newGroupedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .groupId(newGroupId)
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         assertEquals(newGroupedSubmissionId, list.getData().get(0).getId());
@@ -1208,22 +1208,22 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_history_submissions_for_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, control);
-        String newGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), newGroupId);
-        String defaultGroupedSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, control);
+        String newGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), newGroupId);
+        String defaultGroupedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String newGroupedSubmissionId = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        String newGroupedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .qrId(qrResponse.getQrId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         QListSubmission submission = list.getData().get(0);
@@ -1238,20 +1238,20 @@ class SubmissionControllerApiTest extends BaseApiTest {
         Page homePage = defaultPageBuilder().controls(newArrayList(homePageControl)).build();
         FSingleLineTextControl childPageControl = defaultSingleLineTextControl();
         Page childPage = defaultPageBuilder().controls(newArrayList(childPageControl)).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), homePage, childPage);
-        String homePageSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), homePage.getId(),
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), homePage, childPage);
+        String homePageSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), homePage.getId(),
                 rAnswer(homePageControl));
-        String childPageSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), childPage.getId(),
+        String childPageSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), childPage.getId(),
                 rAnswer(childPageControl));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .pageId(homePage.getId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         QListSubmission submission = list.getData().get(0);
@@ -1264,12 +1264,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .qrId(response.qrId())
+                .appId(response.getAppId())
+                .qrId(response.getQrId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1284,11 +1284,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1303,12 +1303,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .groupId(response.defaultGroupId())
+                .appId(response.getAppId())
+                .groupId(response.getDefaultGroupId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1322,16 +1322,16 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         Page page = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build())
                 .build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
 
-        assertError(() -> SubmissionApi.listSubmissionsRaw(response.jwt(), command), NO_MANAGABLE_PAGES);
+        assertError(() -> SubmissionApi.listSubmissionsRaw(response.getJwt(), command), NO_MANAGABLE_PAGES);
     }
 
     @Test
@@ -1339,12 +1339,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         Page homePage = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(AS_TENANT_MEMBER).build())
                 .build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), homePage);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), homePage);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .pageId(homePage.getId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
@@ -1360,23 +1360,23 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         PageSetting pageSetting = defaultPageSettingBuilder().approvalSetting(
                 defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String newGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), newGroupId);
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String newGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), newGroupId);
 
-        String defaultGroupSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String defaultGroupSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String newGroupSubmissionId = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        String newGroupSubmissionId = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .groupId(newGroupId)
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
         assertEquals(1, list.getData().size());
         assertEquals(newGroupSubmissionId, list.getData().get(0).getId());
     }
@@ -1387,23 +1387,23 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         PageSetting pageSetting = defaultPageSettingBuilder().approvalSetting(
                 defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String newGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), newGroupId);
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String newGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), newGroupId);
 
-        String defaultGroupSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String defaultGroupSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String newGroupSubmissionId = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        String newGroupSubmissionId = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .qrId(qrResponse.getQrId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
         assertEquals(1, list.getData().size());
         assertEquals(newGroupSubmissionId, list.getData().get(0).getId());
     }
@@ -1419,18 +1419,18 @@ class SubmissionControllerApiTest extends BaseApiTest {
         Page approvablePage2 = defaultPageBuilder().controls(newArrayList(control2))
                 .setting(defaultPageSettingBuilder().approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).build()).build())
                 .build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), approvablePage1, approvablePage2);
-        String submissionId1 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), approvablePage1.getId(), rAnswer(control1));
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), approvablePage2.getId(), rAnswer(control2));
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), approvablePage1, approvablePage2);
+        String submissionId1 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), approvablePage1.getId(), rAnswer(control1));
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), approvablePage2.getId(), rAnswer(control2));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .pageId(approvablePage1.getId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         assertEquals(submissionId1, list.getData().get(0).getId());
@@ -1443,12 +1443,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().approvalSetting(
                         defaultPageApproveSettingBuilder().permission(CAN_MANAGE_GROUP).approvalEnabled(true).build()).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .qrId(response.qrId())
+                .appId(response.getAppId())
+                .qrId(response.getQrId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1464,11 +1464,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().approvalSetting(
                         defaultPageApproveSettingBuilder().permission(CAN_MANAGE_GROUP).approvalEnabled(true).build()).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1484,12 +1484,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         Page page = defaultPageBuilder().controls(newArrayList(control))
                 .setting(defaultPageSettingBuilder().approvalSetting(
                         defaultPageApproveSettingBuilder().permission(CAN_MANAGE_GROUP).approvalEnabled(true).build()).build()).build();
-        AppApi.updateAppPage(response.jwt(), response.appId(), page);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppPage(response.getJwt(), response.getAppId(), page);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .groupId(response.defaultGroupId())
+                .appId(response.getAppId())
+                .groupId(response.getDefaultGroupId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1503,13 +1503,13 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
 
-        assertError(() -> SubmissionApi.listSubmissionsRaw(response.jwt(), command), NO_APPROVABLE_PAGES);
+        assertError(() -> SubmissionApi.listSubmissionsRaw(response.getJwt(), command), NO_APPROVABLE_PAGES);
     }
 
     @Test
@@ -1517,14 +1517,14 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .pageId(response.homePageId())
+                .appId(response.getAppId())
+                .pageId(response.getHomePageId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
 
-        assertError(() -> SubmissionApi.listSubmissionsRaw(response.jwt(), command), NO_APPROVABLE_PERMISSION_FOR_PAGE);
+        assertError(() -> SubmissionApi.listSubmissionsRaw(response.getJwt(), command), NO_APPROVABLE_PERMISSION_FOR_PAGE);
     }
 
     @Test
@@ -1532,35 +1532,35 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FRadioControl radioControl = defaultRadioControlBuilder().options(rTextOptions(10)).build();
         FCheckboxControl checkboxControl = defaultCheckboxControlBuilder().options(rTextOptions(10)).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, checkboxControl);
 
         RadioAnswer firstRadioAnswer = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
         CheckboxAnswer firstCheckboxAnswer = rAnswerBuilder(checkboxControl).optionIds(
                 newArrayList(checkboxControl.getOptions().get(0).getId(), checkboxControl.getOptions().get(1).getId())).build();
-        String firstSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String firstSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 firstRadioAnswer, firstCheckboxAnswer);
 
         RadioAnswer secondRadioAnswer = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
         CheckboxAnswer secondCheckboxAnswer = rAnswerBuilder(checkboxControl).optionIds(
                 newArrayList(checkboxControl.getOptions().get(1).getId(), checkboxControl.getOptions().get(2).getId())).build();
-        String secondSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String secondSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 secondRadioAnswer, secondCheckboxAnswer);
 
         RadioAnswer thirdRadioAnswer = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
         CheckboxAnswer thirdCheckboxAnswer = rAnswerBuilder(checkboxControl).optionIds(
                 newArrayList(checkboxControl.getOptions().get(2).getId(), checkboxControl.getOptions().get(3).getId())).build();
-        String thirdSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String thirdSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 thirdRadioAnswer, thirdCheckboxAnswer);
 
         RadioAnswer fourthRadioAnswer = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(3).getId()).build();
         CheckboxAnswer fourthCheckboxAnswer = rAnswerBuilder(checkboxControl).optionIds(
                 newArrayList(checkboxControl.getOptions().get(4).getId(), checkboxControl.getOptions().get(5).getId())).build();
-        String fourthSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String fourthSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 fourthRadioAnswer, fourthCheckboxAnswer);
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .pageId(response.homePageId())
+                .appId(response.getAppId())
+                .pageId(response.getHomePageId())
                 .type(ALL_SUBMIT_HISTORY)
                 .filterables(Map.of(
                         radioControl.getId(),
@@ -1571,7 +1571,7 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .pageSize(20)
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(2, list.getData().size());
         Set<String> submissionIds = list.getData().stream().map(QListSubmission::getId).collect(toSet());
@@ -1586,20 +1586,20 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         PageSetting pageSetting = defaultPageSettingBuilder().approvalSetting(
                 ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
 
-        String approvedYesSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String approvedYesSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        SubmissionApi.approveSubmission(response.jwt(), approvedYesSubmissionId, approveSubmissionCommand(true));
-        String approvedNoSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.approveSubmission(response.getJwt(), approvedYesSubmissionId, approveSubmissionCommand(true));
+        String approvedNoSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        SubmissionApi.approveSubmission(response.jwt(), approvedNoSubmissionId, approveSubmissionCommand(false));
-        String notApprovedSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.approveSubmission(response.getJwt(), approvedNoSubmissionId, approveSubmissionCommand(false));
+        String notApprovedSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .pageId(response.homePageId())
+                .appId(response.getAppId())
+                .pageId(response.getHomePageId())
                 .type(ALL_SUBMIT_HISTORY)
                 .filterables(Map.of(
                         "approval", newHashSet("YES", "NONE")
@@ -1608,7 +1608,7 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .pageSize(20)
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
         assertEquals(2, list.getData().size());
         Set<String> submissionIds = list.getData().stream().map(QListSubmission::getId).collect(toSet());
         assertTrue(submissionIds.contains(approvedYesSubmissionId));
@@ -1619,21 +1619,21 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_submissions_with_search() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FMobileNumberControl control = defaultMobileControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         MobileNumberAnswer firstAnswer = rAnswerBuilder(control).mobileNumber(rMobile()).build();
-        String firstSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), firstAnswer);
+        String firstSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), firstAnswer);
         MobileNumberAnswer secondAnswer = rAnswerBuilder(control).mobileNumber(rMobile()).build();
-        String secondSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), secondAnswer);
+        String secondSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), secondAnswer);
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .search(firstAnswer.getMobileNumber())
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(1, list.getData().size());
         assertEquals(firstSubmissionId, list.getData().get(0).getId());
@@ -1643,10 +1643,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_submissions_with_date_range() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        String submissionId1 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        String submissionId3 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        String submissionId1 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        String submissionId3 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         Submission submission1 = submissionRepository.byId(submissionId1);
         ReflectionTestUtils.setField(submission1, "createdAt", LocalDate.of(2011, 3, 3).atStartOfDay(systemDefault()).toInstant());
@@ -1661,14 +1661,14 @@ class SubmissionControllerApiTest extends BaseApiTest {
         submissionRepository.save(submission3);
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
                 .startDate("2011-03-04")
                 .endDate("2011-03-07")
                 .build();
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
         assertEquals(1, list.getData().size());
         assertEquals(submission2.getId(), list.getData().get(0).getId());
     }
@@ -1677,20 +1677,20 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_submissions_with_default_sort_by_created_at() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        String firstSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        String firstSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String secondSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String secondSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
         assertEquals(secondSubmissionId, list.getData().get(0).getId());
     }
 
@@ -1698,14 +1698,14 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_list_submissions_with_sort_on_control() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        String firstSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        String firstSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(control).number(1d).build());
-        String secondSubmissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String secondSubmissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(control).number(2d).build());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .sortedBy(control.getId())
                 .ascSort(true)
@@ -1713,25 +1713,25 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .pageSize(20)
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
         assertEquals(firstSubmissionId, list.getData().get(0).getId());
     }
 
     @Test
     public void should_list_submissions_with_only_permissioned_answers() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         FSingleLineTextControl control = defaultSingleLineTextControl();
         FSingleLineTextControl permissionedControl = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_APP)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control, permissionedControl);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control, permissionedControl);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, rAnswer(control), rAnswer(permissionedControl));
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, rAnswer(control), rAnswer(permissionedControl));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1748,18 +1748,18 @@ class SubmissionControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_submissions_with_submitter_viewable_answers() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         FSingleLineTextControl control = defaultSingleLineTextControl();
         FSingleLineTextControl permissionedControl = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_APP)
                 .submitterViewable(true).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control, permissionedControl);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control, permissionedControl);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, rAnswer(control), rAnswer(permissionedControl));
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, rAnswer(control), rAnswer(permissionedControl));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1778,14 +1778,14 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl permissionedControl = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_APP)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), permissionedControl);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), permissionedControl);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(permissionedControl));
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
@@ -1803,18 +1803,18 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FCheckboxControl permissionedControl = defaultCheckboxControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_GROUP)
                 .submitterViewable(false).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), permissionedControl);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), permissionedControl);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
 
         CheckboxAnswer checkboxAnswer = rAnswerBuilder(permissionedControl).optionIds(List.of(permissionedControl.getOptions().get(0).getId()))
                 .build();
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 checkboxAnswer);
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .pageId(response.homePageId())
+                .appId(response.getAppId())
+                .pageId(response.getHomePageId())
                 .type(SUBMITTER_SUBMISSION)
                 .filterables(Map.of(permissionedControl.getId(), newHashSet(permissionedControl.getOptions().get(1).getId())))
                 .pageIndex(1)
@@ -1830,18 +1830,18 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         FNumberInputControl permissionedControl = defaultNumberInputControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_GROUP)
                 .submitterViewable(false).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), permissionedControl);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), permissionedControl);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
 
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(permissionedControl).number(10d).build());
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(permissionedControl).number(11d).build());
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .pageId(response.homePageId())
+                .appId(response.getAppId())
+                .pageId(response.getHomePageId())
                 .type(SUBMITTER_SUBMISSION)
                 .sortedBy(permissionedControl.getId())
                 .ascSort(false)
@@ -1857,24 +1857,24 @@ class SubmissionControllerApiTest extends BaseApiTest {
     @Test
     public void list_viewable_submissions_should_include_sub_groups() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, control);
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, control);
 
-        String submissionId1 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), subGroupId);
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), rAnswer(control));
+        String submissionId1 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), subGroupId);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(SUBMITTER_SUBMISSION)
                 .pageIndex(1)
                 .pageSize(20)
-                .groupId(response.defaultGroupId())
+                .groupId(response.getDefaultGroupId())
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(2, list.getData().size());
         List<String> submissionIds = list.getData().stream().map(QListSubmission::getId).toList();
@@ -1885,24 +1885,24 @@ class SubmissionControllerApiTest extends BaseApiTest {
     @Test
     public void list_history_submissions_should_include_sub_groups() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_TENANT_MEMBER, control);
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER, control);
 
-        String submissionId1 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), subGroupId);
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), rAnswer(control));
+        String submissionId1 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), subGroupId);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
-                .groupId(response.defaultGroupId())
+                .groupId(response.getDefaultGroupId())
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(2, list.getData().size());
         List<String> submissionIds = list.getData().stream().map(QListSubmission::getId).toList();
@@ -1917,22 +1917,22 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FSingleLineTextControl control = defaultSingleLineTextControl();
         PageSetting pageSetting = defaultPageSettingBuilder().approvalSetting(
                 defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
 
-        String submissionId1 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), subGroupId);
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), rAnswer(control));
+        String submissionId1 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), subGroupId);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), rAnswer(control));
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
+                .appId(response.getAppId())
                 .type(TO_BE_APPROVED)
                 .pageIndex(1)
                 .pageSize(20)
-                .groupId(response.defaultGroupId())
+                .groupId(response.getDefaultGroupId())
                 .build();
 
-        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.jwt(), command);
+        PagedList<QListSubmission> list = SubmissionApi.listSubmissions(response.getJwt(), command);
 
         assertEquals(2, list.getData().size());
         List<String> submissionIds = list.getData().stream().map(QListSubmission::getId).toList();
@@ -1957,7 +1957,7 @@ class SubmissionControllerApiTest extends BaseApiTest {
         DropdownAnswer dropdownAnswer = rAnswer(dropdownControl);
 
         FMemberSelectControl memberSelectControl = defaultMemberSelectControl();
-        MemberSelectAnswer memberSelectAnswer = rAnswer(memberSelectControl, response.memberId());
+        MemberSelectAnswer memberSelectAnswer = rAnswer(memberSelectControl, response.getMemberId());
 
         FAddressControl addressControl = defaultAddressControlBuilder().precision(4).build();
         AddressAnswer addressAnswer = rAnswer(addressControl);
@@ -2008,7 +2008,7 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FDateTimeControl dateTimeControl = defaultDateTimeControl();
         DateTimeAnswer dateTimeAnswer = rAnswer(dateTimeControl);
 
-        AppApi.updateAppControls(response.jwt(), response.appId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(),
                 radioControl,
                 checkboxControl,
                 singleLineTextControl,
@@ -2030,7 +2030,7 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 dateTimeControl
         );
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 radioAnswer,
                 checkboxAnswer,
                 singleLineTextAnswer,
@@ -2053,13 +2053,13 @@ class SubmissionControllerApiTest extends BaseApiTest {
         );
 
         ListSubmissionsQuery command = ListSubmissionsQuery.builder()
-                .appId(response.appId())
-                .pageId(response.homePageId())
+                .appId(response.getAppId())
+                .pageId(response.getHomePageId())
                 .type(ALL_SUBMIT_HISTORY)
                 .pageIndex(1)
                 .pageSize(20)
                 .build();
-        byte[] exportBytes = SubmissionApi.exportSubmissionsAsExcel(response.jwt(), command);
+        byte[] exportBytes = SubmissionApi.exportSubmissionsAsExcel(response.getJwt(), command);
         List<Map<Integer, String>> result = newArrayList();
         EasyExcel.read(new ByteArrayInputStream(exportBytes), new AnalysisEventListener<Map<Integer, String>>() {
 
@@ -2073,10 +2073,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
 
             }
         }).excelType(XLSX).sheet().doRead();
-        QR qr = qrRepository.byId(response.qrId());
-        Group group = groupRepository.byId(response.defaultGroupId());
+        QR qr = qrRepository.byId(response.getQrId());
+        Group group = groupRepository.byId(response.getDefaultGroupId());
         Submission submission = submissionRepository.byId(submissionId);
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         Map<Integer, String> record = result.get(0);
         assertEquals(submissionId, record.get(0));
         assertEquals(qr.getName(), record.get(1));
@@ -2118,27 +2118,27 @@ class SubmissionControllerApiTest extends BaseApiTest {
         assertEquals(multiLevelSelectionAnswer.getSelection().toText(), record.get(22));
         assertEquals(dateTimeAnswer.toDateTimeString(), record.get(23));
 
-        assertEquals(response.qrId(), record.get(24));
-        assertEquals(response.defaultGroupId(), record.get(25));
+        assertEquals(response.getQrId(), record.get(24));
+        assertEquals(response.getDefaultGroupId(), record.get(25));
     }
 
     @Test
     public void should_fetch_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(response.jwt(), submissionId);
+        QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(response.getJwt(), submissionId);
 
         Submission submission = submissionRepository.byId(submissionId);
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertEquals(submissionId, submissionDetail.getId());
         assertEquals(1, submissionDetail.getAnswers().size());
-        assertEquals(response.appId(), submissionDetail.getAppId());
-        assertEquals(response.defaultGroupId(), submissionDetail.getGroupId());
-        assertEquals(response.tenantId(), submissionDetail.getTenantId());
-        assertEquals(response.homePageId(), submissionDetail.getPageId());
+        assertEquals(response.getAppId(), submissionDetail.getAppId());
+        assertEquals(response.getDefaultGroupId(), submissionDetail.getGroupId());
+        assertEquals(response.getTenantId(), submissionDetail.getTenantId());
+        assertEquals(response.getHomePageId(), submissionDetail.getPageId());
         assertNull(submissionDetail.getApproval());
         assertEquals(submission.getCreatedAt(), submissionDetail.getCreatedAt());
         assertEquals(submission.getCreatedBy(), submissionDetail.getCreatedBy());
@@ -2155,11 +2155,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterViewable(true).build();
         FSingleLineTextControl nonPermissionedControl = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_APP)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), permissonedControl, onlyViewableControl, nonPermissionedControl);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), permissonedControl, onlyViewableControl, nonPermissionedControl);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         SingleLineTextAnswer permissionedAnswer = rAnswer(permissonedControl);
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 permissionedAnswer);
         QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(memberResponse.getJwt(), submissionId);
         assertEquals(1, submissionDetail.getAnswers().size());
@@ -2167,7 +2167,7 @@ class SubmissionControllerApiTest extends BaseApiTest {
 
         SingleLineTextAnswer updatedPermissionedAnswer = rAnswer(permissonedControl);
         SingleLineTextAnswer onlyViewableAnswer = rAnswer(onlyViewableControl);
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, updatedPermissionedAnswer, onlyViewableAnswer,
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, updatedPermissionedAnswer, onlyViewableAnswer,
                 rAnswer(nonPermissionedControl));
         QDetailedSubmission updatedSubmissionDetail = SubmissionApi.fetchSubmission(memberResponse.getJwt(), submissionId);
         assertEquals(2, updatedSubmissionDetail.getAnswers().size());
@@ -2179,12 +2179,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void managers_should_fetch_submission_answers_even_with_no_permission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_APP).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
 
         SingleLineTextAnswer permissionedAnswer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), permissionedAnswer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), permissionedAnswer);
         QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(memberResponse.getJwt(), submissionId);
         assertEquals(1, submissionDetail.getAnswers().size());
         assertEquals(permissionedAnswer, submissionDetail.getAnswers().stream().findAny().get());
@@ -2198,12 +2198,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
-        SubmissionApi.approveSubmission(response.jwt(), submissionId, command);
+        SubmissionApi.approveSubmission(response.getJwt(), submissionId, command);
 
-        QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(response.jwt(), submissionId);
+        QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(response.getJwt(), submissionId);
 
         Submission submission = submissionRepository.byId(submissionId);
         QSubmissionApproval qSubmissionApproval = submissionDetail.getApproval();
@@ -2219,9 +2219,9 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fetch_own_submitted_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(memberResponse.getJwt(), submissionId);
@@ -2232,10 +2232,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fetch_submission_if_can_manage_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(memberResponse.getJwt(), submissionId);
         assertEquals(submissionId, submissionDetail.getId());
@@ -2245,10 +2245,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fail_fetch_submission_if_not_submitted_by_myself() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         assertError(() -> SubmissionApi.fetchSubmissionRaw(memberResponse.getJwt(), submissionId), ACCESS_DENIED);
     }
@@ -2258,10 +2258,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
         PageSetting pageSetting = defaultPageSettingBuilder().modifyPermission(CAN_MANAGE_GROUP).build();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(memberResponse.getJwt(), submissionId);
         assertEquals(submissionId, submissionDetail.getId());
@@ -2281,9 +2281,9 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .build();
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(memberResponse.getJwt(), submissionId);
@@ -2303,10 +2303,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(response.jwt(), submissionId);
+        QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(response.getJwt(), submissionId);
         assertEquals(submissionId, submissionDetail.getId());
         assertTrue(submissionDetail.isCanApprove());
     }
@@ -2318,10 +2318,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         QDetailedSubmission submissionDetail = SubmissionApi.fetchSubmission(memberResponse.getJwt(), submissionId);
@@ -2333,19 +2333,19 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fetch_listed_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        QListSubmission listedSubmission = SubmissionApi.fetchListedSubmission(response.jwt(), submissionId);
+        QListSubmission listedSubmission = SubmissionApi.fetchListedSubmission(response.getJwt(), submissionId);
 
         Submission submission = submissionRepository.byId(submissionId);
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         assertEquals(submissionId, listedSubmission.getId());
         assertEquals(1, listedSubmission.getDisplayAnswers().size());
-        assertEquals(response.appId(), listedSubmission.getAppId());
+        assertEquals(response.getAppId(), listedSubmission.getAppId());
         assertEquals(qr.getName(), listedSubmission.getQrName());
-        assertEquals(response.defaultGroupId(), listedSubmission.getGroupId());
-        assertEquals(response.homePageId(), listedSubmission.getPageId());
+        assertEquals(response.getDefaultGroupId(), listedSubmission.getGroupId());
+        assertEquals(response.getHomePageId(), listedSubmission.getPageId());
         assertEquals(NONE, listedSubmission.getApprovalStatus());
         assertEquals(submission.getCreatedAt(), listedSubmission.getCreatedAt());
         assertEquals(submission.getCreatedBy(), listedSubmission.getCreatedBy());
@@ -2359,11 +2359,11 @@ class SubmissionControllerApiTest extends BaseApiTest {
                 .submitterViewable(true).build();
         FSingleLineTextControl nonPermissionedControl = defaultSingleLineTextControlBuilder().permissionEnabled(true).permission(CAN_MANAGE_APP)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), permissonedControl, onlyViewableControl, nonPermissionedControl);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), permissonedControl, onlyViewableControl, nonPermissionedControl);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         SingleLineTextAnswer permissionedAnswer = rAnswer(permissonedControl);
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 permissionedAnswer);
         QListSubmission listSubmission1 = SubmissionApi.fetchListedSubmission(memberResponse.getJwt(), submissionId);
         assertEquals(1, listSubmission1.getDisplayAnswers().size());
@@ -2372,7 +2372,7 @@ class SubmissionControllerApiTest extends BaseApiTest {
 
         SingleLineTextAnswer updatedPermissionedAnswer = rAnswer(permissonedControl);
         SingleLineTextAnswer onlyViewableAnswer = rAnswer(onlyViewableControl);
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, updatedPermissionedAnswer, onlyViewableAnswer,
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, updatedPermissionedAnswer, onlyViewableAnswer,
                 rAnswer(nonPermissionedControl));
         QListSubmission listSubmission2 = SubmissionApi.fetchListedSubmission(memberResponse.getJwt(), submissionId);
         assertEquals(2, listSubmission2.getDisplayAnswers().size());
@@ -2390,12 +2390,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).build())
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, control);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
-        SubmissionApi.approveSubmission(response.jwt(), submissionId, command);
+        SubmissionApi.approveSubmission(response.getJwt(), submissionId, command);
 
-        QListSubmission listSubmission = SubmissionApi.fetchListedSubmission(response.jwt(), submissionId);
+        QListSubmission listSubmission = SubmissionApi.fetchListedSubmission(response.getJwt(), submissionId);
 
         Submission submission = submissionRepository.byId(submissionId);
         ApprovalStatus approvalStatus = listSubmission.getApprovalStatus();
@@ -2408,9 +2408,9 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fetch_own_listed_submitted_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        String submissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
         QListSubmission listSubmission = SubmissionApi.fetchListedSubmission(memberResponse.getJwt(), submissionId);
@@ -2421,10 +2421,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fetch_listed_submission_if_can_manage_qr() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberResponse.getMemberId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberResponse.getMemberId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         QListSubmission listSubmission = SubmissionApi.fetchListedSubmission(memberResponse.getJwt(), submissionId);
         assertEquals(submissionId, listSubmission.getId());
@@ -2434,10 +2434,10 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fail_fetch_listed_submission_if_not_submitted_by_myself() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         assertError(() -> SubmissionApi.fetchListedSubmissionRaw(memberResponse.getJwt(), submissionId), ACCESS_DENIED);
     }
@@ -2446,21 +2446,21 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fetch_instance_last_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
         assertEquals("",
-                SubmissionApi.tryFetchInstanceLastSubmissionRaw(memberResponse.getJwt(), response.qrId(), response.homePageId()).asString());
+                SubmissionApi.tryFetchInstanceLastSubmissionRaw(memberResponse.getJwt(), response.getQrId(), response.getHomePageId()).asString());
 
-        String firstSubmissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        String firstSubmissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String secondSubmissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        String secondSubmissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
-        QDetailedSubmission submissionDetail = SubmissionApi.tryFetchInstanceLastSubmission(response.jwt(), response.qrId(),
-                response.homePageId());
+        QDetailedSubmission submissionDetail = SubmissionApi.tryFetchInstanceLastSubmission(response.getJwt(), response.getQrId(),
+                response.getHomePageId());
         assertEquals(secondSubmissionId, submissionDetail.getId());
-        QDetailedSubmission memberSubmissionDetail = SubmissionApi.tryFetchInstanceLastSubmission(memberResponse.getJwt(), response.qrId(),
-                response.homePageId());
+        QDetailedSubmission memberSubmissionDetail = SubmissionApi.tryFetchInstanceLastSubmission(memberResponse.getJwt(), response.getQrId(),
+                response.getHomePageId());
         assertEquals(secondSubmissionId, memberSubmissionDetail.getId());
     }
 
@@ -2468,18 +2468,18 @@ class SubmissionControllerApiTest extends BaseApiTest {
     public void should_fetch_my_last_submission() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        String firstSubmissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        String firstSubmissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
-        String secondSubmissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(),
+        String secondSubmissionId = SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswer(control));
 
-        QDetailedSubmission submissionDetail = SubmissionApi.tryFetchMyLastSubmission(memberResponse.getJwt(), response.qrId(),
-                response.homePageId());
+        QDetailedSubmission submissionDetail = SubmissionApi.tryFetchMyLastSubmission(memberResponse.getJwt(), response.getQrId(),
+                response.getHomePageId());
         assertEquals(secondSubmissionId, submissionDetail.getId());
-        assertEquals("", SubmissionApi.tryFetchMyLastSubmissionRaw(response.jwt(), response.qrId(), response.homePageId()).asString());
+        assertEquals("", SubmissionApi.tryFetchMyLastSubmissionRaw(response.getJwt(), response.getQrId(), response.getHomePageId()).asString());
     }
 
     @Test
@@ -2492,21 +2492,21 @@ class SubmissionControllerApiTest extends BaseApiTest {
         FImageUploadControl nonAutoFillEligibleControl = defaultImageUploadControlBuilder().fillableSetting(
                 ControlFillableSetting.builder().autoFill(true).build()).build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), autoFillControl, nonAutoFillControl, nonAutoFillEligibleControl);
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), autoFillControl, nonAutoFillControl, nonAutoFillEligibleControl);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(), rAnswer(autoFillControl),
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(autoFillControl),
                 rAnswer(nonAutoFillControl));
         SingleLineTextAnswer lastAnswer = rAnswer(autoFillControl);
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId(), lastAnswer,
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId(), lastAnswer,
                 rAnswer(nonAutoFillControl), rAnswer(nonAutoFillEligibleControl));
 
-        Set<Answer> answers = SubmissionApi.tryFetchSubmissionAnswersForAutoFill(memberResponse.getJwt(), response.qrId(),
-                response.homePageId());
+        Set<Answer> answers = SubmissionApi.tryFetchSubmissionAnswersForAutoFill(memberResponse.getJwt(), response.getQrId(),
+                response.getHomePageId());
         assertEquals(1, answers.size());
         assertEquals(lastAnswer, answers.stream().findFirst().get());
         assertTrue(
-                SubmissionApi.tryFetchSubmissionAnswersForAutoFill(response.jwt(), response.qrId(), response.homePageId()).isEmpty());
+                SubmissionApi.tryFetchSubmissionAnswersForAutoFill(response.getJwt(), response.getQrId(), response.getHomePageId()).isEmpty());
     }
 
     @Test
@@ -2529,13 +2529,13 @@ class SubmissionControllerApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), dependantControl, calculatedControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), dependantControl, calculatedControl);
         NumberInputAnswer answer = rAnswerBuilder(dependantControl).number(11.123).build();
 
-        NumberInputAutoCalculateResponse calculateResponse = SubmissionApi.autoCalculateNumberInput(response.jwt(),
+        NumberInputAutoCalculateResponse calculateResponse = SubmissionApi.autoCalculateNumberInput(response.getJwt(),
                 AutoCalculateQuery.builder()
-                        .appId(response.appId())
-                        .pageId(response.homePageId())
+                        .appId(response.getAppId())
+                        .pageId(response.getHomePageId())
                         .controlId(calculatedControl.getId())
                         .answers(newArrayList(answer))
                         .build());
@@ -2571,12 +2571,12 @@ class SubmissionControllerApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, itemStatusControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, itemStatusControl);
         NumberInputAnswer answer = rAnswerBuilder(numberInputControl).number(11.0).build();
-        ItemStatusAutoCalculateResponse calculateResponse = SubmissionApi.autoCalculateItemStatus(response.jwt(),
+        ItemStatusAutoCalculateResponse calculateResponse = SubmissionApi.autoCalculateItemStatus(response.getJwt(),
                 AutoCalculateQuery.builder()
-                        .appId(response.appId())
-                        .pageId(response.homePageId())
+                        .appId(response.getAppId())
+                        .pageId(response.getHomePageId())
                         .controlId(itemStatusControl.getId())
                         .answers(newArrayList(answer))
                         .build());

@@ -46,13 +46,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -68,13 +68,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(SUBMIT_COUNT_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(null)
                         .build()))
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -92,15 +92,15 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(dateControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, dateControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, dateControl, control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -119,15 +119,15 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(dateTimeControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, dateTimeControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, dateTimeControl, control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -138,7 +138,7 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder()
                 .segmentSettings(List.of(PTimeSegmentControl.TimeSegmentSetting.builder()
                         .id(newShortUuid())
@@ -148,9 +148,9 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -160,7 +160,7 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder()
                 .segmentSettings(List.of(PTimeSegmentControl.TimeSegmentSetting.builder()
                         .id(newShortUuid())
@@ -170,9 +170,9 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -182,19 +182,19 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder()
                 .segmentSettings(List.of(PTimeSegmentControl.TimeSegmentSetting.builder()
                         .id(newShortUuid())
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .build()))
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -211,14 +211,14 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, dateControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, dateControl, control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -228,7 +228,7 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder()
                 .segmentSettings(List.of(PTimeSegmentControl.TimeSegmentSetting.builder()
                         .id(newShortUuid())
@@ -240,10 +240,10 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .build()))
                 .build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_PAGE_NOT_EXIST);
     }
 
@@ -252,22 +252,22 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder()
                 .segmentSettings(List.of(PTimeSegmentControl.TimeSegmentSetting.builder()
                         .id(newShortUuid())
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(Control.newControlId())
                         .build()))
                 .build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -276,22 +276,22 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), singleLineTextControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), singleLineTextControl);
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder()
                 .segmentSettings(List.of(PTimeSegmentControl.TimeSegmentSetting.builder()
                         .id(newShortUuid())
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(singleLineTextControl.getId())
                         .build()))
                 .build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 NOT_SUPPORTED_TARGET_CONTROL_FOR_TIME_SEGMENT);
     }
 
@@ -300,23 +300,23 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder()
                 .segmentSettings(List.of(PTimeSegmentControl.TimeSegmentSetting.builder()
                         .id(newShortUuid())
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(Control.newControlId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -327,23 +327,23 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), singleLineTextControl, numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), singleLineTextControl, numberInputControl);
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder()
                 .segmentSettings(List.of(PTimeSegmentControl.TimeSegmentSetting.builder()
                         .id(newShortUuid())
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(singleLineTextControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 NOT_SUPPORTED_BASED_CONTROL_FOR_TIME_SEGMENT);
     }
 
@@ -358,13 +358,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         LocalDate localDate1 = now().minusMonths(5);
         createSubmission(response, numberInputControl, localDate1, 10);
@@ -379,12 +379,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         LocalDate localDate4 = now();
         createSubmission(response, numberInputControl, localDate4, 60);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
 
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
@@ -414,13 +414,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_AVG)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         LocalDate localDate = now();
         createSubmission(response, numberInputControl, localDate, 10);
@@ -428,12 +428,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         createSubmission(response, numberInputControl, localDate, 30);
         createSubmission(response, numberInputControl, localDate, 40);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
 
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
@@ -454,13 +454,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_MAX)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         LocalDate localDate = now();
         createSubmission(response, numberInputControl, localDate, 10);
@@ -468,12 +468,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         createSubmission(response, numberInputControl, localDate, 30);
         createSubmission(response, numberInputControl, localDate, 40);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
 
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
@@ -494,13 +494,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_MIN)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         LocalDate localDate = now();
         createSubmission(response, numberInputControl, localDate, 10);
@@ -508,12 +508,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         createSubmission(response, numberInputControl, localDate, 30);
         createSubmission(response, numberInputControl, localDate, 40);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
 
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
@@ -534,13 +534,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_SEASON)
                 .max(2)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         createSubmission(response, numberInputControl, now().minusMonths(11).withDayOfMonth(5), 10);
         createSubmission(response, numberInputControl, now().minusMonths(10).withDayOfMonth(5), 20);
@@ -554,12 +554,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         createSubmission(response, numberInputControl, now(), 120);
         createSubmission(response, numberInputControl, now(), 130);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_SEASON, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertTrue(segments.size() >= 2);
@@ -580,13 +580,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_YEAR)
                 .max(2)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         createSubmission(response, numberInputControl, now().minusYears(1), 10);
         createSubmission(response, numberInputControl, now().minusYears(1), 20);
@@ -594,12 +594,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         createSubmission(response, numberInputControl, now(), 120);
         createSubmission(response, numberInputControl, now(), 130);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_YEAR, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertEquals(2, segments.size());
@@ -624,13 +624,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(SUBMIT_COUNT_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         LocalDate localDate1 = now().minusMonths(5).withDayOfMonth(5);
         createSubmission(response, numberInputControl, localDate1, 10);
@@ -645,12 +645,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         LocalDate localDate4 = now();
         createSubmission(response, numberInputControl, localDate4, 60);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertEquals(3, segments.size());
@@ -679,13 +679,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(SUBMIT_COUNT_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_SEASON)
                 .max(2)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         createSubmission(response, numberInputControl, now().minusMonths(11).withDayOfMonth(5), 10);
         createSubmission(response, numberInputControl, now().minusMonths(10).withDayOfMonth(5), 20);
@@ -699,12 +699,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         createSubmission(response, numberInputControl, now(), 120);
         createSubmission(response, numberInputControl, now(), 130);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_SEASON, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertTrue(segments.size() >= 2);
@@ -725,13 +725,13 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(SUBMIT_COUNT_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_YEAR)
                 .max(2)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
         createSubmission(response, numberInputControl, now().minusYears(1), 10);
         createSubmission(response, numberInputControl, now().minusYears(1), 20);
@@ -739,12 +739,12 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
         createSubmission(response, numberInputControl, now(), 120);
         createSubmission(response, numberInputControl, now(), 130);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(),
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(10d).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_YEAR, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertEquals(2, segments.size());
@@ -759,7 +759,7 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
     }
 
     private void createSubmission(PreparedQrResponse response, FNumberInputControl numberInputControl, LocalDate localDate, double value) {
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(value).build());
         Submission submission = submissionRepository.byId(submissionId);
         ReflectionTestUtils.setField(submission, "createdAt", localDate.atTime(5, 0).atZone(systemDefault()).toInstant());
@@ -778,33 +778,33 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(SUBMIT_COUNT_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(dateControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(20)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, dateControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, dateControl, control);
 
         int thisYear = now().getYear();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 1, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl).number(1D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 2, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl).number(2D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 3, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl).number(3D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 3, 3).toString()).build(),
                 rAnswerBuilder(numberInputControl).number(4D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(1D).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertEquals(3, segments.size());
@@ -832,33 +832,33 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(dateControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(20)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, dateControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, dateControl, control);
 
         int thisYear = now().getYear();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 1, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl).number(1D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 2, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl).number(2D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 3, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl).number(3D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 3, 3).toString()).build(),
                 rAnswerBuilder(numberInputControl).number(4D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(2D).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertEquals(3, segments.size());
@@ -886,33 +886,33 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(SUBMIT_COUNT_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(dateTimeControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(20)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, dateTimeControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, dateTimeControl, control);
 
         int thisYear = now().getYear();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateTimeControl).date(LocalDate.of(thisYear, 1, 2).toString()).time(rTime()).build(),
                 rAnswerBuilder(numberInputControl).number(1D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateTimeControl).date(LocalDate.of(thisYear, 2, 2).toString()).time(rTime()).build(),
                 rAnswerBuilder(numberInputControl).number(2D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateTimeControl).date(LocalDate.of(thisYear, 3, 2).toString()).time(rTime()).build(),
                 rAnswerBuilder(numberInputControl).number(3D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateTimeControl).date(LocalDate.of(thisYear, 3, 3).toString()).time(rTime()).build(),
                 rAnswerBuilder(numberInputControl).number(4D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(1D).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertEquals(3, segments.size());
@@ -940,33 +940,33 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(DATE_CONTROL)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(dateTimeControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(20)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, dateTimeControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, dateTimeControl, control);
 
         int thisYear = now().getYear();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateTimeControl).date(LocalDate.of(thisYear, 1, 2).toString()).time(rTime()).build(),
                 rAnswerBuilder(numberInputControl).number(1D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateTimeControl).date(LocalDate.of(thisYear, 2, 2).toString()).time(rTime()).build(),
                 rAnswerBuilder(numberInputControl).number(2D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateTimeControl).date(LocalDate.of(thisYear, 3, 2).toString()).time(rTime()).build(),
                 rAnswerBuilder(numberInputControl).number(3D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateTimeControl).date(LocalDate.of(thisYear, 3, 3).toString()).time(rTime()).build(),
                 rAnswerBuilder(numberInputControl).number(4D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(2D).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
         List<TimeSegment> segments = presentation.getSegmentsData().get(0);
         assertEquals(3, segments.size());
@@ -996,7 +996,7 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                                 .name("未命名统计项")
                                 .segmentType(CONTROL_VALUE_SUM)
                                 .basedType(DATE_CONTROL)
-                                .pageId(response.homePageId())
+                                .pageId(response.getHomePageId())
                                 .basedControlId(dateControl.getId())
                                 .targetControlId(numberInputControl1.getId())
                                 .build(),
@@ -1005,33 +1005,33 @@ public class TimeSegmentControlApiTest extends BaseApiTest {
                                 .name("未命名统计项")
                                 .segmentType(CONTROL_VALUE_MAX)
                                 .basedType(DATE_CONTROL)
-                                .pageId(response.homePageId())
+                                .pageId(response.getHomePageId())
                                 .basedControlId(dateControl.getId())
                                 .targetControlId(numberInputControl2.getId())
                                 .build()))
                 .interval(PER_MONTH)
                 .max(20)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl1, numberInputControl2, dateControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl1, numberInputControl2, dateControl, control);
 
         int thisYear = now().getYear();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 1, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl1).number(1D).build(), rAnswerBuilder(numberInputControl2).number(1D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 2, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl1).number(2D).build(), rAnswerBuilder(numberInputControl2).number(2D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 3, 2).toString()).build(),
                 rAnswerBuilder(numberInputControl1).number(3D).build(), rAnswerBuilder(numberInputControl2).number(3D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(dateControl).date(LocalDate.of(thisYear, 3, 3).toString()).build(),
                 rAnswerBuilder(numberInputControl1).number(4D).build(), rAnswerBuilder(numberInputControl2).number(4D).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl1).number(2D).build());
 
-        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.jwt(),
-                response.qrId(), response.homePageId(), control.getId());
+        QTimeSegmentPresentation presentation = (QTimeSegmentPresentation) PresentationApi.fetchPresentation(response.getJwt(),
+                response.getQrId(), response.getHomePageId(), control.getId());
         assertEquals(PER_MONTH, presentation.getInterval());
         List<TimeSegment> segments1 = presentation.getSegmentsData().get(0);
         assertEquals(3, segments1.size());

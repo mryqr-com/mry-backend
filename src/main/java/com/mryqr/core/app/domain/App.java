@@ -108,10 +108,6 @@ public class App extends AggregateRoot {
         addOpsLog("新建", user);
     }
 
-    public static String newAppId() {
-        return "APP" + newSnowflakeId();
-    }
-
     private void init(String name, AppSetting setting, ReportSetting reportSetting, User user) {
         this.version = increaseVersion();
         this.name = name;
@@ -125,6 +121,10 @@ public class App extends AggregateRoot {
         this.reportSetting = reportSetting;
         this.webhookSetting = WebhookSetting.create();
         raiseEvent(new AppCreatedEvent(this.getId(), user));
+    }
+
+    public static String newAppId() {
+        return "APP" + newSnowflakeId();
     }
 
     public UpdateAppSettingResult updateSetting(AppSetting newSetting, String version, User user) {

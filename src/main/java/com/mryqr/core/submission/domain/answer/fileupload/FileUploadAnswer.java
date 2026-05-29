@@ -43,10 +43,6 @@ public class FileUploadAnswer extends Answer {
     @Size(max = MAX_MAX_FILE_SIZE)
     private List<@Valid UploadedFile> files;
 
-    public static FileUploadAnswer.FileUploadAnswerBuilder<?, ?> answerBuilder(FFileUploadControl control) {
-        return FileUploadAnswer.builder().controlId(control.getId()).controlType(control.getType());
-    }
-
     @Override
     public void correctAndValidate() {
         if (isDuplicated(files)) {
@@ -96,6 +92,10 @@ public class FileUploadAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
+    }
+
+    public static FileUploadAnswer.FileUploadAnswerBuilder<?, ?> answerBuilder(FFileUploadControl control) {
+        return FileUploadAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

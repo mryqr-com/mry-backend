@@ -10,10 +10,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 public class OrderIdValidator implements ConstraintValidator<OrderId, String> {
     private static final Pattern PATTERN = Pattern.compile("^ODR[0-9]{17,19}$");
 
-    public static boolean isOrderId(String orderId) {
-        return PATTERN.matcher(orderId).matches();
-    }
-
     @Override
     public void initialize(OrderId constraintAnnotation) {
     }
@@ -25,6 +21,10 @@ public class OrderIdValidator implements ConstraintValidator<OrderId, String> {
         }
 
         return isOrderId(orderId);
+    }
+
+    public static boolean isOrderId(String orderId) {
+        return PATTERN.matcher(orderId).matches();
     }
 
 

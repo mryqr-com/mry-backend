@@ -37,13 +37,13 @@ public class PresentationControllerApiTest extends BaseApiTest {
         PreparedQrResponse qrResponse = setupApi.registerWithQr();
 
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
-        PSubmissionReferenceControl referenceControl = defaultSubmissionReferenceControlBuilder().pageId(qrResponse.homePageId()).build();
-        AppApi.updateAppPermissionAndControls(qrResponse.jwt(), qrResponse.appId(), PUBLIC, singleLineTextControl, referenceControl);
+        PSubmissionReferenceControl referenceControl = defaultSubmissionReferenceControlBuilder().pageId(qrResponse.getHomePageId()).build();
+        AppApi.updateAppPermissionAndControls(qrResponse.getJwt(), qrResponse.getAppId(), PUBLIC, singleLineTextControl, referenceControl);
 
         SingleLineTextAnswer singleLineTextAnswer = rAnswer(singleLineTextControl);
-        SubmissionApi.newSubmission(qrResponse.jwt(), qrResponse.qrId(), qrResponse.homePageId(), singleLineTextAnswer);
+        SubmissionApi.newSubmission(qrResponse.getJwt(), qrResponse.getQrId(), qrResponse.getHomePageId(), singleLineTextAnswer);
         QSubmissionReferencePresentation presentation = (QSubmissionReferencePresentation) PresentationApi.fetchPresentation(null,
-                qrResponse.qrId(), qrResponse.homePageId(), referenceControl.getId());
+                qrResponse.getQrId(), qrResponse.getHomePageId(), referenceControl.getId());
 
         TextDisplayValue value = (TextDisplayValue) presentation.getValues().get(singleLineTextControl.getId());
         assertEquals(singleLineTextAnswer.getContent(), value.getText());
@@ -60,15 +60,15 @@ public class PresentationControllerApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), PUBLIC, numberInputControl, control);
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), PUBLIC, numberInputControl, control);
 
-        assertError(() -> PresentationApi.fetchPresentationRaw(null, response.qrId(), response.homePageId(), control.getId()),
+        assertError(() -> PresentationApi.fetchPresentationRaw(null, response.getQrId(), response.getHomePageId(), control.getId()),
                 AUTHENTICATION_FAILED);
     }
 
@@ -83,15 +83,15 @@ public class PresentationControllerApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
-        assertError(() -> PresentationApi.fetchPresentationRaw(null, response.qrId(), response.homePageId(), control.getId()),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
+        assertError(() -> PresentationApi.fetchPresentationRaw(null, response.getQrId(), response.getHomePageId(), control.getId()),
                 AUTHENTICATION_FAILED);
     }
 
@@ -106,16 +106,16 @@ public class PresentationControllerApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
 
-        AppApi.updateAppPermissionAndControls(response.jwt(), response.appId(), AS_GROUP_MEMBER, numberInputControl, control);
-        CreateMemberResponse noPermissionMember = MemberApi.createMemberAndLogin(response.jwt());
-        assertError(() -> PresentationApi.fetchPresentationRaw(noPermissionMember.getJwt(), response.qrId(), response.homePageId(),
+        AppApi.updateAppPermissionAndControls(response.getJwt(), response.getAppId(), AS_GROUP_MEMBER, numberInputControl, control);
+        CreateMemberResponse noPermissionMember = MemberApi.createMemberAndLogin(response.getJwt());
+        assertError(() -> PresentationApi.fetchPresentationRaw(noPermissionMember.getJwt(), response.getQrId(), response.getHomePageId(),
                 control.getId()), ACCESS_DENIED);
     }
 
@@ -130,19 +130,19 @@ public class PresentationControllerApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(numberInputControl.getId())
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
 
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withSupportedControlTypes(allControlTypesExcept(TIME_SEGMENT)));
         assertError(
-                () -> PresentationApi.fetchPresentationRaw(response.jwt(), response.qrId(), response.homePageId(), control.getId()),
+                () -> PresentationApi.fetchPresentationRaw(response.getJwt(), response.getQrId(), response.getHomePageId(), control.getId()),
                 CONTROL_TYPE_NOT_ALLOWED);
     }
 
@@ -157,16 +157,16 @@ public class PresentationControllerApiTest extends BaseApiTest {
                         .name("未命名统计项")
                         .segmentType(CONTROL_VALUE_SUM)
                         .basedType(CREATED_AT)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .targetControlId(null)
                         .build()))
                 .interval(PER_MONTH)
                 .max(5)
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, control);
         assertError(
-                () -> PresentationApi.fetchPresentationRaw(response.jwt(), response.qrId(), response.homePageId(), control.getId()),
+                () -> PresentationApi.fetchPresentationRaw(response.getJwt(), response.getQrId(), response.getHomePageId(), control.getId()),
                 CONTROL_NOT_COMPLETE);
     }
 }

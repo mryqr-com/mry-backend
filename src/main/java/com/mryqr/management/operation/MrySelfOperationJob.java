@@ -97,8 +97,8 @@ public class MrySelfOperationJob {
             Group group = groupRepository.cachedById(MRY_OPERATION_GROUP_ID);
 
             PlatedQr platedQr = qrFactory.createPlatedQr("码如云运营数据", group, app, OPERATION_QR_CUSTOM_ID, NO_USER);
-            QR qr = platedQr.qr();
-            Plate plate = platedQr.plate();
+            QR qr = platedQr.getQr();
+            Plate plate = platedQr.getPlate();
             qrRepository.save(qr);
             plateRepository.save(plate);
         });

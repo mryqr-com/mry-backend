@@ -75,7 +75,7 @@ public class AppTemplateControllerApiTest extends BaseApiTest {
                         List.of(SCENARIO_INSPECTION_OPTION_ID), List.of(FEATURE_GEOLOCATION_ID))).toList();
 
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateMemberResponse member = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse member = MemberApi.createMemberAndLogin(response.getJwt());
         PagedList<QListAppTemplate> firstPageTemplates = AppTemplateApi.listPublishedAppTemplates(
                 ListAppTemplateQuery.builder().pageIndex(1).pageSize(10).build());
 
@@ -163,7 +163,7 @@ public class AppTemplateControllerApiTest extends BaseApiTest {
         assertNull(template.attributeValueOf(APPLIED_COUNT_ATTRIBUTE_ID));
 
         LoginResponse loginResponse = setupApi.registerWithLogin();
-        CreateAppResponse appResponse = AppApi.createAppFromTemplate(loginResponse.jwt(), template.getId());
+        CreateAppResponse appResponse = AppApi.createAppFromTemplate(loginResponse.getJwt(), template.getId());
         App newApp = appRepository.byId(appResponse.getAppId());
         App sourceApp = appRepository.byId(refedAppId);
         assertEquals(template.getId(), newApp.getAppTemplateId());
@@ -190,7 +190,7 @@ public class AppTemplateControllerApiTest extends BaseApiTest {
         );
 
         LoginResponse loginResponse = setupApi.registerWithLogin();
-        CreateAppResponse appResponse = AppApi.createAppFromTemplate(loginResponse.jwt(), template.getId());
+        CreateAppResponse appResponse = AppApi.createAppFromTemplate(loginResponse.getJwt(), template.getId());
         App newApp = appRepository.byId(appResponse.getAppId());
         assertEquals(CAN_MANAGE_GROUP, newApp.getSetting().homePage().getSetting().getPermission());
         assertEquals(ONCE_PER_INSTANCE, newApp.getSetting().homePage().getSetting().getSubmitType());
@@ -206,9 +206,9 @@ public class AppTemplateControllerApiTest extends BaseApiTest {
         AppManualApi.updateAppManual(jwt, refedAppId, UpdateAppManualCommand.builder().content(content).build());
 
         LoginResponse loginResponse = setupApi.registerWithLogin();
-        CreateAppResponse appResponse = AppApi.createAppFromTemplate(loginResponse.jwt(), template.getId());
+        CreateAppResponse appResponse = AppApi.createAppFromTemplate(loginResponse.getJwt(), template.getId());
 
-        QAppManual qAppManual = AppManualApi.fetchAppManual(loginResponse.jwt(), appResponse.getAppId());
+        QAppManual qAppManual = AppManualApi.fetchAppManual(loginResponse.getJwt(), appResponse.getAppId());
         assertEquals(content, qAppManual.getContent());
     }
 
@@ -219,9 +219,9 @@ public class AppTemplateControllerApiTest extends BaseApiTest {
                 List.of(SCENARIO_INSPECTION_OPTION_ID), List.of(FEATURE_GEOLOCATION_ID));
 
         LoginResponse loginResponse = setupApi.registerWithLogin();
-        Tenant theTenant = tenantRepository.byId(loginResponse.tenantId());
+        Tenant theTenant = tenantRepository.byId(loginResponse.getTenantId());
         setupApi.updateTenantPlan(theTenant, FREE_PLAN);
-        assertError(() -> AppApi.createAppFromTemplateRaw(loginResponse.jwt(), template.getId()), LOW_PLAN_FOR_APP_TEMPLATE);
+        assertError(() -> AppApi.createAppFromTemplateRaw(loginResponse.getJwt(), template.getId()), LOW_PLAN_FOR_APP_TEMPLATE);
     }
 
     @Test
@@ -231,8 +231,8 @@ public class AppTemplateControllerApiTest extends BaseApiTest {
                 List.of(SCENARIO_INSPECTION_OPTION_ID), List.of(FEATURE_GEOLOCATION_ID));
 
         LoginResponse loginResponse = setupApi.registerWithLogin();
-        AppApi.createAppFromTemplate(loginResponse.jwt(), template.getId());
-        assertError(() -> AppApi.createAppFromTemplateRaw(loginResponse.jwt(), template.getId()), APP_WITH_NAME_ALREADY_EXISTS);
+        AppApi.createAppFromTemplate(loginResponse.getJwt(), template.getId());
+        assertError(() -> AppApi.createAppFromTemplateRaw(loginResponse.getJwt(), template.getId()), APP_WITH_NAME_ALREADY_EXISTS);
     }
 
     @Test
@@ -243,11 +243,11 @@ public class AppTemplateControllerApiTest extends BaseApiTest {
 
         LoginResponse loginResponse = setupApi.registerWithLogin();
 
-        Tenant tenant = tenantRepository.byId(loginResponse.tenantId());
+        Tenant tenant = tenantRepository.byId(loginResponse.getTenantId());
         tenant.setAppCount(tenant.currentPlan().getMaxAppCount(), NO_USER);
         tenantRepository.save(tenant);
 
-        assertError(() -> AppApi.createAppFromTemplateRaw(loginResponse.jwt(), template.getId()), APP_COUNT_LIMIT_REACHED);
+        assertError(() -> AppApi.createAppFromTemplateRaw(loginResponse.getJwt(), template.getId()), APP_COUNT_LIMIT_REACHED);
     }
 
     @Test
@@ -257,7 +257,7 @@ public class AppTemplateControllerApiTest extends BaseApiTest {
                 List.of(SCENARIO_INSPECTION_OPTION_ID), List.of(FEATURE_GEOLOCATION_ID));
 
         LoginResponse loginResponse = setupApi.registerWithLogin();
-        assertError(() -> AppApi.createAppFromTemplateRaw(loginResponse.jwt(), template.getId()), APP_TEMPLATE_NOT_PUBLISHED);
+        assertError(() -> AppApi.createAppFromTemplateRaw(loginResponse.getJwt(), template.getId()), APP_TEMPLATE_NOT_PUBLISHED);
     }
 
     @Test

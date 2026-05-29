@@ -4,6 +4,7 @@ import com.mryqr.BaseApiTest;
 import com.mryqr.common.domain.administrative.Administrative;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,7 +48,7 @@ class AdministrativeControllerApiTest extends BaseApiTest {
         assertEquals("香港", hangKong.getChild().get(0).getName());//香港的省和市应该是一样的
 
         Administrative finalChina = Administrative.builder().name(china.getName()).child(finalResults).build();
-        System.out.println(objectMapper.writeValueAsString(finalChina));
+        System.out.println(new ObjectMapper().writeValueAsString(finalChina));
     }
 
     static class TiandutuResponse {

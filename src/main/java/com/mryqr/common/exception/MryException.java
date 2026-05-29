@@ -13,8 +13,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 public final class MryException extends RuntimeException {
     private final ErrorCode code;
     private final Map<String, Object> data = new HashMap<>();
-    private final String userMessage;
     private String message;
+    private final String userMessage;
 
     public MryException(ErrorCode code, String userMessage) {
         this.code = code;
@@ -73,6 +73,20 @@ public final class MryException extends RuntimeException {
         this.message = message(userMessage);
     }
 
+    private String message(String userMessage) {
+        StringBuilder stringBuilder = new StringBuilder().append("[").append(this.code.toString()).append("]");
+
+        if (isNotBlank(userMessage)) {
+            stringBuilder.append(userMessage);
+        }
+
+        if (isNotEmpty(this.data)) {
+            stringBuilder.append("Data: ").append(this.data);
+        }
+
+        return stringBuilder.toString();
+    }
+
     public static MryException requestValidationException(Map<String, Object> data) {
         return new MryException(REQUEST_VALIDATION_FAILED, "请求数据验证失败。", data);
     }
@@ -99,20 +113,6 @@ public final class MryException extends RuntimeException {
 
     public static MryException authenticationException(String userMessage, Map<String, Object> data) {
         return new MryException(AUTHENTICATION_FAILED, userMessage, data);
-    }
-
-    private String message(String userMessage) {
-        StringBuilder stringBuilder = new StringBuilder().append("[").append(this.code.toString()).append("]");
-
-        if (isNotBlank(userMessage)) {
-            stringBuilder.append(userMessage);
-        }
-
-        if (isNotEmpty(this.data)) {
-            stringBuilder.append("Data: ").append(this.data);
-        }
-
-        return stringBuilder.toString();
     }
 
     public void addData(String key, Object value) {

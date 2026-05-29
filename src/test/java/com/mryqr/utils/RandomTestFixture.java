@@ -91,9 +91,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 public class RandomTestFixture {
 
-    //排除掉省市县不全的
-    private static final Set<String> excludedProvinces = Set.of("台湾省", "香港", "澳门", "海南省", "新疆维吾尔自治区", "湖北省", "河南省", "广东省", "甘肃省");
-
     public static String rMobile() {
         return String.valueOf(RandomUtils.secure().randomLong(13000000000L, 19000000000L));
     }
@@ -247,6 +244,9 @@ public class RandomTestFixture {
     public static String rAssignmentPlanName() {
         return RandomStringUtils.secure().nextAlphabetic(6) + "任务计划";
     }
+
+    //排除掉省市县不全的
+    private static final Set<String> excludedProvinces = Set.of("台湾省", "香港", "澳门", "海南省", "新疆维吾尔自治区", "湖北省", "河南省", "广东省", "甘肃省");
 
     public static Address rAddress() {
         String provinceName;

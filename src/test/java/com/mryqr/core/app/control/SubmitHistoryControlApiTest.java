@@ -50,10 +50,10 @@ public class SubmitHistoryControlApiTest extends BaseApiTest {
     public void should_create_control_normally() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        PSubmitHistoryControl control = defaultSubmitHistoryControlBuilder().pageIds(newArrayList(response.homePageId())).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        PSubmitHistoryControl control = defaultSubmitHistoryControlBuilder().pageIds(newArrayList(response.getHomePageId())).build();
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -64,9 +64,9 @@ public class SubmitHistoryControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PSubmitHistoryControl control = defaultSubmitHistoryControlBuilder().build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertFalse(updatedControl.isComplete());
@@ -77,11 +77,11 @@ public class SubmitHistoryControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PSubmitHistoryControl control = defaultSubmitHistoryControlBuilder().pageIds(newArrayList(Page.newPageId())).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_PAGE_NOT_EXIST);
     }
 
@@ -104,7 +104,7 @@ public class SubmitHistoryControlApiTest extends BaseApiTest {
         SingleLineTextAnswer singleLineTextAnswer = rAnswer(singleLineTextControl);
 
         FMemberSelectControl memberSelectControl = defaultMemberSelectControlBuilder().fillableSetting(fillableSetting).build();
-        MemberSelectAnswer memberSelectAnswer = rAnswer(memberSelectControl, response.memberId());
+        MemberSelectAnswer memberSelectAnswer = rAnswer(memberSelectControl, response.getMemberId());
 
         FAddressControl addressControl = defaultAddressControlBuilder().fillableSetting(fillableSetting).build();
         AddressAnswer addressAnswer = rAnswer(addressControl);
@@ -145,25 +145,25 @@ public class SubmitHistoryControlApiTest extends BaseApiTest {
         FPointCheckControl pointCheckControl = defaultPointCheckControlBuilder().fillableSetting(fillableSetting).build();
         PointCheckAnswer pointCheckAnswer = rAnswer(pointCheckControl);
 
-        PSubmitHistoryControl submitHistoryControl = defaultSubmitHistoryControlBuilder().pageIds(newArrayList(response.homePageId()))
+        PSubmitHistoryControl submitHistoryControl = defaultSubmitHistoryControlBuilder().pageIds(newArrayList(response.getHomePageId()))
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(),
                 radioControl, checkboxControl, dropdownControl, singleLineTextControl, memberSelectControl, addressControl,
                 geolocationControl, numberInputControl, numberRankingControl, mobileNumberControl, identifierControl, emailControl,
                 dateControl, dateTimeControl, timeControl, itemCountControl, itemStatusControl, pointCheckControl, submitHistoryControl);
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 radioAnswer, checkboxAnswer, dropdownAnswer, singleLineTextAnswer, memberSelectAnswer, addressAnswer,
                 geolocationAnswer, numberInputAnswer, numberRankingAnswer, mobileNumberAnswer, identifierAnswer, emailAnswer,
                 dateAnswer, dateTimeAnswer, timeAnswer, itemCountAnswer, itemStatusAnswer, pointCheckAnswer);
 
         Submission dbSubmission = submissionRepository.byId(submissionId);
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
 
-        CreateMemberResponse fetcherMember = MemberApi.createMemberAndLogin(response.jwt());//只要有足够权限者即可查看
+        CreateMemberResponse fetcherMember = MemberApi.createMemberAndLogin(response.getJwt());//只要有足够权限者即可查看
         QSubmitHistoryPresentation presentation = (QSubmitHistoryPresentation) PresentationApi.fetchPresentation(fetcherMember.getJwt(),
-                response.qrId(), response.homePageId(), submitHistoryControl.getId());
+                response.getQrId(), response.getHomePageId(), submitHistoryControl.getId());
         QSubmitHistorySubmission submission = presentation.getSubmissions().get(0);
         assertEquals(dbSubmission.getId(), submission.getId());
         assertEquals(dbSubmission.getPageId(), submission.getPageId());

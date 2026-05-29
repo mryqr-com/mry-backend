@@ -33,10 +33,6 @@ public class GeolocationAnswer extends Answer {
     @NotNull
     private Geolocation geolocation;
 
-    public static GeolocationAnswer.GeolocationAnswerBuilder<?, ?> answerBuilder(FGeolocationControl control) {
-        return GeolocationAnswer.builder().controlId(control.getId()).controlType(control.getType());
-    }
-
     @Override
     public void correctAndValidate() {
     }
@@ -83,6 +79,10 @@ public class GeolocationAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
+    }
+
+    public static GeolocationAnswer.GeolocationAnswerBuilder<?, ?> answerBuilder(FGeolocationControl control) {
+        return GeolocationAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

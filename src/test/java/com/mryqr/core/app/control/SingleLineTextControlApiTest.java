@@ -35,9 +35,9 @@ public class SingleLineTextControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -47,11 +47,11 @@ public class SingleLineTextControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().minMaxSetting(minMaxOf(1, 101)).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), MAX_OVERFLOW);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), MAX_OVERFLOW);
     }
 
     @Test
@@ -59,21 +59,21 @@ public class SingleLineTextControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().minMaxSetting(minMaxOf(-1, 10)).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), MIN_OVERFLOW);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), MIN_OVERFLOW);
     }
 
     @Test
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         SingleLineTextAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         SingleLineTextAnswer updatedAnswer = (SingleLineTextAnswer) submission.allAnswers().get(control.getId());
@@ -85,51 +85,51 @@ public class SingleLineTextControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         SingleLineTextAnswer answer = rAnswerBuilder(control).content(null).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_fail_answer_if_content_exceeds_max_length() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().minMaxSetting(minMaxOf(0, 10)).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         SingleLineTextAnswer answer = rAnswerBuilder(control).content(rSentence(100)).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), SINGLE_LINE_MAX_CONTENT_REACHED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), SINGLE_LINE_MAX_CONTENT_REACHED);
     }
 
     @Test
     public void should_fail_answer_if_content_less_than_min_length() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControlBuilder().minMaxSetting(minMaxOf(20, 50)).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         SingleLineTextAnswer answer = rAnswerBuilder(control).content(rSentence(10)).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), SINGLE_LINE_MIN_CONTENT_NOT_REACHED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), SINGLE_LINE_MIN_CONTENT_NOT_REACHED);
     }
 
     @Test
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         SingleLineTextAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         TextAttributeValue attributeValue = (TextAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getContent(), attributeValue.getText());
         assertNull(qr.getIndexedValues());
@@ -139,15 +139,15 @@ public class SingleLineTextControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         SingleLineTextAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         TextAttributeValue attributeValue = (TextAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getContent(), attributeValue.getText());
         assertNull(qr.getIndexedValues());

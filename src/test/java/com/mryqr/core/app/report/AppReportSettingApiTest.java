@@ -67,11 +67,11 @@ public class AppReportSettingApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
                 .type(INSTANCE_SUBMIT_COUNT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         AttributeNumberReport attributeNumberReport = AttributeNumberReport.builder()
                 .id(newShortUuid())
@@ -88,7 +88,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .type(CONTROL_NUMBER_REPORT)
                 .range(NO_LIMIT)
                 .numberAggregationType(AVG)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .controlId(control.getId())
                 .build();
 
@@ -106,7 +106,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .type(PAGE_NUMBER_REPORT)
                 .range(NO_LIMIT)
                 .pageNumberReportType(PAGE_SUBMIT_COUNT)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .build();
 
         List<NumberReport> reports = newArrayList(attributeNumberReport, controlNumberReport, instanceNumberReport, pageNumberReport);
@@ -119,16 +119,16 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        AppApi.updateAppReportSetting(response.jwt(), response.appId(), command);
+        AppApi.updateAppReportSetting(response.getJwt(), response.getAppId(), command);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         assertEquals(command.getSetting(), app.getReportSetting());
     }
 
     @Test
     public void should_fail_update_report_setting_if_package_not_enough() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withReportingAllowed(false));
 
         InstanceNumberReport instanceNumberReport = InstanceNumberReport.builder()
@@ -149,7 +149,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), REPORTING_NOT_ALLOWED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), REPORTING_NOT_ALLOWED);
     }
 
     @Test
@@ -175,7 +175,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
     }
 
     @Test
@@ -183,7 +183,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FNumberInputControl control = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         ControlNumberReport controlNumberReport = ControlNumberReport.builder()
                 .id(newShortUuid())
@@ -204,7 +204,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                         .numberReportSetting(NumberReportSetting.builder().reports(reports)
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_PAGE_NOT_EXIST);
     }
 
     @Test
@@ -217,7 +217,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .type(CONTROL_NUMBER_REPORT)
                 .range(NO_LIMIT)
                 .numberAggregationType(AVG)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .controlId(Control.newControlId())
                 .build();
 
@@ -230,7 +230,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                         .numberReportSetting(NumberReportSetting.builder().reports(reports)
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_CONTROL_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_CONTROL_NOT_EXIST);
     }
 
     @Test
@@ -238,7 +238,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         ControlNumberReport controlNumberReport = ControlNumberReport.builder()
                 .id(newShortUuid())
@@ -246,7 +246,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .type(CONTROL_NUMBER_REPORT)
                 .range(NO_LIMIT)
                 .numberAggregationType(AVG)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .controlId(control.getId())
                 .build();
 
@@ -259,7 +259,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                         .numberReportSetting(NumberReportSetting.builder().reports(reports)
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), CONTROL_NOT_NUMBER_VALUED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), CONTROL_NOT_NUMBER_VALUED);
     }
 
     @Test
@@ -284,7 +284,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                         .numberReportSetting(NumberReportSetting.builder().reports(reports)
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_PAGE_NOT_EXIST);
     }
 
     @Test
@@ -293,7 +293,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
                 .type(DIRECT_INPUT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         AttributeNumberReport attributeNumberReport = AttributeNumberReport.builder()
                 .id(newShortUuid())
@@ -314,7 +314,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
     }
 
     @Test
@@ -323,13 +323,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberRefAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxRefAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberRefAttribute, checkboxRefAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberRefAttribute, checkboxRefAttribute);
 
         ControlBarReport controlBarReport = ControlBarReport.builder()
                 .id(newShortUuid())
@@ -339,7 +339,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlCategorizedReportSetting.builder()
                         .segmentType(SUBMIT_COUNT_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(checkboxControl.getId())
                         .targetControlIds(List.of())
                         .addressPrecisionType(CITY)
@@ -357,7 +357,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlCategorizedReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(checkboxControl.getId())
                         .targetControlIds(List.of(numberInputControl.getId()))
                         .addressPrecisionType(CITY)
@@ -375,7 +375,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlCategorizedReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(checkboxControl.getId())
                         .targetControlIds(List.of(numberInputControl.getId()))
                         .addressPrecisionType(CITY)
@@ -393,7 +393,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlNumberRangeSegmentReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(numberInputControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .numberRangesString("10,20,30,40")
@@ -415,7 +415,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                         .name("分时报告")
                                         .segmentType(CONTROL_VALUE_SUM)
                                         .basedType(CREATED_AT)
-                                        .pageId(response.homePageId())
+                                        .pageId(response.getHomePageId())
                                         .targetControlId(numberInputControl.getId())
                                         .build()
                         ))
@@ -523,8 +523,8 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        AppApi.updateAppReportSetting(response.jwt(), response.appId(), command);
-        App app = appRepository.byId(response.appId());
+        AppApi.updateAppReportSetting(response.getJwt(), response.getAppId(), command);
+        App app = appRepository.byId(response.getAppId());
         assertEquals(command.getSetting(), app.getReportSetting());
     }
 
@@ -534,7 +534,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlPieReport report = ControlPieReport.builder()
                 .id(newShortUuid())
@@ -563,7 +563,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_PAGE_NOT_EXIST);
     }
 
     @Test
@@ -572,7 +572,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlDoughnutReport report = ControlDoughnutReport.builder()
                 .id(newShortUuid())
@@ -582,7 +582,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlCategorizedReportSetting.builder()
                         .segmentType(CONTROL_VALUE_AVG)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(Control.newControlId())
                         .addressPrecisionType(CITY)
                         .multiLevelSelectionPrecisionType(LEVEL2)
@@ -601,7 +601,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_CONTROL_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_CONTROL_NOT_EXIST);
     }
 
     @Test
@@ -610,7 +610,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlBarReport controlBarReport = ControlBarReport.builder()
                 .id(newShortUuid())
@@ -620,7 +620,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlCategorizedReportSetting.builder()
                         .segmentType(CONTROL_VALUE_AVG)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(numberInputControl.getId())
                         .addressPrecisionType(CITY)
                         .multiLevelSelectionPrecisionType(LEVEL2)
@@ -639,7 +639,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), CONTROL_NOT_CATEGORIZED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), CONTROL_NOT_CATEGORIZED);
     }
 
     @Test
@@ -648,7 +648,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlBarReport controlBarReport = ControlBarReport.builder()
                 .id(newShortUuid())
@@ -658,7 +658,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlCategorizedReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(checkboxControl.getId())
                         .addressPrecisionType(CITY)
                         .multiLevelSelectionPrecisionType(LEVEL2)
@@ -677,7 +677,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_CONTROL_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_CONTROL_NOT_EXIST);
     }
 
     @Test
@@ -686,7 +686,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlBarReport controlBarReport = ControlBarReport.builder()
                 .id(newShortUuid())
@@ -696,7 +696,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlCategorizedReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(checkboxControl.getId())
                         .addressPrecisionType(CITY)
                         .multiLevelSelectionPrecisionType(LEVEL2)
@@ -715,7 +715,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), CONTROL_NOT_NUMBERED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), CONTROL_NOT_NUMBERED);
     }
 
     @Test
@@ -723,7 +723,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
 
         ControlNumberRangeSegmentReport report = ControlNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -751,7 +751,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_PAGE_NOT_EXIST);
     }
 
     @Test
@@ -759,7 +759,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
 
         ControlNumberRangeSegmentReport report = ControlNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -769,7 +769,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlNumberRangeSegmentReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(Control.newControlId())
                         .targetControlId(numberInputControl.getId())
                         .numberRangesString("10,20,30")
@@ -787,7 +787,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_CONTROL_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_CONTROL_NOT_EXIST);
     }
 
     @Test
@@ -796,7 +796,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlNumberRangeSegmentReport report = ControlNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -806,7 +806,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlNumberRangeSegmentReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(checkboxControl.getId())
                         .targetControlId(numberInputControl.getId())
                         .numberRangesString("10,20,30")
@@ -824,7 +824,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), CONTROL_NOT_NUMBERED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), CONTROL_NOT_NUMBERED);
     }
 
     @Test
@@ -833,7 +833,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlNumberRangeSegmentReport report = ControlNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -843,7 +843,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlNumberRangeSegmentReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(numberInputControl.getId())
                         .targetControlId(Control.newControlId())
                         .numberRangesString("10,20,30")
@@ -861,7 +861,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_CONTROL_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_CONTROL_NOT_EXIST);
     }
 
     @Test
@@ -870,7 +870,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlNumberRangeSegmentReport report = ControlNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -880,7 +880,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                 .aspectRatio(50)
                 .setting(ControlNumberRangeSegmentReportSetting.builder()
                         .segmentType(CONTROL_VALUE_SUM)
-                        .pageId(response.homePageId())
+                        .pageId(response.getHomePageId())
                         .basedControlId(numberInputControl.getId())
                         .targetControlId(checkboxControl.getId())
                         .numberRangesString("10,20,30")
@@ -898,7 +898,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), CONTROL_NOT_NUMBERED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), CONTROL_NOT_NUMBERED);
     }
 
     @Test
@@ -907,7 +907,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlTimeSegmentReport report = ControlTimeSegmentReport.builder()
                 .id(newShortUuid())
@@ -940,7 +940,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_PAGE_NOT_EXIST);
     }
 
     @Test
@@ -949,7 +949,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlTimeSegmentReport report = ControlTimeSegmentReport.builder()
                 .id(newShortUuid())
@@ -963,7 +963,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .name("分时报告")
                                 .segmentType(CONTROL_VALUE_SUM)
                                 .basedType(CREATED_AT)
-                                .pageId(response.homePageId())
+                                .pageId(response.getHomePageId())
                                 .targetControlId(Control.newControlId())
                                 .build()))
                         .interval(PER_MONTH)
@@ -980,7 +980,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_CONTROL_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_CONTROL_NOT_EXIST);
     }
 
     @Test
@@ -989,7 +989,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         ControlTimeSegmentReport report = ControlTimeSegmentReport.builder()
                 .id(newShortUuid())
@@ -1003,7 +1003,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .name("分时报告")
                                 .segmentType(CONTROL_VALUE_SUM)
                                 .basedType(CREATED_AT)
-                                .pageId(response.homePageId())
+                                .pageId(response.getHomePageId())
                                 .targetControlId(checkboxControl.getId())
                                 .build()))
                         .interval(PER_MONTH)
@@ -1020,7 +1020,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), CONTROL_NOT_NUMBERED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), CONTROL_NOT_NUMBERED);
     }
 
     @Test
@@ -1029,13 +1029,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeBarReport report = AttributeBarReport.builder()
                 .id(newShortUuid())
@@ -1063,7 +1063,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
     }
 
     @Test
@@ -1072,13 +1072,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeBarReport report = AttributeBarReport.builder()
                 .id(newShortUuid())
@@ -1106,7 +1106,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), ATTRIBUTE_NOT_CATEGORIZED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), ATTRIBUTE_NOT_CATEGORIZED);
     }
 
     @Test
@@ -1115,13 +1115,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeDoughnutReport report = AttributeDoughnutReport.builder()
                 .id(newShortUuid())
@@ -1149,7 +1149,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
     }
 
     @Test
@@ -1158,13 +1158,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributePieReport report = AttributePieReport.builder()
                 .id(newShortUuid())
@@ -1192,7 +1192,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
     }
 
     @Test
@@ -1201,13 +1201,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeNumberRangeSegmentReport report = AttributeNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -1234,7 +1234,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
     }
 
     @Test
@@ -1243,13 +1243,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeNumberRangeSegmentReport report = AttributeNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -1276,7 +1276,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
     }
 
     @Test
@@ -1285,13 +1285,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeNumberRangeSegmentReport report = AttributeNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -1318,7 +1318,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
     }
 
     @Test
@@ -1327,13 +1327,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeNumberRangeSegmentReport report = AttributeNumberRangeSegmentReport.builder()
                 .id(newShortUuid())
@@ -1360,7 +1360,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
     }
 
     @Test
@@ -1369,13 +1369,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeTimeSegmentReport report = AttributeTimeSegmentReport.builder()
                 .id(newShortUuid())
@@ -1405,7 +1405,7 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), VALIDATION_ATTRIBUTE_NOT_EXIST);
     }
 
     @Test
@@ -1414,13 +1414,13 @@ public class AppReportSettingApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(0).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, checkboxControl);
 
         Attribute numberAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
         Attribute checkboxAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
-                .type(CONTROL_LAST).pageId(response.homePageId()).controlId(checkboxControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), numberAttribute, checkboxAttribute);
+                .type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(checkboxControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), numberAttribute, checkboxAttribute);
 
         AttributeTimeSegmentReport report = AttributeTimeSegmentReport.builder()
                 .id(newShortUuid())
@@ -1450,6 +1450,6 @@ public class AppReportSettingApiTest extends BaseApiTest {
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
 
-        assertError(() -> AppApi.updateAppReportSettingRaw(response.jwt(), response.appId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
+        assertError(() -> AppApi.updateAppReportSettingRaw(response.getJwt(), response.getAppId(), command), ATTRIBUTE_NOT_NUMBER_VALUED);
     }
 }

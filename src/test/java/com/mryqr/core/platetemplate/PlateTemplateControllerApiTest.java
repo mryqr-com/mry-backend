@@ -171,13 +171,13 @@ class PlateTemplateControllerApiTest extends BaseApiTest {
     @Test
     public void non_mry_self_tenant_should_not_create_plate_template() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         CreatePlateTemplateCommand command = CreatePlateTemplateCommand.builder()
                 .appId(app.getId())
                 .plateSetting(app.getSetting().getPlateSetting())
                 .build();
 
-        assertError(() -> PlateTemplateApi.createPlateTemplateRaw(response.jwt(), command), ACCESS_DENIED);
+        assertError(() -> PlateTemplateApi.createPlateTemplateRaw(response.getJwt(), command), ACCESS_DENIED);
     }
 
     @Test

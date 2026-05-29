@@ -519,9 +519,9 @@ public class MryOffenceReportApp {
         log.info("Created offence reporting manage app.");
 
         PlatedQr platedQr = qrFactory.createPlatedQr("举报", OFFENCE_TEMPLATE_PLATE_ID, defaultGroup, app, MRY_MANAGE_ROBOT_USER);
-        QR qr = platedQr.qr();
+        QR qr = platedQr.getQr();
         qr.markAsTemplate(MRY_MANAGE_ROBOT_USER);
-        Plate plate = platedQr.plate();
+        Plate plate = platedQr.getPlate();
         qrRepository.save(qr);
         plateRepository.save(plate);
     }

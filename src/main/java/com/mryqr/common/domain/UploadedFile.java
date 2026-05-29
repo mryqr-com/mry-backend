@@ -22,18 +22,23 @@ public class UploadedFile implements Identified {
     @NotBlank
     @ShortUuid
     private final String id;//id，用于前端loop时作为key
+
+    @Size(max = 200)
+    private String name;//文件名称
+
     @NotBlank
     @Size(max = 500)
     private final String type;//文件类型
+
     @NotBlank
     @Size(max = MAX_URL_LENGTH)
     private final String fileUrl;//文件url
+
     @Size(max = 500)
     private final String ossKey;//阿里云的文件key
+
     @Min(0)
     private final int size;//文件大小
-    @Size(max = 200)
-    private String name;//文件名称
 
     @Override
     public String getIdentifier() {

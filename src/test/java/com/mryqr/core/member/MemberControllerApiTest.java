@@ -84,7 +84,7 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void tenant_admin_should_be_able_to_create_member() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        String jwt = loginResponse.jwt();
+        String jwt = loginResponse.getJwt();
 
         String newMemberName = rMemberName();
         String newMemberMobile = rMobile();
@@ -103,20 +103,20 @@ class MemberControllerApiTest extends BaseApiTest {
     public void should_raise_created_event_when_create_member() {
         LoginResponse response = setupApi.registerWithLogin();
 
-        String memberId = MemberApi.createMember(response.jwt());
+        String memberId = MemberApi.createMember(response.getJwt());
 
         MemberCreatedEvent memberCreatedEvent = latestEventFor(memberId, MEMBER_CREATED, MemberCreatedEvent.class);
         assertEquals(memberId, memberCreatedEvent.getMemberId());
-        Tenant tenant = tenantRepository.byId(response.tenantId());
+        Tenant tenant = tenantRepository.byId(response.getTenantId());
         assertEquals(2, tenant.getResourceUsage().getMemberCount());
     }
 
     @Test
     public void should_raise_departments_changed_event_when_create_member() {
         LoginResponse response = setupApi.registerWithLogin();
-        String departmentId = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String departmentId = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
 
-        String memberId = MemberApi.createMember(response.jwt(), CreateMemberCommand.builder()
+        String memberId = MemberApi.createMember(response.getJwt(), CreateMemberCommand.builder()
                 .name(rMemberName())
                 .departmentIds(List.of(departmentId))
                 .mobile(rMobile())
@@ -132,11 +132,11 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void member_add_to_department_should_sync_to_group() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.enableGroupSync(response.jwt(), response.appId());
+        AppApi.enableGroupSync(response.getJwt(), response.getAppId());
         String name = rDepartmentName();
-        String departmentId = DepartmentApi.createDepartment(response.jwt(), name);
+        String departmentId = DepartmentApi.createDepartment(response.getJwt(), name);
         assertFalse(
-                groupRepository.byDepartmentIdOptional(departmentId, response.appId()).get().getMembers().contains(response.memberId()));
+                groupRepository.byDepartmentIdOptional(departmentId, response.getAppId()).get().getMembers().contains(response.getMemberId()));
 
         UpdateMemberInfoCommand command = UpdateMemberInfoCommand.builder()
                 .mobile(rMobile()).email(rEmail())
@@ -144,14 +144,14 @@ class MemberControllerApiTest extends BaseApiTest {
                 .departmentIds(List.of(departmentId))
                 .build();
 
-        MemberApi.updateMember(response.jwt(), response.memberId(), command);
+        MemberApi.updateMember(response.getJwt(), response.getMemberId(), command);
         assertTrue(
-                groupRepository.byDepartmentIdOptional(departmentId, response.appId()).get().getMembers().contains(response.memberId()));
+                groupRepository.byDepartmentIdOptional(departmentId, response.getAppId()).get().getMembers().contains(response.getMemberId()));
     }
 
     @Test
     public void non_admin_should_fail_create_member() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
 
         CreateMemberResponse newMember = MemberApi.createMemberAndLogin(jwt, rMemberName(), rMobile(), rPassword());
         CreateMemberCommand command = CreateMemberCommand.builder()
@@ -167,7 +167,7 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_create_member_if_mobile_already_exist() {
         String mobile = rMobile();
-        String jwt = setupApi.registerWithLogin(mobile, rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(mobile, rPassword()).getJwt();
 
         CreateMemberCommand command = CreateMemberCommand.builder()
                 .mobile(mobile)
@@ -182,7 +182,7 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_create_member_if_email_already_exist() {
         String email = rEmail();
-        String jwt = setupApi.registerWithLogin(email, rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(email, rPassword()).getJwt();
 
         CreateMemberCommand command = CreateMemberCommand.builder()
                 .email(email)
@@ -196,7 +196,7 @@ class MemberControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_create_member_if_both_mobile_and_email_is_empty() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
 
         CreateMemberCommand command = CreateMemberCommand.builder()
                 .mobile(null)
@@ -212,12 +212,12 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_create_member_if_exceed_packages_limit() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        Tenant tenant = tenantRepository.byId(loginResponse.tenantId());
+        Tenant tenant = tenantRepository.byId(loginResponse.getTenantId());
         int maxMemberCount = tenant.getPackages().effectiveMaxMemberCount();
         tenant.setMemberCount(maxMemberCount, User.NO_USER);
         tenantRepository.save(tenant);
 
-        String jwt = loginResponse.jwt();
+        String jwt = loginResponse.getJwt();
         CreateMemberCommand anotherCommand = CreateMemberCommand.builder()
                 .mobile(rMobile())
                 .password(rPassword())
@@ -230,7 +230,7 @@ class MemberControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_create_member_if_department_not_exists() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
 
         CreateMemberCommand command = CreateMemberCommand.builder()
                 .mobile(null)
@@ -246,12 +246,12 @@ class MemberControllerApiTest extends BaseApiTest {
     public void should_create_member_if_has_extra_member() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
 
-        Tenant tenant = tenantRepository.byId(loginResponse.tenantId());
+        Tenant tenant = tenantRepository.byId(loginResponse.getTenantId());
         int maxMemberCount = tenant.getPackages().effectiveMaxMemberCount();
         tenant.setMemberCount(maxMemberCount, User.NO_USER);
         tenantRepository.save(tenant);
 
-        String jwt = loginResponse.jwt();
+        String jwt = loginResponse.getJwt();
         CreateMemberCommand anotherCommand = CreateMemberCommand.builder()
                 .mobile(rMobile())
                 .password(rPassword())
@@ -269,9 +269,9 @@ class MemberControllerApiTest extends BaseApiTest {
                 .paymentType(WX_NATIVE)
                 .build();
 
-        CreateOrderResponse orderResponse = OrderApi.createOrder(loginResponse.jwt(), command);
+        CreateOrderResponse orderResponse = OrderApi.createOrder(loginResponse.getJwt(), command);
         StubOrderPaidNotifyApi.notifyWxPaid(orderResponse.getId(), "fakeWxPayTxnId");
-        String memberId = MemberApi.createMember(loginResponse.jwt());
+        String memberId = MemberApi.createMember(loginResponse.getJwt());
         assertTrue(memberRepository.exists(memberId));
     }
 
@@ -280,7 +280,7 @@ class MemberControllerApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         ClassPathResource resource = new ClassPathResource("testdata/member/normal-import-members.xlsx");
-        MemberImportResponse importResponse = MemberApi.importMembers(response.jwt(), resource.getFile());
+        MemberImportResponse importResponse = MemberApi.importMembers(response.getJwt(), resource.getFile());
 
         //有可能该测试多次运行，导致重复手机号等情况而无法成功
         assertTrue(importResponse.getImportedCount() == 1 || importResponse.getImportedCount() == 0);
@@ -289,7 +289,7 @@ class MemberControllerApiTest extends BaseApiTest {
         assertTrue(memberRepository.byMobileOrEmailOptional("19444444444").isPresent());
         assertTrue(memberRepository.byMobileOrEmailOptional("abcdedf@abcdefg.com").isPresent());
 
-        MemberImportResponse againResponse = MemberApi.importMembers(response.jwt(), resource.getFile());
+        MemberImportResponse againResponse = MemberApi.importMembers(response.getJwt(), resource.getFile());
         List<MemberImportRecord> errorRecords = againResponse.getErrorRecords();
         assertEquals(7, errorRecords.size());
         assertEquals(7, againResponse.getReadCount());
@@ -308,12 +308,12 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_import_members_excel_if_packages_too_low() throws IOException {
         PreparedAppResponse response = setupApi.registerWithApp();
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withBatchImportMemberAllowed(false));
 
         ClassPathResource resource = new ClassPathResource("testdata/member/normal-import-members.xlsx");
         File file = resource.getFile();
-        assertError(() -> MemberApi.importMembersRaw(response.jwt(), file), BATCH_MEMBER_IMPORT_NOT_ALLOWED);
+        assertError(() -> MemberApi.importMembersRaw(response.getJwt(), file), BATCH_MEMBER_IMPORT_NOT_ALLOWED);
     }
 
     @Test
@@ -322,21 +322,21 @@ class MemberControllerApiTest extends BaseApiTest {
 
         ClassPathResource resource = new ClassPathResource("testdata/member/a-text-file.txt");
         File file = resource.getFile();
-        assertError(() -> MemberApi.importMembersRaw(response.jwt(), file), INVALID_MEMBER_EXCEL);
+        assertError(() -> MemberApi.importMembersRaw(response.getJwt(), file), INVALID_MEMBER_EXCEL);
     }
 
     @Test
     public void should_fail_import_members_if_max_members_reached() throws IOException {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        Tenant tenant = tenantRepository.byId(response.tenantId());
+        Tenant tenant = tenantRepository.byId(response.getTenantId());
         ResourceUsage resourceUsage = tenant.getResourceUsage();
         ReflectionTestUtils.setField(resourceUsage, "memberCount", 10000);
         tenantRepository.save(tenant);
 
         ClassPathResource resource = new ClassPathResource("testdata/member/normal-import-members.xlsx");
         File file = resource.getFile();
-        assertError(() -> MemberApi.importMembersRaw(response.jwt(), file), MEMBER_COUNT_LIMIT_REACHED);
+        assertError(() -> MemberApi.importMembersRaw(response.getJwt(), file), MEMBER_COUNT_LIMIT_REACHED);
     }
 
     @Test
@@ -345,7 +345,7 @@ class MemberControllerApiTest extends BaseApiTest {
 
         ClassPathResource resource = new ClassPathResource("testdata/member/no-name-import-members.xlsx");
         File file = resource.getFile();
-        assertError(() -> MemberApi.importMembersRaw(response.jwt(), file), INVALID_MEMBER_EXCEL);
+        assertError(() -> MemberApi.importMembersRaw(response.getJwt(), file), INVALID_MEMBER_EXCEL);
     }
 
     @Test
@@ -354,12 +354,12 @@ class MemberControllerApiTest extends BaseApiTest {
 
         ClassPathResource resource = new ClassPathResource("testdata/member/empty-import-members.xlsx");
         File file = resource.getFile();
-        assertError(() -> MemberApi.importMembersRaw(response.jwt(), file), NO_RECORDS_FOR_MEMBER_IMPORT);
+        assertError(() -> MemberApi.importMembersRaw(response.getJwt(), file), NO_RECORDS_FOR_MEMBER_IMPORT);
     }
 
     @Test
     public void tenant_admin_can_update_member() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String memberId = MemberApi.createMember(jwt, rMemberName(), rMobile(), rPassword());
 
         String mobile = rMobile();
@@ -387,12 +387,12 @@ class MemberControllerApiTest extends BaseApiTest {
     public void update_department_should_raise_domain_event() {
         LoginResponse loginResponse = setupApi.registerWithLogin();
 
-        String departmentId1 = DepartmentApi.createDepartment(loginResponse.jwt(), rDepartmentName());
-        String departmentId2 = DepartmentApi.createDepartment(loginResponse.jwt(), rDepartmentName());
-        String departmentId3 = DepartmentApi.createDepartment(loginResponse.jwt(), rDepartmentName());
+        String departmentId1 = DepartmentApi.createDepartment(loginResponse.getJwt(), rDepartmentName());
+        String departmentId2 = DepartmentApi.createDepartment(loginResponse.getJwt(), rDepartmentName());
+        String departmentId3 = DepartmentApi.createDepartment(loginResponse.getJwt(), rDepartmentName());
 
         String name = rMemberName();
-        String memberId = MemberApi.createMember(loginResponse.jwt(), CreateMemberCommand.builder()
+        String memberId = MemberApi.createMember(loginResponse.getJwt(), CreateMemberCommand.builder()
                 .name(name)
                 .departmentIds(List.of(departmentId1, departmentId2))
                 .mobile(rMobile())
@@ -405,7 +405,7 @@ class MemberControllerApiTest extends BaseApiTest {
                 .departmentIds(List.of(departmentId2, departmentId3))
                 .build();
 
-        MemberApi.updateMember(loginResponse.jwt(), memberId, command);
+        MemberApi.updateMember(loginResponse.getJwt(), memberId, command);
         MemberDepartmentsChangedEvent event = latestEventFor(memberId, MEMBER_DEPARTMENTS_CHANGED, MemberDepartmentsChangedEvent.class);
         assertEquals(memberId, event.getMemberId());
         assertEquals(1, event.getRemovedDepartmentIds().size());
@@ -416,7 +416,7 @@ class MemberControllerApiTest extends BaseApiTest {
 
     @Test
     public void non_tenant_admin_should_fail_update_member() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         CreateMemberResponse nonTenantAdminMember = MemberApi.createMemberAndLogin(jwt, rMemberName(), rMobile(), rPassword());
 
         UpdateMemberInfoCommand command = UpdateMemberInfoCommand.builder()
@@ -440,7 +440,7 @@ class MemberControllerApiTest extends BaseApiTest {
                 .departmentIds(List.of())
                 .build();
 
-        assertError(() -> MemberApi.updateMemberRaw(response.jwt(), response.memberId(), command), MOBILE_EMAIL_CANNOT_BOTH_EMPTY);
+        assertError(() -> MemberApi.updateMemberRaw(response.getJwt(), response.getMemberId(), command), MOBILE_EMAIL_CANNOT_BOTH_EMPTY);
     }
 
     @Test
@@ -454,17 +454,17 @@ class MemberControllerApiTest extends BaseApiTest {
                 .departmentIds(List.of(newDepartmentId()))
                 .build();
 
-        assertError(() -> MemberApi.updateMemberRaw(response.jwt(), response.memberId(), command), NOT_ALL_DEPARTMENTS_EXITS);
+        assertError(() -> MemberApi.updateMemberRaw(response.getJwt(), response.getMemberId(), command), NOT_ALL_DEPARTMENTS_EXITS);
     }
 
     @Test
     public void should_update_member_role() {
         LoginResponse loginResponse = setupApi.registerWithLogin();
 
-        String memberId = MemberApi.createMember(loginResponse.jwt());
+        String memberId = MemberApi.createMember(loginResponse.getJwt());
         assertEquals(TENANT_MEMBER, memberRepository.byId(memberId).getRole());
 
-        MemberApi.updateMemberRole(loginResponse.jwt(), memberId, UpdateMemberRoleCommand.builder().role(TENANT_ADMIN).build());
+        MemberApi.updateMemberRole(loginResponse.getJwt(), memberId, UpdateMemberRoleCommand.builder().role(TENANT_ADMIN).build());
         assertEquals(TENANT_ADMIN, memberRepository.byId(memberId).getRole());
     }
 
@@ -472,7 +472,7 @@ class MemberControllerApiTest extends BaseApiTest {
     public void should_fail_update_member_role_to_normal_member_if_no_admin_left() {
         LoginResponse response = setupApi.registerWithLogin();
 
-        assertError(() -> MemberApi.updateMemberRoleRaw(response.jwt(), response.memberId(),
+        assertError(() -> MemberApi.updateMemberRoleRaw(response.getJwt(), response.getMemberId(),
                 UpdateMemberRoleCommand.builder().role(TENANT_MEMBER).build()), NO_ACTIVE_TENANT_ADMIN_LEFT);
     }
 
@@ -481,45 +481,45 @@ class MemberControllerApiTest extends BaseApiTest {
         LoginResponse response = setupApi.registerWithLogin();
 
         IntStream.range(1, 10).forEach(value -> {
-            String memberId = MemberApi.createMember(response.jwt());
-            MemberApi.updateMemberRole(response.jwt(), memberId, UpdateMemberRoleCommand.builder().role(TENANT_ADMIN).build());
+            String memberId = MemberApi.createMember(response.getJwt());
+            MemberApi.updateMemberRole(response.getJwt(), memberId, UpdateMemberRoleCommand.builder().role(TENANT_ADMIN).build());
         });
 
-        String memberId = MemberApi.createMember(response.jwt());
+        String memberId = MemberApi.createMember(response.getJwt());
         assertError(
-                () -> MemberApi.updateMemberRoleRaw(response.jwt(), memberId, UpdateMemberRoleCommand.builder().role(TENANT_ADMIN).build()),
+                () -> MemberApi.updateMemberRoleRaw(response.getJwt(), memberId, UpdateMemberRoleCommand.builder().role(TENANT_ADMIN).build()),
                 MAX_TENANT_ADMIN_REACHED);
     }
 
     @Test
     public void should_top_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateAppResponse appResponse = AppApi.createApp(response.jwt());
-        MemberApi.topApp(response.jwt(), response.appId());
-        MemberApi.topApp(response.jwt(), appResponse.getAppId());
-        Member member = memberRepository.byId(response.memberId());
+        CreateAppResponse appResponse = AppApi.createApp(response.getJwt());
+        MemberApi.topApp(response.getJwt(), response.getAppId());
+        MemberApi.topApp(response.getJwt(), appResponse.getAppId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertEquals(appResponse.getAppId(), member.getTopAppIds().get(0));
-        assertEquals(response.appId(), member.getTopAppIds().get(1));
+        assertEquals(response.getAppId(), member.getTopAppIds().get(1));
     }
 
     @Test
     public void should_cancel_top_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateAppResponse appResponse = AppApi.createApp(response.jwt());
-        MemberApi.topApp(response.jwt(), response.appId());
-        MemberApi.topApp(response.jwt(), appResponse.getAppId());
-        MemberApi.cancelTopApp(response.jwt(), appResponse.getAppId());
-        Member member = memberRepository.byId(response.memberId());
+        CreateAppResponse appResponse = AppApi.createApp(response.getJwt());
+        MemberApi.topApp(response.getJwt(), response.getAppId());
+        MemberApi.topApp(response.getJwt(), appResponse.getAppId());
+        MemberApi.cancelTopApp(response.getJwt(), appResponse.getAppId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertEquals(1, member.getTopAppIds().size());
-        assertEquals(response.appId(), member.getTopAppIds().get(0));
+        assertEquals(response.getAppId(), member.getTopAppIds().get(0));
     }
 
     @Test
     public void tenant_admin_can_delete_member() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        String memberId = MemberApi.createMember(response.jwt(), rMemberName(), rMobile(), rPassword());
+        String memberId = MemberApi.createMember(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        MemberApi.deleteMember(response.jwt(), memberId);
+        MemberApi.deleteMember(response.getJwt(), memberId);
 
         Optional<Member> member = memberRepository.byIdOptional(memberId);
         assertFalse(member.isPresent());
@@ -528,40 +528,40 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void should_raise_event_when_delete_member() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String memberId = MemberApi.createMember(response.jwt());
-        AppApi.setAppManager(response.jwt(), response.appId(), memberId);
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberId);
-        assertTrue(appRepository.byId(response.appId()).getManagers().contains(memberId));
-        assertTrue(groupRepository.byId(response.defaultGroupId()).getManagers().contains(memberId));
-        assertEquals(2, tenantRepository.byId(response.tenantId()).getResourceUsage().getMemberCount());
+        String memberId = MemberApi.createMember(response.getJwt());
+        AppApi.setAppManager(response.getJwt(), response.getAppId(), memberId);
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberId);
+        assertTrue(appRepository.byId(response.getAppId()).getManagers().contains(memberId));
+        assertTrue(groupRepository.byId(response.getDefaultGroupId()).getManagers().contains(memberId));
+        assertEquals(2, tenantRepository.byId(response.getTenantId()).getResourceUsage().getMemberCount());
 
-        MemberApi.deleteMember(response.jwt(), memberId);
+        MemberApi.deleteMember(response.getJwt(), memberId);
 
         MemberDeletedEvent event = latestEventFor(memberId, MEMBER_DELETED, MemberDeletedEvent.class);
         assertEquals(memberId, event.getMemberId());
-        assertFalse(appRepository.byId(response.appId()).getManagers().contains(memberId));
-        assertFalse(groupRepository.byId(response.defaultGroupId()).getManagers().contains(memberId));
-        assertEquals(1, tenantRepository.byId(response.tenantId()).getResourceUsage().getMemberCount());
+        assertFalse(appRepository.byId(response.getAppId()).getManagers().contains(memberId));
+        assertFalse(groupRepository.byId(response.getDefaultGroupId()).getManagers().contains(memberId));
+        assertEquals(1, tenantRepository.byId(response.getTenantId()).getResourceUsage().getMemberCount());
     }
 
     @Test
     public void should_fail_delete_member_if_only_one_admin_left() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        assertError(() -> MemberApi.deleteMemberRaw(response.jwt(), response.memberId()), NO_ACTIVE_TENANT_ADMIN_LEFT);
+        assertError(() -> MemberApi.deleteMemberRaw(response.getJwt(), response.getMemberId()), NO_ACTIVE_TENANT_ADMIN_LEFT);
     }
 
     @Test
     public void should_fail_delete_member_if_its_the_only_one_active_tenant_admin() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        assertError(() -> MemberApi.deleteMemberRaw(response.jwt(), response.memberId()), NO_ACTIVE_TENANT_ADMIN_LEFT);
+        assertError(() -> MemberApi.deleteMemberRaw(response.getJwt(), response.getMemberId()), NO_ACTIVE_TENANT_ADMIN_LEFT);
     }
 
     @Test
     public void delete_member_should_also_delete_them_from_app_groups() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        String memberId = MemberApi.createMember(response.jwt(), rMemberName(), rMobile(), rPassword());
-        CreateAppResponse app = AppApi.createApp(response.jwt());
-        GroupApi.addGroupMembers(response.jwt(), app.getDefaultGroupId(), memberId);
+        String memberId = MemberApi.createMember(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateAppResponse app = AppApi.createApp(response.getJwt());
+        GroupApi.addGroupMembers(response.getJwt(), app.getDefaultGroupId(), memberId);
         Group group = groupRepository.byId(app.getDefaultGroupId());
         assertTrue(group.getMembers().contains(memberId));
 
@@ -573,7 +573,7 @@ class MemberControllerApiTest extends BaseApiTest {
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(groupsKey)));
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(defaultGroupKey)));
 
-        MemberApi.deleteMember(response.jwt(), memberId);
+        MemberApi.deleteMember(response.getJwt(), memberId);
 
         Group updatedGroup = groupRepository.byId(app.getDefaultGroupId());
         assertFalse(updatedGroup.getMembers().contains(memberId));
@@ -586,60 +586,60 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void delete_member_should_also_delete_from_app_managers() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String memberId = MemberApi.createMember(response.jwt());
-        AppApi.setAppManagers(response.jwt(), response.appId(), memberId);
-        assertTrue(appRepository.byId(response.appId()).getManagers().contains(memberId));
+        String memberId = MemberApi.createMember(response.getJwt());
+        AppApi.setAppManagers(response.getJwt(), response.getAppId(), memberId);
+        assertTrue(appRepository.byId(response.getAppId()).getManagers().contains(memberId));
 
-        App cachedApp = appRepository.cachedById(response.appId());
-        List<TenantCachedApp> cachedApps = appRepository.cachedTenantAllApps(response.tenantId());
-        String appsKey = "Cache:TENANT_APPS::" + response.tenantId();
-        String appKey = "Cache:APP::" + response.appId();
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
+        App cachedApp = appRepository.cachedById(response.getAppId());
+        List<TenantCachedApp> cachedApps = appRepository.cachedTenantAllApps(response.getTenantId());
+        String appsKey = "Cache:TENANT_APPS::" + response.getTenantId();
+        String appKey = "Cache:APP::" + response.getAppId();
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
 
-        MemberApi.deleteMember(response.jwt(), memberId);
-        assertFalse(appRepository.byId(response.appId()).getManagers().contains(memberId));
-        PollingAssertion.pollAssert().run(() -> assertEquals(FALSE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(FALSE, stringRedisTemplate.hasKey(appsKey)));
+        MemberApi.deleteMember(response.getJwt(), memberId);
+        assertFalse(appRepository.byId(response.getAppId()).getManagers().contains(memberId));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(FALSE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(FALSE, stringRedisTemplate.hasKey(appsKey)));
     }
 
     @Test
     public void delete_member_should_also_delete_from_department_managers() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String memberId = MemberApi.createMember(response.jwt());
-        String departmentId = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
+        String memberId = MemberApi.createMember(response.getJwt());
+        String departmentId = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
         UpdateMemberInfoCommand command = UpdateMemberInfoCommand.builder()
                 .mobile(rMobile()).email(rEmail())
                 .name(rMemberName())
                 .departmentIds(List.of(departmentId))
                 .build();
 
-        MemberApi.updateMember(response.jwt(), memberId, command);
-        DepartmentApi.addDepartmentManager(response.jwt(), departmentId, memberId);
+        MemberApi.updateMember(response.getJwt(), memberId, command);
+        DepartmentApi.addDepartmentManager(response.getJwt(), departmentId, memberId);
         assertTrue(departmentRepository.byId(departmentId).getManagers().contains(memberId));
 
-        departmentRepository.cachedTenantAllDepartments(response.tenantId());
-        String key = "Cache:TENANT_DEPARTMENTS::" + response.tenantId();
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        departmentRepository.cachedTenantAllDepartments(response.getTenantId());
+        String key = "Cache:TENANT_DEPARTMENTS::" + response.getTenantId();
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
-        MemberApi.deleteMember(response.jwt(), memberId);
+        MemberApi.deleteMember(response.getJwt(), memberId);
         assertFalse(departmentRepository.byId(departmentId).getManagers().contains(memberId));
-        PollingAssertion.pollAssert().run(() -> assertEquals(FALSE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(FALSE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
     public void delete_member_should_also_delete_all_their_in_app_notifications() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String memberId = MemberApi.createMember(response.jwt());
+        String memberId = MemberApi.createMember(response.getJwt());
 
         InAppNotification notification = inAppNotificationFactory.createInAppNotification(memberId,
-                response.tenantId(),
+                response.getTenantId(),
                 "https://some.notification.com",
                 "https://some.notification.com",
                 "You've got a notification");
         inAppNotificationRepository.insert(notification);
 
-        MemberApi.deleteMember(response.jwt(), memberId);
+        MemberApi.deleteMember(response.getJwt(), memberId);
 
         assertTrue(inAppNotificationRepository.byIdOptional(notification.getId()).isEmpty());
     }
@@ -647,10 +647,10 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void should_reset_password_for_member() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        String memberId = MemberApi.createMember(response.jwt(), rMemberName(), rMobile(), rPassword());
+        String memberId = MemberApi.createMember(response.getJwt(), rMemberName(), rMobile(), rPassword());
         String newPassword = rPassword();
 
-        MemberApi.resetPassword(response.jwt(), memberId, ResetMemberPasswordCommand.builder().password(newPassword).build());
+        MemberApi.resetPassword(response.getJwt(), memberId, ResetMemberPasswordCommand.builder().password(newPassword).build());
 
         Member member = memberRepository.byId(memberId);
         assertTrue(mryPasswordEncoder.matches(newPassword, member.getPassword()));
@@ -659,7 +659,7 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void should_unbind_wx_for_member() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        String memberId = MemberApi.createMember(response.jwt(), rMemberName(), rMobile(), rPassword());
+        String memberId = MemberApi.createMember(response.getJwt(), rMemberName(), rMobile(), rPassword());
         Member member = memberRepository.byId(memberId);
         ReflectionTestUtils.setField(member, "pcWxOpenId", rPcWxOpenId());
         ReflectionTestUtils.setField(member, "mobileWxOpenId", rMobileWxOpenId());
@@ -668,7 +668,7 @@ class MemberControllerApiTest extends BaseApiTest {
         assertNotNull(changedMember.getMobileWxOpenId());
         assertNotNull(changedMember.getPcWxOpenId());
 
-        MemberApi.unbindWx(response.jwt(), memberId);
+        MemberApi.unbindWx(response.getJwt(), memberId);
 
         Member updatedMember = memberRepository.byId(memberId);
         assertNull(updatedMember.getMobileWxOpenId());
@@ -681,30 +681,30 @@ class MemberControllerApiTest extends BaseApiTest {
         String newName = rMemberName();
 
         UpdateMyBaseSettingCommand command = UpdateMyBaseSettingCommand.builder().name(newName).build();
-        MemberApi.updateMyBaseSetting(response.jwt(), command);
+        MemberApi.updateMyBaseSetting(response.getJwt(), command);
 
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertEquals(newName, member.getName());
     }
 
     @Test
     public void should_sync_new_name_if_name_changed() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberAndLogin = MemberApi.createMemberAndLogin(response.jwt());
-        String submissionId = SubmissionApi.newSubmission(memberAndLogin.getJwt(), response.qrId(), response.homePageId());
+        CreateMemberResponse memberAndLogin = MemberApi.createMemberAndLogin(response.getJwt());
+        String submissionId = SubmissionApi.newSubmission(memberAndLogin.getJwt(), response.getQrId(), response.getHomePageId());
 
         String newName = rMemberName();
 
         UpdateMyBaseSettingCommand command = UpdateMyBaseSettingCommand.builder().name(newName).build();
-        MemberApi.updateMyBaseSetting(response.jwt(), command);
+        MemberApi.updateMyBaseSetting(response.getJwt(), command);
 
-        MemberNameChangedEvent event = latestEventFor(response.memberId(), MEMBER_NAME_CHANGED, MemberNameChangedEvent.class);
-        assertEquals(response.memberId(), event.getMemberId());
+        MemberNameChangedEvent event = latestEventFor(response.getMemberId(), MEMBER_NAME_CHANGED, MemberNameChangedEvent.class);
+        assertEquals(response.getMemberId(), event.getMemberId());
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         assertEquals(newName, app.getCreator());
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         assertEquals(newName, qr.getCreator());
 
         Submission submission = submissionRepository.byId(submissionId);
@@ -716,13 +716,13 @@ class MemberControllerApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         UploadedFile avatar = rImageFile();
-        MemberApi.updateMyAvatar(response.jwt(), UpdateMyAvatarCommand.builder().avatar(avatar).build());
+        MemberApi.updateMyAvatar(response.getJwt(), UpdateMyAvatarCommand.builder().avatar(avatar).build());
 
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertEquals(avatar, member.getAvatar());
 
-        MemberApi.deleteMyAvatar(response.jwt());
-        Member updatedMember = memberRepository.byId(response.memberId());
+        MemberApi.deleteMyAvatar(response.getJwt());
+        Member updatedMember = memberRepository.byId(response.getMemberId());
         assertNull(updatedMember.getAvatar());
     }
 
@@ -733,13 +733,13 @@ class MemberControllerApiTest extends BaseApiTest {
         LoginResponse response = setupApi.registerWithLogin(oldMobile, password);
 
         String newMobile = rMobile();
-        String codeId = createVerificationCodeForChangeMobile(response.jwt(),
+        String codeId = createVerificationCodeForChangeMobile(response.getJwt(),
                 CreateChangeMobileVerificationCodeCommand.builder().mobile(newMobile).build());
         VerificationCode code = verificationCodeRepository.byId(codeId);
-        MemberApi.changeMyMobile(response.jwt(),
+        MemberApi.changeMyMobile(response.getJwt(),
                 ChangeMyMobileCommand.builder().mobile(newMobile).verification(code.getCode()).password(password).build());
 
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertEquals(newMobile, member.getMobile());
     }
 
@@ -748,13 +748,13 @@ class MemberControllerApiTest extends BaseApiTest {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
 
         String newMobile = rMobile();
-        String codeId = createVerificationCodeForChangeMobile(response.jwt(),
+        String codeId = createVerificationCodeForChangeMobile(response.getJwt(),
                 CreateChangeMobileVerificationCodeCommand.builder().mobile(newMobile).build());
         VerificationCode code = verificationCodeRepository.byId(codeId);
         ChangeMyMobileCommand command = ChangeMyMobileCommand.builder().mobile(newMobile).verification(code.getCode()).password(rPassword())
                 .build();
 
-        assertError(() -> MemberApi.changeMyMobileRaw(response.jwt(), command), PASSWORD_NOT_MATCH);
+        assertError(() -> MemberApi.changeMyMobileRaw(response.getJwt(), command), PASSWORD_NOT_MATCH);
     }
 
     @Test
@@ -762,7 +762,7 @@ class MemberControllerApiTest extends BaseApiTest {
         String password = rPassword();
         LoginResponse response = setupApi.registerWithLogin(rMobile(), password);
         String alreadyExistsMobile = rMobile();
-        String codeId = createVerificationCodeForChangeMobile(response.jwt(),
+        String codeId = createVerificationCodeForChangeMobile(response.getJwt(),
                 CreateChangeMobileVerificationCodeCommand.builder().mobile(alreadyExistsMobile).build());
         VerificationCode code = verificationCodeRepository.byId(codeId);
         setupApi.registerWithLogin(alreadyExistsMobile, rPassword());
@@ -770,7 +770,7 @@ class MemberControllerApiTest extends BaseApiTest {
         ChangeMyMobileCommand command = ChangeMyMobileCommand.builder().mobile(alreadyExistsMobile).verification(code.getCode())
                 .password(password).build();
 
-        assertError(() -> MemberApi.changeMyMobileRaw(response.jwt(), command), MEMBER_WITH_MOBILE_ALREADY_EXISTS);
+        assertError(() -> MemberApi.changeMyMobileRaw(response.getJwt(), command), MEMBER_WITH_MOBILE_ALREADY_EXISTS);
     }
 
     @Test
@@ -778,12 +778,12 @@ class MemberControllerApiTest extends BaseApiTest {
         String mobile = rMobile();
         LoginResponse response = setupApi.registerWithLogin(mobile, rPassword());
 
-        String codeId = createVerificationCodeForIdentifyMobile(response.jwt(),
+        String codeId = createVerificationCodeForIdentifyMobile(response.getJwt(),
                 IdentifyMobileVerificationCodeCommand.builder().mobile(mobile).build());
         VerificationCode code = verificationCodeRepository.byId(codeId);
-        MemberApi.identifyMyMobile(response.jwt(), IdentifyMyMobileCommand.builder().mobile(mobile).verification(code.getCode()).build());
+        MemberApi.identifyMyMobile(response.getJwt(), IdentifyMyMobileCommand.builder().mobile(mobile).verification(code.getCode()).build());
 
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertTrue(member.isMobileIdentified());
     }
 
@@ -792,26 +792,26 @@ class MemberControllerApiTest extends BaseApiTest {
         String password = rPassword();
         LoginResponse response = setupApi.registerWithLogin(rMobile(), password);
         String alreadyExistsMobile = rMobile();
-        String codeId = createVerificationCodeForIdentifyMobile(response.jwt(),
+        String codeId = createVerificationCodeForIdentifyMobile(response.getJwt(),
                 IdentifyMobileVerificationCodeCommand.builder().mobile(alreadyExistsMobile).build());
         VerificationCode code = verificationCodeRepository.byId(codeId);
         setupApi.registerWithLogin(alreadyExistsMobile, rPassword());
 
         IdentifyMyMobileCommand command = IdentifyMyMobileCommand.builder().mobile(alreadyExistsMobile).verification(code.getCode()).build();
 
-        assertError(() -> MemberApi.identifyMyMobileRaw(response.jwt(), command), MEMBER_WITH_MOBILE_ALREADY_EXISTS);
+        assertError(() -> MemberApi.identifyMyMobileRaw(response.getJwt(), command), MEMBER_WITH_MOBILE_ALREADY_EXISTS);
     }
 
     @Test
     public void should_fail_identify_my_mobile_is_mobile_number_not_the_same() {
         String wrongMobile = rMobile();
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        String codeId = createVerificationCodeForIdentifyMobile(response.jwt(),
+        String codeId = createVerificationCodeForIdentifyMobile(response.getJwt(),
                 IdentifyMobileVerificationCodeCommand.builder().mobile(wrongMobile).build());
         VerificationCode code = verificationCodeRepository.byId(codeId);
 
         IdentifyMyMobileCommand command = IdentifyMyMobileCommand.builder().mobile(wrongMobile).verification(code.getCode()).build();
-        assertError(() -> MemberApi.identifyMyMobileRaw(response.jwt(), command), IDENTIFY_MOBILE_NOT_THE_SAME);
+        assertError(() -> MemberApi.identifyMyMobileRaw(response.getJwt(), command), IDENTIFY_MOBILE_NOT_THE_SAME);
     }
 
     @Test
@@ -821,7 +821,7 @@ class MemberControllerApiTest extends BaseApiTest {
 
         LoginResponse response = setupApi.registerWithLogin(mobile, password);
         String newPassword = rPassword();
-        MemberApi.changeMyPassword(response.jwt(),
+        MemberApi.changeMyPassword(response.getJwt(),
                 ChangeMyPasswordCommand.builder()
                         .oldPassword(password)
                         .newPassword(newPassword)
@@ -843,7 +843,7 @@ class MemberControllerApiTest extends BaseApiTest {
                 .confirmNewPassword(newPassword)
                 .build();
 
-        assertError(() -> MemberApi.changeMyPasswordRaw(response.jwt(), command), PASSWORD_NOT_MATCH);
+        assertError(() -> MemberApi.changeMyPasswordRaw(response.getJwt(), command), PASSWORD_NOT_MATCH);
     }
 
     @Test
@@ -859,7 +859,7 @@ class MemberControllerApiTest extends BaseApiTest {
                 .confirmNewPassword(wrongNewPassword)
                 .build();
 
-        assertError(() -> MemberApi.changeMyPasswordRaw(response.jwt(), command), PASSWORD_CONFIRM_NOT_MATCH);
+        assertError(() -> MemberApi.changeMyPasswordRaw(response.getJwt(), command), PASSWORD_CONFIRM_NOT_MATCH);
     }
 
     @Test
@@ -873,7 +873,7 @@ class MemberControllerApiTest extends BaseApiTest {
                 .confirmNewPassword(oldPassword)
                 .build();
 
-        assertError(() -> MemberApi.changeMyPasswordRaw(response.jwt(), command), NEW_PASSWORD_SAME_WITH_OLD);
+        assertError(() -> MemberApi.changeMyPasswordRaw(response.getJwt(), command), NEW_PASSWORD_SAME_WITH_OLD);
     }
 
     @Test
@@ -881,17 +881,17 @@ class MemberControllerApiTest extends BaseApiTest {
         String mobile = rMobile();
         String password = rPassword();
         LoginResponse response = setupApi.registerWithLogin(mobile, password);
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         ReflectionTestUtils.setField(member, "pcWxOpenId", rPcWxOpenId());
         ReflectionTestUtils.setField(member, "mobileWxOpenId", rMobileWxOpenId());
         memberRepository.save(member);
-        Member changedMember = memberRepository.byId(response.memberId());
+        Member changedMember = memberRepository.byId(response.getMemberId());
         assertNotNull(changedMember.getMobileWxOpenId());
         assertNotNull(changedMember.getPcWxOpenId());
 
-        MemberApi.unbindMyWx(response.jwt());
+        MemberApi.unbindMyWx(response.getJwt());
 
-        Member updatedMember = memberRepository.byId(response.memberId());
+        Member updatedMember = memberRepository.byId(response.getMemberId());
         assertNull(updatedMember.getMobileWxOpenId());
         assertNull(updatedMember.getPcWxOpenId());
     }
@@ -945,15 +945,15 @@ class MemberControllerApiTest extends BaseApiTest {
     public void should_fetch_own_profile() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
 
-        QConsoleMemberProfile profile = MemberApi.myProfile(response.jwt());
+        QConsoleMemberProfile profile = MemberApi.myProfile(response.getJwt());
 
-        assertEquals(response.memberId(), profile.getMemberId());
-        assertEquals(response.tenantId(), profile.getTenantId());
+        assertEquals(response.getMemberId(), profile.getMemberId());
+        assertEquals(response.getTenantId(), profile.getTenantId());
         assertNotNull(profile.getName());
         assertEquals(TENANT_ADMIN, profile.getRole());
         assertTrue(profile.isHasManagedApps());
         QConsoleTenantProfile tenantProfile = profile.getTenantProfile();
-        assertEquals(response.tenantId(), tenantProfile.getTenantId());
+        assertEquals(response.getTenantId(), tenantProfile.getTenantId());
         assertNotNull(tenantProfile.getName());
         assertTrue(profile.isMobileIdentified());
     }
@@ -962,7 +962,7 @@ class MemberControllerApiTest extends BaseApiTest {
     public void should_fetch_tenant_package_status() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
 
-        QConsoleMemberProfile profile = MemberApi.myProfile(response.jwt());
+        QConsoleMemberProfile profile = MemberApi.myProfile(response.getJwt());
         QPackagesStatus packagesStatus = profile.getTenantProfile().getPackagesStatus();
         assertNotNull(packagesStatus);
     }
@@ -970,7 +970,7 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void normal_member_should_fetch_own_profile() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        CreateMemberResponse createMemberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse createMemberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
         QConsoleMemberProfile profile = MemberApi.myProfile(createMemberResponse.getJwt());
 
@@ -981,9 +981,9 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_fetch_own_profile() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        CreateMemberResponse newMember = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse newMember = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
         SetAppManagersCommand setAppManagersCommand = SetAppManagersCommand.builder().managers(newArrayList(newMember.getMemberId())).build();
-        AppApi.setAppManagers(response.jwt(), response.appId(), setAppManagersCommand);
+        AppApi.setAppManagers(response.getJwt(), response.getAppId(), setAppManagersCommand);
 
         QConsoleMemberProfile profile = MemberApi.myProfile(newMember.getJwt());
 
@@ -996,12 +996,12 @@ class MemberControllerApiTest extends BaseApiTest {
         String password = rPassword();
         LoginResponse response = setupApi.registerWithLogin(mobile, password);
 
-        QClientMemberProfile profile = MemberApi.myClientProfile(response.jwt());
+        QClientMemberProfile profile = MemberApi.myClientProfile(response.getJwt());
 
         assertNotNull(profile.getMemberName());
         assertNotNull(profile.getTenantName());
-        assertEquals(response.memberId(), profile.getMemberId());
-        assertEquals(response.tenantId(), profile.getTenantId());
+        assertEquals(response.getMemberId(), profile.getMemberId());
+        assertEquals(response.getTenantId(), profile.getTenantId());
     }
 
     @Test
@@ -1009,11 +1009,11 @@ class MemberControllerApiTest extends BaseApiTest {
         String mobile = rMobile();
         LoginResponse response = setupApi.registerWithLogin(mobile, rPassword());
 
-        QMemberInfo memberInfo = MemberApi.myMemberInfo(response.jwt());
+        QMemberInfo memberInfo = MemberApi.myMemberInfo(response.getJwt());
 
-        Member member = memberRepository.byId(response.memberId());
-        assertEquals(response.memberId(), memberInfo.getMemberId());
-        assertEquals(response.tenantId(), memberInfo.getTenantId());
+        Member member = memberRepository.byId(response.getMemberId());
+        assertEquals(response.getMemberId(), memberInfo.getMemberId());
+        assertEquals(response.getTenantId(), memberInfo.getTenantId());
         assertEquals(member.getName(), memberInfo.getName());
         assertEquals(member.getMobile(), memberInfo.getMobile());
         assertNotNull(memberInfo.getRole());
@@ -1023,10 +1023,10 @@ class MemberControllerApiTest extends BaseApiTest {
     public void should_fetch_my_base_setting() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
 
-        QMemberBaseSetting baseSetting = MemberApi.myBaseSetting(response.jwt());
+        QMemberBaseSetting baseSetting = MemberApi.myBaseSetting(response.getJwt());
 
-        Member member = memberRepository.byId(response.memberId());
-        assertEquals(response.memberId(), baseSetting.getId());
+        Member member = memberRepository.byId(response.getMemberId());
+        assertEquals(response.getMemberId(), baseSetting.getId());
         assertEquals(member.getName(), baseSetting.getName());
     }
 
@@ -1035,9 +1035,9 @@ class MemberControllerApiTest extends BaseApiTest {
         LoginResponse admin = setupApi.registerWithLogin(rMobile(), rPassword());
         //可以创建很多成员
 
-        IntStream.range(1, 30).forEach(value -> MemberApi.createMember(admin.jwt(), rMemberName(), rMobile(), rPassword()));
+        IntStream.range(1, 30).forEach(value -> MemberApi.createMember(admin.getJwt(), rMemberName(), rMobile(), rPassword()));
 
-        PagedList<QListMember> firstPage = MemberApi.listMembers(admin.jwt(), null, null, null, false, 1, 20);
+        PagedList<QListMember> firstPage = MemberApi.listMembers(admin.getJwt(), null, null, null, false, 1, 20);
         assertEquals(20, firstPage.getData().size());
         assertEquals(30, firstPage.getTotalNumber());
         assertEquals(1, firstPage.getPageIndex());
@@ -1051,7 +1051,7 @@ class MemberControllerApiTest extends BaseApiTest {
         assertNotNull(aMember.getCreatedAt());
         assertTrue(aMember.isActive());
 
-        PagedList<QListMember> secondPage = MemberApi.listMembers(admin.jwt(), null, null, null, false, 2, 20);
+        PagedList<QListMember> secondPage = MemberApi.listMembers(admin.getJwt(), null, null, null, false, 2, 20);
         assertEquals(10, secondPage.getData().size());
         assertEquals(30, secondPage.getTotalNumber());
         assertEquals(2, secondPage.getPageIndex());
@@ -1063,60 +1063,60 @@ class MemberControllerApiTest extends BaseApiTest {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
 
         String firstMemberName = rMemberName();
-        String memberId1 = MemberApi.createMember(response.jwt(), firstMemberName, rMobile(), rPassword());
+        String memberId1 = MemberApi.createMember(response.getJwt(), firstMemberName, rMobile(), rPassword());
         Member member1 = memberRepository.byId(memberId1);
         String customId = UuidGenerator.newShortUuid();
         member1.updateCustomId(customId, member1.toUser());
         memberRepository.save(member1);
 
         String secondMemberMobile = rMobile();
-        String memberId2 = MemberApi.createMember(response.jwt(), rMemberName(), secondMemberMobile, rPassword());
+        String memberId2 = MemberApi.createMember(response.getJwt(), rMemberName(), secondMemberMobile, rPassword());
 
         String thirdMemberEmail = rEmail();
-        String memberId3 = MemberApi.createMember(response.jwt(), rMemberName(), rMobile(), thirdMemberEmail, rPassword());
+        String memberId3 = MemberApi.createMember(response.getJwt(), rMemberName(), rMobile(), thirdMemberEmail, rPassword());
 
-        PagedList<QListMember> allMembers = MemberApi.listMembers(response.jwt(), null, null, null, false, 1, 20);
+        PagedList<QListMember> allMembers = MemberApi.listMembers(response.getJwt(), null, null, null, false, 1, 20);
         assertEquals(4, allMembers.getData().size());
         assertEquals(memberId3, allMembers.getData().get(0).getId());
         assertEquals(memberId2, allMembers.getData().get(1).getId());
         assertEquals(memberId1, allMembers.getData().get(2).getId());
-        assertEquals(response.memberId(), allMembers.getData().get(3).getId());
+        assertEquals(response.getMemberId(), allMembers.getData().get(3).getId());
 
         //模糊搜索姓名
-        PagedList<QListMember> fuzzyNameResult = MemberApi.listMembers(response.jwt(), null, firstMemberName.substring(1), null, false, 1,
+        PagedList<QListMember> fuzzyNameResult = MemberApi.listMembers(response.getJwt(), null, firstMemberName.substring(1), null, false, 1,
                 20);
         assertEquals(1, fuzzyNameResult.getData().size());
         assertEquals(memberId1, fuzzyNameResult.getData().get(0).getId());
 
         //精确搜索手机号
-        PagedList<QListMember> mobileResult = MemberApi.listMembers(response.jwt(), null, secondMemberMobile, null, false, 1, 20);
+        PagedList<QListMember> mobileResult = MemberApi.listMembers(response.getJwt(), null, secondMemberMobile, null, false, 1, 20);
         assertEquals(1, mobileResult.getData().size());
         assertEquals(memberId2, mobileResult.getData().get(0).getId());
 
         //精确搜索邮箱
-        PagedList<QListMember> emailResult = MemberApi.listMembers(response.jwt(), null, thirdMemberEmail, null, false, 1, 20);
+        PagedList<QListMember> emailResult = MemberApi.listMembers(response.getJwt(), null, thirdMemberEmail, null, false, 1, 20);
         assertEquals(1, emailResult.getData().size());
         assertEquals(memberId3, emailResult.getData().get(0).getId());
 
         //直接搜索memberId
-        PagedList<QListMember> byIdResult = MemberApi.listMembers(response.jwt(), null, memberId1, null, false, 1, 20);
+        PagedList<QListMember> byIdResult = MemberApi.listMembers(response.getJwt(), null, memberId1, null, false, 1, 20);
         assertEquals(1, byIdResult.getData().size());
         assertEquals(memberId1, byIdResult.getData().get(0).getId());
 
         //搜索customId
-        PagedList<QListMember> byCustomIdResult = MemberApi.listMembers(response.jwt(), null, customId, null, false, 1, 20);
+        PagedList<QListMember> byCustomIdResult = MemberApi.listMembers(response.getJwt(), null, customId, null, false, 1, 20);
         assertEquals(1, byCustomIdResult.getData().size());
         assertEquals(memberId1, byCustomIdResult.getData().get(0).getId());
 
         //模糊搜索手机号
-        PagedList<QListMember> fuzzyMobileResult = MemberApi.listMembers(response.jwt(), null, secondMemberMobile.substring(0, 5), null,
+        PagedList<QListMember> fuzzyMobileResult = MemberApi.listMembers(response.getJwt(), null, secondMemberMobile.substring(0, 5), null,
                 false, 1, 20);
         assertEquals(1, fuzzyMobileResult.getData().size());
         assertEquals(memberId2, fuzzyMobileResult.getData().get(0).getId());
 
         //基于姓名排序
-        PagedList<QListMember> allAscOrdersMembers = MemberApi.listMembers(response.jwt(), null, null, "name", true, 1, 20);
-        PagedList<QListMember> allDescOrdersMembers = MemberApi.listMembers(response.jwt(), null, null, "name", false, 1, 20);
+        PagedList<QListMember> allAscOrdersMembers = MemberApi.listMembers(response.getJwt(), null, null, "name", true, 1, 20);
+        PagedList<QListMember> allDescOrdersMembers = MemberApi.listMembers(response.getJwt(), null, null, "name", false, 1, 20);
         List<String> allAscNames = allAscOrdersMembers.getData().stream().map(QListMember::getName).collect(toList());
         List<String> allDescNames = allDescOrdersMembers.getData().stream().map(QListMember::getName).collect(toList());
         assertNotEquals(allAscNames, allDescNames);
@@ -1126,42 +1126,42 @@ class MemberControllerApiTest extends BaseApiTest {
     public void should_list_members_by_department() {
         LoginResponse response = setupApi.registerWithLogin();
 
-        String departmentId1 = DepartmentApi.createDepartment(response.jwt(),
+        String departmentId1 = DepartmentApi.createDepartment(response.getJwt(),
                 CreateDepartmentCommand.builder().name(rDepartmentName()).build());
-        String departmentId2 = DepartmentApi.createDepartment(response.jwt(),
+        String departmentId2 = DepartmentApi.createDepartment(response.getJwt(),
                 CreateDepartmentCommand.builder().name(rDepartmentName()).build());
 
-        String memberId1 = MemberApi.createMember(response.jwt(), CreateMemberCommand.builder()
+        String memberId1 = MemberApi.createMember(response.getJwt(), CreateMemberCommand.builder()
                 .name(rMemberName())
                 .departmentIds(List.of(departmentId1))
                 .mobile(rMobile())
                 .password(rPassword())
                 .build());
 
-        String memberId2 = MemberApi.createMember(response.jwt(), CreateMemberCommand.builder()
+        String memberId2 = MemberApi.createMember(response.getJwt(), CreateMemberCommand.builder()
                 .name(rMemberName())
                 .departmentIds(List.of(departmentId2))
                 .mobile(rMobile())
                 .password(rPassword())
                 .build());
 
-        String memberId3 = MemberApi.createMember(response.jwt(), CreateMemberCommand.builder()
+        String memberId3 = MemberApi.createMember(response.getJwt(), CreateMemberCommand.builder()
                 .name(rMemberName())
                 .departmentIds(List.of(departmentId1, departmentId2))
                 .mobile(rMobile())
                 .password(rPassword())
                 .build());
 
-        PagedList<QListMember> members0 = MemberApi.listMembers(response.jwt(), null, null, null, false, 1, 10);
+        PagedList<QListMember> members0 = MemberApi.listMembers(response.getJwt(), null, null, null, false, 1, 10);
         assertEquals(4, members0.getData().size());
 
-        PagedList<QListMember> members1 = MemberApi.listMembers(response.jwt(), departmentId1, null, null, false, 1, 10);
+        PagedList<QListMember> members1 = MemberApi.listMembers(response.getJwt(), departmentId1, null, null, false, 1, 10);
         assertEquals(2, members1.getData().size());
         List<String> memberIds1 = members1.getData().stream().map(QListMember::getId).toList();
         assertTrue(memberIds1.contains(memberId1));
         assertTrue(memberIds1.contains(memberId3));
 
-        PagedList<QListMember> members2 = MemberApi.listMembers(response.jwt(), departmentId2, null, null, false, 1, 10);
+        PagedList<QListMember> members2 = MemberApi.listMembers(response.getJwt(), departmentId2, null, null, false, 1, 10);
         assertEquals(2, members2.getData().size());
         List<String> memberIds2 = members2.getData().stream().map(QListMember::getId).toList();
         assertTrue(memberIds2.contains(memberId2));
@@ -1175,9 +1175,9 @@ class MemberControllerApiTest extends BaseApiTest {
         String name = rMemberName();
         String mobile = rMobile();
         String email = rEmail();
-        String memberId = MemberApi.createMember(response.jwt(), name, mobile, email, rPassword());
-        MemberApi.createMember(response.jwt(), rMemberName(), rMobile(), rPassword());
-        CreateMemberResponse createMemberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        String memberId = MemberApi.createMember(response.getJwt(), name, mobile, email, rPassword());
+        MemberApi.createMember(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse createMemberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
         List<QMemberReference> memberReferences = MemberApi.allMemberReferences(createMemberResponse.getJwt());
         assertEquals(4, memberReferences.size());
@@ -1189,10 +1189,10 @@ class MemberControllerApiTest extends BaseApiTest {
     @Test
     public void should_fetch_all_member_reference_for_given_tenant() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        MemberApi.createMember(response.jwt(), rMemberName(), rMobile(), rPassword());
-        MemberApi.createMember(response.jwt(), rMemberName(), rMobile(), rPassword());
+        MemberApi.createMember(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        MemberApi.createMember(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        List<QMemberReference> memberReferences = MemberApi.allMemberReferences(response.jwt(), response.tenantId());
+        List<QMemberReference> memberReferences = MemberApi.allMemberReferences(response.getJwt(), response.getTenantId());
 
         assertEquals(3, memberReferences.size());
         assertNotNull(memberReferences.get(0).getShowName());
@@ -1204,112 +1204,112 @@ class MemberControllerApiTest extends BaseApiTest {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
         LoginResponse other = setupApi.registerWithLogin(rMobile(), rPassword());
 
-        assertError(() -> MemberApi.allMemberReferencesRaw(other.jwt(), response.tenantId()), WRONG_TENANT);
+        assertError(() -> MemberApi.allMemberReferencesRaw(other.getJwt(), response.getTenantId()), WRONG_TENANT);
     }
 
     @Test
     public void should_deactivate_member() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String memberId = MemberApi.createMember(response.jwt());
+        String memberId = MemberApi.createMember(response.getJwt());
 
-        MemberApi.deactivateMember(response.jwt(), memberId);
+        MemberApi.deactivateMember(response.getJwt(), memberId);
         assertFalse(memberRepository.byId(memberId).isActive());
     }
 
     @Test
     public void should_fail_deactivate_if_its_the_only_one_tenant_admin() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        assertError(() -> MemberApi.deactivateMemberRaw(response.jwt(), response.memberId()), NO_ACTIVE_TENANT_ADMIN_LEFT);
+        assertError(() -> MemberApi.deactivateMemberRaw(response.getJwt(), response.getMemberId()), NO_ACTIVE_TENANT_ADMIN_LEFT);
     }
 
     @Test
     public void should_fail_deactivate_if_its_the_only_one_active_tenant_admin() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        assertError(() -> MemberApi.deactivateMemberRaw(response.jwt(), response.memberId()), NO_ACTIVE_TENANT_ADMIN_LEFT);
+        assertError(() -> MemberApi.deactivateMemberRaw(response.getJwt(), response.getMemberId()), NO_ACTIVE_TENANT_ADMIN_LEFT);
     }
 
     @Test
     public void should_activate_member() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String memberId = MemberApi.createMember(response.jwt());
+        String memberId = MemberApi.createMember(response.getJwt());
 
-        MemberApi.deactivateMember(response.jwt(), memberId);
+        MemberApi.deactivateMember(response.getJwt(), memberId);
         assertFalse(memberRepository.byId(memberId).isActive());
 
-        MemberApi.activateMember(response.jwt(), memberId);
+        MemberApi.activateMember(response.getJwt(), memberId);
         assertTrue(memberRepository.byId(memberId).isActive());
     }
 
     @Test
     public void should_cache_member() {
         LoginResponse response = setupApi.registerWithLogin();
-        String key = "Cache:MEMBER::" + response.memberId();
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
-        Member member = memberRepository.cachedById(response.memberId());
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        String key = "Cache:MEMBER::" + response.getMemberId();
+        PollingAssertion.pollAssert().run(() ->   assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        Member member = memberRepository.cachedById(response.getMemberId());
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
         memberRepository.save(member);
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
     public void should_cache_member_references() {
         LoginResponse response = setupApi.registerWithLogin();
-        memberRepository.save(memberRepository.byId(response.memberId()));
-        String key = "Cache:TENANT_MEMBERS::" + response.tenantId();
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        memberRepository.save(memberRepository.byId(response.getMemberId()));
+        String key = "Cache:TENANT_MEMBERS::" + response.getTenantId();
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
-        memberRepository.cachedAllMemberReferences(response.tenantId());
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        memberRepository.cachedAllMemberReferences(response.getTenantId());
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
-        memberRepository.save(memberRepository.byId(response.memberId()));
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        memberRepository.save(memberRepository.byId(response.getMemberId()));
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
     public void save_member_should_evict_cache() {
         LoginResponse response = setupApi.registerWithLogin();
-        String newMemberId = MemberApi.createMember(response.jwt());
-        String membersKey = "Cache:TENANT_MEMBERS::" + response.tenantId();
-        String memberKey = "Cache:MEMBER::" + response.memberId();
+        String newMemberId = MemberApi.createMember(response.getJwt());
+        String membersKey = "Cache:TENANT_MEMBERS::" + response.getTenantId();
+        String memberKey = "Cache:MEMBER::" + response.getMemberId();
         String newMemberKey = "Cache:MEMBER::" + newMemberId;
 
-        memberRepository.cachedById(response.memberId());
+        memberRepository.cachedById(response.getMemberId());
         memberRepository.cachedById(newMemberId);
-        memberRepository.cachedTenantAllMembers(response.tenantId());
+        memberRepository.cachedTenantAllMembers(response.getTenantId());
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
 
         Member member = memberRepository.byId(newMemberId);
         memberRepository.save(member);
 
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
         PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
     }
 
     @Test
     public void delete_member_should_evict_cache() {
         LoginResponse response = setupApi.registerWithLogin();
-        String newMemberId = MemberApi.createMember(response.jwt());
-        String membersKey = "Cache:TENANT_MEMBERS::" + response.tenantId();
-        String memberKey = "Cache:MEMBER::" + response.memberId();
+        String newMemberId = MemberApi.createMember(response.getJwt());
+        String membersKey = "Cache:TENANT_MEMBERS::" + response.getTenantId();
+        String memberKey = "Cache:MEMBER::" + response.getMemberId();
         String newMemberKey = "Cache:MEMBER::" + newMemberId;
 
-        memberRepository.cachedById(response.memberId());
+        memberRepository.cachedById(response.getMemberId());
         memberRepository.cachedById(newMemberId);
-        memberRepository.cachedTenantAllMembers(response.tenantId());
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
+        memberRepository.cachedTenantAllMembers(response.getTenantId());
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
 
         Member member = memberRepository.byId(newMemberId);
         member.onDelete(User.NO_USER);
         memberRepository.delete(member);
 
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(membersKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(memberKey)));
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(newMemberKey)));
     }
 }

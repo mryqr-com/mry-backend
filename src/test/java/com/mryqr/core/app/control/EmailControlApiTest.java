@@ -40,9 +40,9 @@ public class EmailControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FEmailControl control = defaultEmailControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -51,13 +51,13 @@ public class EmailControlApiTest extends BaseApiTest {
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FEmailControl control = defaultEmailControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         EmailAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
+        App app = appRepository.byId(response.getAppId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         EmailAnswer updatedAnswer = (EmailAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -70,63 +70,63 @@ public class EmailControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_email_already_exists_for_instance() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FEmailControl control = defaultEmailControlBuilder().uniqueType(UNIQUE_PER_INSTANCE).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         EmailAnswer answer = rAnswerBuilder(control).email(rEmail()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
-        assertError(() -> newSubmissionRaw(response.jwt(), command), ANSWER_NOT_UNIQUE_PER_INSTANCE);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), ANSWER_NOT_UNIQUE_PER_INSTANCE);
 
         //其他qr依然可以提交
-        CreateQrResponse anotherQr = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), anotherQr.getQrId(), response.homePageId(), answer);
+        CreateQrResponse anotherQr = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), anotherQr.getQrId(), response.getHomePageId(), answer);
     }
 
     @Test
     public void should_fail_answer_if_email_already_exists_for_app() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FEmailControl control = defaultEmailControlBuilder().uniqueType(UNIQUE_PER_APP).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         EmailAnswer answer = rAnswerBuilder(control).email(rEmail()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
-        assertError(() -> newSubmissionRaw(response.jwt(), command), ANSWER_NOT_UNIQUE_PER_APP);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), ANSWER_NOT_UNIQUE_PER_APP);
 
         //其他qr也不能提交
-        CreateQrResponse anotherQr = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        NewSubmissionCommand anotherCommand = newSubmissionCommand(anotherQr.getQrId(), response.homePageId(), answer);
-        assertError(() -> newSubmissionRaw(response.jwt(), anotherCommand), ANSWER_NOT_UNIQUE_PER_APP);
+        CreateQrResponse anotherQr = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        NewSubmissionCommand anotherCommand = newSubmissionCommand(anotherQr.getQrId(), response.getHomePageId(), answer);
+        assertError(() -> newSubmissionRaw(response.getJwt(), anotherCommand), ANSWER_NOT_UNIQUE_PER_APP);
     }
 
     @Test
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FEmailControl control = defaultEmailControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         EmailAnswer answer = rAnswerBuilder(control).email(null).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FEmailControl control = defaultEmailControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         EmailAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         EmailAttributeValue attributeValue = (EmailAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getEmail(), attributeValue.getEmail());
         assertTrue(qr.getIndexedValues().valueOf(indexedField).getTv().contains(answer.getEmail()));
@@ -136,17 +136,17 @@ public class EmailControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FEmailControl control = defaultEmailControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         EmailAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         EmailAttributeValue attributeValue = (EmailAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getEmail(), attributeValue.getEmail());
         assertTrue(qr.getIndexedValues().valueOf(indexedField).getTv().contains(answer.getEmail()));

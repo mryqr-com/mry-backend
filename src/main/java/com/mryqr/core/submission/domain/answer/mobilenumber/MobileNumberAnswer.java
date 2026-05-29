@@ -32,10 +32,6 @@ public class MobileNumberAnswer extends Answer {
     @Mobile
     private String mobileNumber;
 
-    public static MobileNumberAnswer.MobileNumberAnswerBuilder<?, ?> answerBuilder(FMobileNumberControl control) {
-        return MobileNumberAnswer.builder().controlId(control.getId()).controlType(control.getType());
-    }
-
     @Override
     public void correctAndValidate() {
     }
@@ -82,6 +78,10 @@ public class MobileNumberAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
+    }
+
+    public static MobileNumberAnswer.MobileNumberAnswerBuilder<?, ?> answerBuilder(FMobileNumberControl control) {
+        return MobileNumberAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

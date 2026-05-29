@@ -36,7 +36,7 @@ public class NearExpireAssignmentJobTest extends BaseApiTest {
     @Test
     public void should_near_expire_notify_assignments() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         LocalDateTime nearExpireTime = LocalDateTime.now().withMinute(0);
         LocalDateTime startTime = nearExpireTime.minusHours(1);
@@ -50,8 +50,8 @@ public class NearExpireAssignmentJobTest extends BaseApiTest {
 
         AssignmentSetting assignmentSetting = AssignmentSetting.builder()
                 .name(rAssignmentPlanName())
-                .appId(response.appId())
-                .pageId(response.homePageId())
+                .appId(response.getAppId())
+                .pageId(response.getHomePageId())
                 .frequency(EVERY_MONTH)
                 .startTime(startDateTime)
                 .expireTime(expireDateTime)
@@ -59,11 +59,11 @@ public class NearExpireAssignmentJobTest extends BaseApiTest {
                 .nearExpireNotifyTime(nearExpireDateTime)
                 .build();
 
-        AssignmentPlanApi.createAssignmentPlan(response.jwt(),
+        AssignmentPlanApi.createAssignmentPlan(response.getJwt(),
                 CreateAssignmentPlanCommand.builder().setting(assignmentSetting).build());
 
         createAssignmentsJob.run(of(startTime.getYear(), startTime.getMonthValue(), startTime.getDayOfMonth(), startTime.getHour(), 0));
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
         assertEquals(IN_PROGRESS, assignment.getStatus());
 
         nearExpireAssignmentsJob.run(LocalDateTime.now());

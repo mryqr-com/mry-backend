@@ -42,10 +42,6 @@ public class DateTimeAnswer extends Answer {
     @Pattern(regexp = TIME_PATTERN, message = "时间格式不正确。")
     private String time;
 
-    public static DateTimeAnswer.DateTimeAnswerBuilder<?, ?> answerBuilder(FDateTimeControl control) {
-        return DateTimeAnswer.builder().controlId(control.getId()).controlType(control.getType());
-    }
-
     @Override
     public void correctAndValidate() {
     }
@@ -78,6 +74,7 @@ public class DateTimeAnswer extends Answer {
         return (double) this.toInstant().toEpochMilli();
     }
 
+
     @Override
     protected Set<String> doGetSearchableValues() {
         return null;
@@ -101,6 +98,10 @@ public class DateTimeAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
+    }
+
+    public static DateTimeAnswer.DateTimeAnswerBuilder<?, ?> answerBuilder(FDateTimeControl control) {
+        return DateTimeAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
     public Instant toInstant() {

@@ -88,15 +88,20 @@ public class ControlTimeSegmentReportSetting implements ControlAware, PageAware 
         @NotNull
         @ShortUuid
         private final String id;
+
+        @Size(max = MAX_SHORT_NAME_LENGTH)
+        private String name;
+
         @NotNull
         private final SubmissionSegmentType segmentType;
+
         @NotNull
         private final SubmissionTimeBasedType basedType;
+
         @PageId
         @NotBlank
         private final String pageId;
-        @Size(max = MAX_SHORT_NAME_LENGTH)
-        private String name;
+
         @ControlId
         private String basedControlId;
 

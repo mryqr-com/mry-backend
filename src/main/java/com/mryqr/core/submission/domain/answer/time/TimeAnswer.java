@@ -32,10 +32,6 @@ public class TimeAnswer extends Answer {
     @Pattern(regexp = TIME_PATTERN, message = "时间格式不正确。")
     private String time;
 
-    public static TimeAnswer.TimeAnswerBuilder<?, ?> answerBuilder(FTimeControl control) {
-        return TimeAnswer.builder().controlId(control.getId()).controlType(control.getType());
-    }
-
     @Override
     public void correctAndValidate() {
     }
@@ -82,6 +78,10 @@ public class TimeAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
+    }
+
+    public static TimeAnswer.TimeAnswerBuilder<?, ?> answerBuilder(FTimeControl control) {
+        return TimeAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

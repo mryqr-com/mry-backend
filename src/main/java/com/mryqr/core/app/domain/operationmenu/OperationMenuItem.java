@@ -41,19 +41,6 @@ public class OperationMenuItem implements Identified {
     @AllablePageId
     private final String pageId;//引用页面的ID
 
-    public static List<OperationMenuItem> defaultOperationMenuItems() {
-        OperationMenuItem submitHistoryMenuItem = OperationMenuItem.builder()
-                .id(newShortUuid()).name("所有提交").pageId(ALL).type(ALL_SUBMIT_HISTORY).build();
-
-        OperationMenuItem submitterSubmissionMenuItem = OperationMenuItem.builder()
-                .id(newShortUuid()).name("我的提交").pageId(ALL).type(SUBMITTER_SUBMISSION).build();
-
-        OperationMenuItem tobeApprovedMenuItem = OperationMenuItem.builder()
-                .id(newShortUuid()).name("待我审批").pageId(ALL).type(TO_BE_APPROVED).build();
-
-        return List.of(submitHistoryMenuItem, submitterSubmissionMenuItem, tobeApprovedMenuItem);
-    }
-
     public void validate(AppSettingContext context) {
         if (!pageId.equalsIgnoreCase(ALL) && context.pageNotExists(pageId)) {
             throw new MryException(VALIDATION_OPERATION_MENU_REF_PAGE_NOT_EXIST, "运营菜单所引用的页面不存在。",
@@ -68,5 +55,18 @@ public class OperationMenuItem implements Identified {
     @Override
     public String getIdentifier() {
         return id;
+    }
+
+    public static List<OperationMenuItem> defaultOperationMenuItems() {
+        OperationMenuItem submitHistoryMenuItem = OperationMenuItem.builder()
+                .id(newShortUuid()).name("所有提交").pageId(ALL).type(ALL_SUBMIT_HISTORY).build();
+
+        OperationMenuItem submitterSubmissionMenuItem = OperationMenuItem.builder()
+                .id(newShortUuid()).name("我的提交").pageId(ALL).type(SUBMITTER_SUBMISSION).build();
+
+        OperationMenuItem tobeApprovedMenuItem = OperationMenuItem.builder()
+                .id(newShortUuid()).name("待我审批").pageId(ALL).type(TO_BE_APPROVED).build();
+
+        return List.of(submitHistoryMenuItem, submitterSubmissionMenuItem, tobeApprovedMenuItem);
     }
 }

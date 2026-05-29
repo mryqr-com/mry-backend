@@ -22,8 +22,7 @@ import java.util.List;
 
 import static com.mryqr.common.exception.ErrorCode.IMAGE_ID_DUPLICATED;
 import static com.mryqr.common.utils.Identified.isDuplicated;
-import static com.mryqr.common.utils.MryConstants.MAX_MARGIN;
-import static com.mryqr.common.utils.MryConstants.MIN_MARGIN;
+import static com.mryqr.common.utils.MryConstants.*;
 import static lombok.AccessLevel.PRIVATE;
 
 @Getter

@@ -56,6 +56,10 @@ public final class ResourceUsage {
         this.departmentCount = count;
     }
 
+    public void setStorage(float amount) {
+        this.storage = amount;
+    }
+
     public void updatePlateCount(int plateCount) {
         this.plateCount = plateCount;
     }
@@ -107,10 +111,6 @@ public final class ResourceUsage {
 
     public float getStorage() {
         return storage;
-    }
-
-    public void setStorage(float amount) {
-        this.storage = amount;
     }
 
     public int getPlateCount() {

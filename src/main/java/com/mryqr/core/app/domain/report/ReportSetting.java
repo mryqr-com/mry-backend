@@ -31,6 +31,16 @@ public class ReportSetting {
     @NotNull
     private final ChartReportSetting chartReportSetting;//图表报告设置
 
+    public void correct() {
+        this.numberReportSetting.correct();
+        this.chartReportSetting.correct();
+    }
+
+    public void validate(AppSettingContext context) {
+        this.numberReportSetting.validate(context);
+        this.chartReportSetting.validate(context);
+    }
+
     public static ReportSetting create() {
         NumberReportSetting numberReportSetting = NumberReportSetting.builder()
                 .reports(new ArrayList<>())
@@ -43,16 +53,6 @@ public class ReportSetting {
                 .build();
 
         return ReportSetting.builder().numberReportSetting(numberReportSetting).chartReportSetting(chartReportSetting).build();
-    }
-
-    public void correct() {
-        this.numberReportSetting.correct();
-        this.chartReportSetting.correct();
-    }
-
-    public void validate(AppSettingContext context) {
-        this.numberReportSetting.validate(context);
-        this.chartReportSetting.validate(context);
     }
 
     public void removePageAwareReports(Set<String> pageIds) {

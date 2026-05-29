@@ -23,8 +23,10 @@ import com.mryqr.core.grouphierarchy.domain.GroupHierarchy;
 import com.mryqr.core.grouphierarchy.domain.GroupHierarchyRepository;
 import com.mryqr.core.member.domain.MemberReference;
 import com.mryqr.core.member.domain.MemberRepository;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
@@ -49,6 +51,7 @@ import static com.mryqr.common.utils.MryConstants.QR_COLLECTION;
 import static com.mryqr.common.utils.Pagination.pagination;
 import static com.mryqr.common.validation.id.plate.PlateIdValidator.isPlateId;
 import static java.util.Set.copyOf;
+import static lombok.AccessLevel.PRIVATE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.domain.Sort.Direction.ASC;
@@ -169,30 +172,30 @@ public class AssignmentQueryService {
 
     private List<QListAssignment> transform(List<RawAssignment> rawAssignments, String tenantId) {
         Set<String> memberIds = rawAssignments.stream()
-                .flatMap(assignment -> assignment.operators().stream())
+                .flatMap(assignment -> assignment.getOperators().stream())
                 .collect(toImmutableSet());
 
         Map<String, MemberReference> memberReferences = memberRepository.cachedMemberReferences(tenantId, memberIds);
 
         return rawAssignments.stream().map(assignment -> {
-            List<MemberReference> references = assignment.operators().stream()
+            List<MemberReference> references = assignment.getOperators().stream()
                     .map(memberReferences::get)
                     .filter(Objects::nonNull)
                     .collect(toImmutableList());
 
             return QListAssignment.builder()
-                    .id(assignment.id())
-                    .assignmentPlanId(assignment.assignmentPlanId())
-                    .name(assignment.name())
-                    .groupId(assignment.groupId())
-                    .startAt(assignment.startAt())
-                    .expireAt(assignment.expireAt())
+                    .id(assignment.getId())
+                    .assignmentPlanId(assignment.getAssignmentPlanId())
+                    .name(assignment.getName())
+                    .groupId(assignment.getGroupId())
+                    .startAt(assignment.getStartAt())
+                    .expireAt(assignment.getExpireAt())
                     .operators(references.stream().map(MemberReference::getId).collect(toImmutableList()))
                     .operatorNames(references.stream().map(MemberReference::getName).collect(toImmutableList()))
-                    .status(assignment.status())
-                    .createdAt(assignment.createdAt())
-                    .allQrCount(assignment.allQrCount())
-                    .finishedQrCount(assignment.finishedQrCount())
+                    .status(assignment.getStatus())
+                    .createdAt(assignment.getCreatedAt())
+                    .allQrCount(assignment.getAllQrCount())
+                    .finishedQrCount(assignment.getFinishedQrCount())
                     .build();
         }).collect(toImmutableList());
     }
@@ -247,7 +250,7 @@ public class AssignmentQueryService {
 
         Map<String, AssignmentFinishedQr> finishedQrs = assignment.getFinishedQrs();
         Set<String> allOperatorIds = rawQrs.stream().map(rawQr -> {
-                    AssignmentFinishedQr finishedQr = finishedQrs.get(rawQr.id());
+                    AssignmentFinishedQr finishedQr = finishedQrs.get(rawQr.getId());
                     return finishedQr != null ? finishedQr.getOperatorId() : null;
                 }).filter(Objects::nonNull)
                 .collect(toImmutableSet());
@@ -255,24 +258,24 @@ public class AssignmentQueryService {
         Map<String, MemberReference> memberReferences = memberRepository.cachedMemberReferences(tenantId, allOperatorIds);
 
         List<QAssignmentListQr> qrs = rawQrs.stream().map(rawQr -> {
-            AssignmentFinishedQr finishedQr = finishedQrs.get(rawQr.id());
+            AssignmentFinishedQr finishedQr = finishedQrs.get(rawQr.getId());
             if (finishedQr == null) {
                 return QAssignmentListQr.builder()
-                        .id(rawQr.id())
-                        .name(rawQr.name())
-                        .plateId(rawQr.plateId())
-                        .headerImage(rawQr.headerImage())
-                        .geolocation(rawQr.geolocation())
+                        .id(rawQr.getId())
+                        .name(rawQr.getName())
+                        .plateId(rawQr.getPlateId())
+                        .headerImage(rawQr.getHeaderImage())
+                        .geolocation(rawQr.getGeolocation())
                         .build();
             } else {
                 MemberReference member = memberReferences.get(finishedQr.getOperatorId());
                 String operatorName = member != null ? member.getName() : null;
                 return QAssignmentListQr.builder()
-                        .id(rawQr.id())
-                        .name(rawQr.name())
-                        .plateId(rawQr.plateId())
-                        .headerImage(rawQr.headerImage())
-                        .geolocation(rawQr.geolocation())
+                        .id(rawQr.getId())
+                        .name(rawQr.getName())
+                        .plateId(rawQr.getPlateId())
+                        .headerImage(rawQr.getHeaderImage())
+                        .geolocation(rawQr.getGeolocation())
                         .finished(true)
                         .submissionId(finishedQr.getSubmissionId())
                         .operatorId(finishedQr.getOperatorId())
@@ -439,13 +442,31 @@ public class AssignmentQueryService {
         }
     }
 
+    @Value
     @Builder
-    private record RawAssignment(String id, String assignmentPlanId, String name, String groupId, Instant startAt,
-                                 Instant expireAt, List<String> operators, AssignmentStatus status, Instant createdAt,
-                                 int allQrCount, int finishedQrCount) {
+    @AllArgsConstructor(access = PRIVATE)
+    private static class RawAssignment {
+        private final String id;
+        private final String assignmentPlanId;
+        private final String name;
+        private final String groupId;
+        private final Instant startAt;
+        private final Instant expireAt;
+        private List<String> operators;
+        private final AssignmentStatus status;
+        private final Instant createdAt;
+        private final int allQrCount;
+        private final int finishedQrCount;
     }
 
+    @Value
     @Builder
-    private record RawQr(String id, String name, String plateId, UploadedFile headerImage, Geolocation geolocation) {
+    @AllArgsConstructor(access = PRIVATE)
+    private static class RawQr {
+        private final String id;
+        private final String name;
+        private final String plateId;
+        private final UploadedFile headerImage;
+        private final Geolocation geolocation;
     }
 }

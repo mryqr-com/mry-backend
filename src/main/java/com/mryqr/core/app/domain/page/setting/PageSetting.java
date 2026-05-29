@@ -40,16 +40,41 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @AllArgsConstructor(access = PRIVATE)
 public class PageSetting {
     private static final List<Permission> ALLOWED_MODIFY_PERMISSIONS = List.of(CAN_MANAGE_GROUP, CAN_MANAGE_APP);
+
+    @Size(max = MAX_SHORT_NAME_LENGTH)
+    private String pageName;//页面名称
+
+    @NotNull
+    private SubmitType submitType;//提交类型
+
+    @NotNull
+    private Permission permission;//页面自身所需的权限，同时控制页面的查看和提交
+
+    @NotNull
+    private Permission modifyPermission;//修改权限
+
+    private boolean submitterUpdatable;//是否允许提交者提交后修改
+
+    @NotNull
+    private SubmitterUpdateRange submitterUpdateRange;//在submitterUpdatable=true时，设置允许修改的期限
+
     @Valid
     @NotNull
     private final ApprovalSetting approvalSetting;//审批设置
+
     @Valid
     @NotNull
     private final NotificationSetting notificationSetting;
+
     @NotNull
     @NoNullElement
     @Size(max = 5)
     private final List<SubmissionWebhookType> submissionWebhookTypes;
+
+    @Size(max = MAX_SHORT_NAME_LENGTH)
+    private String actionName;//提交动作名称
+
+    private boolean showAsterisk;//对必填项是否显示红色星号
     private final boolean showControlIndex;//为控件显示编号
     private final boolean hideProfileButton;//隐藏页面顶部登录按钮
     private final boolean hideTopBottomBlank;//为大屏设备隐藏上下留白
@@ -57,98 +82,47 @@ public class PageSetting {
     private final boolean hideHeader;//隐藏页眉
     private final boolean hideTitle;//隐藏标题
     private final boolean hideMenu;//隐藏菜单
+
     @Min(650)
     @Max(2000)
     private final int pageMaxWidth;//页面最大宽度
+
     @Min(650)
     @Max(2000)
     private final int contentMaxWidth;//内容区域最大宽度
+
     @Color
     private final String pageBackgroundColor;//页面背景颜色
+
     @Min(MIN_BORDER_RADIUS)
     @Max(MAX_BORDER_RADIUS)
     private final int controlBorderRadius;//所有控件的圆角半径
+
     @Valid
     @NotNull
     private final Shadow shadow;//页边阴影
+
     @Valid
     @NotNull
     private final Border border;//页边边框
+
     @Color
     private final String viewPortBackgroundColor;//整屏背景颜色
+
     @Valid
     private final UploadedFile viewPortBackgroundImage;//整屏背景图片
+
     @Valid
     @NotNull
     private final AfterSubmitBehaviour afterSubmitBehaviour;//提交后行为
+
     @NoSpace
     @Size(max = 5)
     private final String submitterAlias;//提交人称号，用于替换"提交人"字样
+
     @NoSpace
     @Size(max = 5)
     private final String submitAtAlias;//提交时间称号，用于替换"提交时间"字样
-    @Size(max = MAX_SHORT_NAME_LENGTH)
-    private String pageName;//页面名称
-    @NotNull
-    private SubmitType submitType;//提交类型
-    @NotNull
-    private Permission permission;//页面自身所需的权限，同时控制页面的查看和提交
-    @NotNull
-    private Permission modifyPermission;//修改权限
-    private boolean submitterUpdatable;//是否允许提交者提交后修改
-    @NotNull
-    private SubmitterUpdateRange submitterUpdateRange;//在submitterUpdatable=true时，设置允许修改的期限
-    @Size(max = MAX_SHORT_NAME_LENGTH)
-    private String actionName;//提交动作名称
-    private boolean showAsterisk;//对必填项是否显示红色星号
-
-    public static PageSetting defaultPageSetting() {
-        return defaultPageSettingBuilder().build();
-    }
-
-    public static PageSettingBuilder defaultPageSettingBuilder() {
-        return PageSetting.builder()
-                .submitType(NEW)
-                .permission(AS_TENANT_MEMBER)
-                .modifyPermission(CAN_MANAGE_APP)
-                .submitterUpdatable(false)
-                .submitterUpdateRange(IN_1_DAY)
-                .approvalSetting(ApprovalSetting.builder()
-                        .approvalEnabled(false)
-                        .permission(CAN_MANAGE_APP)
-                        .passText("通过")
-                        .notPassText("不通过")
-                        .build())
-                .notificationSetting(NotificationSetting.builder()
-                        .notificationEnabled(false)
-                        .onCreateNotificationRoles(List.of())
-                        .onUpdateNotificationRoles(List.of())
-                        .build())
-                .submissionWebhookTypes(List.of())
-                .pageName("未命名页面")
-                .actionName(null)
-                .showAsterisk(true)
-                .showControlIndex(false)
-                .hideProfileButton(false)
-                .hideTopBottomBlank(false)
-                .hideTopBar(false)
-                .hideHeader(false)
-                .hideTitle(false)
-                .hideMenu(false)
-                .pageMaxWidth(650)
-                .contentMaxWidth(650)
-                .pageBackgroundColor("rgba(255, 255, 255, 1)")
-                .controlBorderRadius(4)
-                .shadow(Shadow.builder().width(6).color("rgba(0, 0, 0, .2)").build())
-                .border(noBorder())
-                .viewPortBackgroundColor(null)
-                .viewPortBackgroundImage(null)
-                .afterSubmitBehaviour(AfterSubmitBehaviour.builder()
-                        .type(DEFAULT)
-                        .internalPageId(null)
-                        .externalUrl(null)
-                        .build());
-    }
 
     private void correctName() {
         if (isBlank(pageName)) {
@@ -206,6 +180,54 @@ public class PageSetting {
     public void modify(SubmitType submitType, Permission permission) {
         this.submitType = submitType;
         this.permission = permission;
+    }
+
+    public static PageSetting defaultPageSetting() {
+        return defaultPageSettingBuilder().build();
+    }
+
+    public static PageSettingBuilder defaultPageSettingBuilder() {
+        return PageSetting.builder()
+                .submitType(NEW)
+                .permission(AS_TENANT_MEMBER)
+                .modifyPermission(CAN_MANAGE_APP)
+                .submitterUpdatable(false)
+                .submitterUpdateRange(IN_1_DAY)
+                .approvalSetting(ApprovalSetting.builder()
+                        .approvalEnabled(false)
+                        .permission(CAN_MANAGE_APP)
+                        .passText("通过")
+                        .notPassText("不通过")
+                        .build())
+                .notificationSetting(NotificationSetting.builder()
+                        .notificationEnabled(false)
+                        .onCreateNotificationRoles(List.of())
+                        .onUpdateNotificationRoles(List.of())
+                        .build())
+                .submissionWebhookTypes(List.of())
+                .pageName("未命名页面")
+                .actionName(null)
+                .showAsterisk(true)
+                .showControlIndex(false)
+                .hideProfileButton(false)
+                .hideTopBottomBlank(false)
+                .hideTopBar(false)
+                .hideHeader(false)
+                .hideTitle(false)
+                .hideMenu(false)
+                .pageMaxWidth(650)
+                .contentMaxWidth(650)
+                .pageBackgroundColor("rgba(255, 255, 255, 1)")
+                .controlBorderRadius(4)
+                .shadow(Shadow.builder().width(6).color("rgba(0, 0, 0, .2)").build())
+                .border(noBorder())
+                .viewPortBackgroundColor(null)
+                .viewPortBackgroundImage(null)
+                .afterSubmitBehaviour(AfterSubmitBehaviour.builder()
+                        .type(DEFAULT)
+                        .internalPageId(null)
+                        .externalUrl(null)
+                        .build());
     }
 
 }

@@ -58,6 +58,10 @@ public class Order extends AggregateRoot {
     private Delivery delivery;
     private String refundReason;
 
+    public static String newOrderId() {
+        return "ODR" + newSnowflakeId();
+    }
+
     public Order(OrderDetail detail,
                  PaymentType paymentType,
                  Tenant tenant,
@@ -77,10 +81,6 @@ public class Order extends AggregateRoot {
         this.status = CREATED;
         raiseEvent(new OrderCreatedEvent(this.getId(), user));
         addOpsLog("新建", user);
-    }
-
-    public static String newOrderId() {
-        return "ODR" + newSnowflakeId();
     }
 
     void setWxPayQrUrl(String url) {

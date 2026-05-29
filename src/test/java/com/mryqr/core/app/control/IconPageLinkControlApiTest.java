@@ -28,9 +28,9 @@ public class IconPageLinkControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PIconPageLinkControl control = defaultIconPageLinkControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -41,8 +41,8 @@ public class IconPageLinkControlApiTest extends BaseApiTest {
 
         PageLink pageLink = PageLink.builder().id(newShortUuid()).type(PAGE).build();
         PIconPageLinkControl control = defaultIconPageLinkControlBuilder().links(newArrayList(pageLink)).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        App app = appRepository.byId(response.appId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -53,11 +53,11 @@ public class IconPageLinkControlApiTest extends BaseApiTest {
 
         PageLink pageLink = PageLink.builder().id(newShortUuid()).type(PAGE).pageId(Page.newPageId()).build();
         PIconPageLinkControl control = defaultIconPageLinkControlBuilder().links(newArrayList(pageLink)).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_LINK_PAGE_NOT_EXIST);
     }
 
@@ -70,11 +70,11 @@ public class IconPageLinkControlApiTest extends BaseApiTest {
         PageLink link2 = PageLink.builder().id(linkId).name(rPageLinkName()).type(EXTERNAL_URL).url(rUrl()).build();
         PIconPageLinkControl control = defaultIconPageLinkControlBuilder().links(newArrayList(link1, link2)).build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 PAGE_LINK_ID_DUPLICATED);
     }
 }

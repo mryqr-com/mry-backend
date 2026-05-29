@@ -31,19 +31,27 @@ public class PageLink implements Identified {
     @NotBlank
     @ShortUuid
     private final String id;//id，用于前端显示时作为key
-    @Size(max = 100)
-    private final String description;//简介
-    private final PageLinkType type;//链接类型
-    @Size(max = MAX_URL_LENGTH)
-    private final String url;//当为外部链接时的url
-    @PageId
-    private final String pageId;//当为内部链接时的页面id
-    @Valid
-    private final UploadedFile image;//链接图标或图片
+
     @Size(max = MAX_GENERIC_NAME_LENGTH)
     private String name;//名称
+
     @Size(max = MAX_GENERIC_NAME_LENGTH)
     private String buttonText;
+
+    @Size(max = 100)
+    private final String description;//简介
+
+    private final PageLinkType type;//链接类型
+
+    @Size(max = MAX_URL_LENGTH)
+    private final String url;//当为外部链接时的url
+
+    @PageId
+    private final String pageId;//当为内部链接时的页面id
+
+    @Valid
+    private final UploadedFile image;//链接图标或图片
+
     @EqualsAndHashCode.Exclude
     private boolean complete;//是否完整，计算值
 

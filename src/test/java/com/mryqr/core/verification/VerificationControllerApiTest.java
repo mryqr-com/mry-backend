@@ -83,13 +83,13 @@ class VerificationControllerApiTest extends BaseApiTest {
         CreateLoginVerificationCodeCommand command = CreateLoginVerificationCodeCommand.builder().mobileOrEmail(mobile).build();
         assertTrue(verificationCodeRepository.exists(VerificationCodeApi.createVerificationCodeForLogin(command)));
 
-        Tenant tenant = tenantRepository.byId(response.tenantId());
+        Tenant tenant = tenantRepository.byId(response.getTenantId());
         IntStream.range(0, tenant.currentPlan().getMaxSmsCountPerMonth() + 1)
                 .forEach(value -> tenant.getResourceUsage().increaseSmsSentCountForCurrentMonth());
         tenantRepository.save(tenant);
 
         String newMemberMobile = rMobile();
-        MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), newMemberMobile, rPassword());
+        MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), newMemberMobile, rPassword());
         assertFalse(verificationCodeRepository.exists(VerificationCodeApi.createVerificationCodeForLogin(
                 CreateLoginVerificationCodeCommand.builder().mobileOrEmail(newMemberMobile).build())));
     }
@@ -102,7 +102,7 @@ class VerificationControllerApiTest extends BaseApiTest {
         CreateLoginVerificationCodeCommand command = CreateLoginVerificationCodeCommand.builder().mobileOrEmail(mobile).build();
         assertTrue(verificationCodeRepository.exists(VerificationCodeApi.createVerificationCodeForLogin(command)));
 
-        Tenant tenant = tenantRepository.byId(response.tenantId());
+        Tenant tenant = tenantRepository.byId(response.getTenantId());
         IntStream.range(0, tenant.currentPlan().getMaxSmsCountPerMonth() + 1)
                 .forEach(value -> tenant.getResourceUsage().increaseSmsSentCountForCurrentMonth());
         tenantRepository.save(tenant);
@@ -112,11 +112,11 @@ class VerificationControllerApiTest extends BaseApiTest {
         tenant.getPackages().increaseExtraRemainSmsCount(1000);
         tenantRepository.save(tenant);
         String newMemberMobile = rMobile();
-        MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), newMemberMobile, rPassword());
+        MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), newMemberMobile, rPassword());
         assertTrue(verificationCodeRepository.exists(VerificationCodeApi.createVerificationCodeForLogin(
                 CreateLoginVerificationCodeCommand.builder().mobileOrEmail(newMemberMobile).build())));
 
-        Tenant updatedTenant = tenantRepository.byId(response.tenantId());
+        Tenant updatedTenant = tenantRepository.byId(response.getTenantId());
         assertEquals(smsCount + 1, updatedTenant.getResourceUsage().getSmsSentCountForCurrentMonth());
         assertEquals(999, updatedTenant.getPackages().getExtraRemainSmsCount());
     }
@@ -168,7 +168,7 @@ class VerificationControllerApiTest extends BaseApiTest {
 
         String mobile = rMobile();
         CreateChangeMobileVerificationCodeCommand command = CreateChangeMobileVerificationCodeCommand.builder().mobile(mobile).build();
-        String codeId = createVerificationCodeForChangeMobile(response.jwt(), command);
+        String codeId = createVerificationCodeForChangeMobile(response.getJwt(), command);
         VerificationCode verificationCode = verificationCodeRepository.byId(codeId);
 
         assertNotNull(verificationCode);
@@ -181,7 +181,7 @@ class VerificationControllerApiTest extends BaseApiTest {
         setupApi.registerWithLogin(mobile, rPassword());
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
         CreateChangeMobileVerificationCodeCommand command = CreateChangeMobileVerificationCodeCommand.builder().mobile(mobile).build();
-        assertFalse(verificationCodeRepository.exists(VerificationCodeApi.createVerificationCodeForChangeMobile(response.jwt(), command)));
+        assertFalse(verificationCodeRepository.exists(VerificationCodeApi.createVerificationCodeForChangeMobile(response.getJwt(), command)));
     }
 
     @Test
@@ -190,7 +190,7 @@ class VerificationControllerApiTest extends BaseApiTest {
 
         String mobile = rMobile();
         IdentifyMobileVerificationCodeCommand command = IdentifyMobileVerificationCodeCommand.builder().mobile(mobile).build();
-        String codeId = createVerificationCodeForIdentifyMobile(response.jwt(), command);
+        String codeId = createVerificationCodeForIdentifyMobile(response.getJwt(), command);
         VerificationCode verificationCode = verificationCodeRepository.byId(codeId);
 
         assertNotNull(verificationCode);

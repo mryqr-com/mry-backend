@@ -3,6 +3,7 @@ package com.mryqr.core.login;
 import com.mryqr.BaseApiTest;
 import com.mryqr.core.login.command.MobileOrEmailLoginCommand;
 import com.mryqr.core.login.command.VerificationCodeLoginCommand;
+import com.mryqr.core.login.domain.WxJwtService;
 import com.mryqr.core.member.MemberApi;
 import com.mryqr.core.member.domain.Member;
 import com.mryqr.core.register.command.RegisterResponse;
@@ -13,14 +14,17 @@ import com.mryqr.utils.CreateMemberResponse;
 import com.mryqr.utils.LoginResponse;
 import com.mryqr.utils.PreparedAppResponse;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static com.mryqr.common.exception.ErrorCode.*;
 import static com.mryqr.utils.RandomTestFixture.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class LoginControllerApiTest extends BaseApiTest {
+
+    @Autowired
+    private WxJwtService wxJwtService;
 
     @Test
     public void should_login_with_mobile() {
@@ -52,6 +56,117 @@ class LoginControllerApiTest extends BaseApiTest {
         String jwt = LoginApi.loginWithVerificationCode(VerificationCodeLoginCommand.builder().mobileOrEmail(mobile).verification(code.getCode()).build());
         MemberApi.myMemberInfo(jwt);
 
+    }
+
+    @Test
+    public void should_login_and_bind_mobile_wx() {
+        String email = rEmail();
+        String password = rPassword();
+
+        RegisterResponse response = setupApi.register(email, password);
+
+        String mobileWxOpenId = rMobileWxOpenId();
+        String wxUnionId = rWxUnionId();
+
+        MobileOrEmailLoginCommand loginCommand = MobileOrEmailLoginCommand.builder()
+                .mobileOrEmail(email)
+                .password(password)
+                .wxIdInfo(wxJwtService.generateMobileWxIdInfoJwt(wxUnionId, mobileWxOpenId))
+                .build();
+
+        LoginApi.loginWithMobileOrEmail(loginCommand);
+
+        Member member = memberRepository.byId(response.getMemberId());
+        assertEquals(mobileWxOpenId, member.getMobileWxOpenId());
+        assertEquals(wxUnionId, member.getWxUnionId());
+    }
+
+    @Test
+    public void should_login_and_bind_pc_wx() {
+        String mobile = rMobile();
+        String password = rPassword();
+
+        RegisterResponse response = setupApi.register(mobile, password);
+
+        String pcWxOpenId = rPcWxOpenId();
+        String wxUnionId = rWxUnionId();
+        MobileOrEmailLoginCommand loginCommand = MobileOrEmailLoginCommand.builder()
+                .mobileOrEmail(mobile)
+                .password(password)
+                .wxIdInfo(wxJwtService.generatePcWxIdInfoJwt(wxUnionId, pcWxOpenId))
+                .build();
+
+        LoginApi.loginWithMobileOrEmail(loginCommand);
+
+        Member member = memberRepository.byId(response.getMemberId());
+        assertEquals(pcWxOpenId, member.getPcWxOpenId());
+        assertEquals(wxUnionId, member.getWxUnionId());
+    }
+
+    @Test
+    public void should_login_with_verification_code_and_bind_mobile_wx() {
+        String mobile = rMobile();
+        RegisterResponse response = setupApi.register(mobile, rPassword());
+
+        String mobileWxOpenId = rMobileWxOpenId();
+        String wxUnionId = rWxUnionId();
+
+        String codeId = VerificationCodeApi.createVerificationCodeForLogin(CreateLoginVerificationCodeCommand.builder().mobileOrEmail(mobile).build());
+        VerificationCode code = verificationCodeRepository.byId(codeId);
+        LoginApi.loginWithVerificationCode(VerificationCodeLoginCommand.builder()
+                .mobileOrEmail(mobile)
+                .verification(code.getCode())
+                .wxIdInfo(wxJwtService.generateMobileWxIdInfoJwt(wxUnionId, mobileWxOpenId))
+                .build());
+
+        Member member = memberRepository.byId(response.getMemberId());
+        assertEquals(mobileWxOpenId, member.getMobileWxOpenId());
+        assertEquals(wxUnionId, member.getWxUnionId());
+    }
+
+    @Test
+    public void should_login_with_verification_code_and_bind_pc_wx() {
+        String mobile = rMobile();
+        RegisterResponse response = setupApi.register(mobile, rPassword());
+
+        String pcWxOpenId = rPcWxOpenId();
+        String wxUnionId = rWxUnionId();
+
+        String codeId = VerificationCodeApi.createVerificationCodeForLogin(CreateLoginVerificationCodeCommand.builder().mobileOrEmail(mobile).build());
+        VerificationCode code = verificationCodeRepository.byId(codeId);
+        LoginApi.loginWithVerificationCode(VerificationCodeLoginCommand.builder()
+                .mobileOrEmail(mobile)
+                .verification(code.getCode())
+                .wxIdInfo(wxJwtService.generatePcWxIdInfoJwt(wxUnionId, pcWxOpenId))
+                .build());
+
+        Member member = memberRepository.byId(response.getMemberId());
+        assertEquals(pcWxOpenId, member.getPcWxOpenId());
+        assertEquals(wxUnionId, member.getWxUnionId());
+    }
+
+    @Test
+    public void should_override_previous_wx_bind_info() {
+        String email = rEmail();
+        String password = rPassword();
+
+        LoginResponse response = setupApi.registerWithLogin(email, password);
+        Member member = memberRepository.byId(response.getMemberId());
+        member.bindMobileWx(rWxUnionId(), rMobileWxOpenId(), member.toUser());
+        memberRepository.save(member);
+
+        String mobileWxOpenId = rMobileWxOpenId();
+        String wxUnionId = rWxUnionId();
+        MobileOrEmailLoginCommand loginCommand = MobileOrEmailLoginCommand.builder()
+                .mobileOrEmail(email)
+                .password(password)
+                .wxIdInfo(wxJwtService.generateMobileWxIdInfoJwt(wxUnionId, mobileWxOpenId))
+                .build();
+
+        LoginApi.loginWithMobileOrEmail(loginCommand);
+        Member updatedMember = memberRepository.byId(response.getMemberId());
+        assertEquals(mobileWxOpenId, updatedMember.getMobileWxOpenId());
+        assertEquals(wxUnionId, updatedMember.getWxUnionId());
     }
 
     @Test
@@ -87,6 +202,24 @@ class LoginControllerApiTest extends BaseApiTest {
 
         VerificationCodeLoginCommand command = VerificationCodeLoginCommand.builder().mobileOrEmail(mobile).verification(rVerificationCode()).build();
         assertError(() -> LoginApi.loginWithVerificationCodeRaw(command), VERIFICATION_CODE_CHECK_FAILED);
+    }
+
+    @Test
+    public void should_login_but_not_bind_wx_with_invalid_format_openid() {
+        String mobile = rMobile();
+        String password = rPassword();
+
+        RegisterResponse response = setupApi.register(mobile, password);
+
+        MobileOrEmailLoginCommand loginCommand = MobileOrEmailLoginCommand.builder()
+                .mobileOrEmail(mobile)
+                .password(password)
+                .wxIdInfo("some_invalid_jwt_openid")
+                .build();
+
+        LoginApi.loginWithMobileOrEmail(loginCommand);
+        Member member = memberRepository.byId(response.getMemberId());
+        assertNull(member.getMobileWxOpenId());
     }
 
     @Test
@@ -127,12 +260,12 @@ class LoginControllerApiTest extends BaseApiTest {
         String password = rPassword();
         MobileOrEmailLoginCommand loginCommand = MobileOrEmailLoginCommand.builder().mobileOrEmail(email).password(password).build();
         LoginResponse response = setupApi.registerWithLogin(email, password);
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertNotNull(LoginApi.loginWithMobileOrEmail(loginCommand));
 
         ReflectionTestUtils.setField(member.getFailedLoginCount(), "count", 51);
         memberRepository.save(member);
-        assertError(() -> MemberApi.myProfileRaw(response.jwt()), MEMBER_ALREADY_LOCKED);
+        assertError(() -> MemberApi.myProfileRaw(response.getJwt()), MEMBER_ALREADY_LOCKED);
     }
 
     @Test
@@ -141,8 +274,8 @@ class LoginControllerApiTest extends BaseApiTest {
 
         String password = rPassword();
         String mobile = rMobile();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt(), rMemberName(), mobile, password);
-        MemberApi.deactivateMember(response.jwt(), memberResponse.getMemberId());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt(), rMemberName(), mobile, password);
+        MemberApi.deactivateMember(response.getJwt(), memberResponse.getMemberId());
 
         MobileOrEmailLoginCommand loginCommand = MobileOrEmailLoginCommand.builder().mobileOrEmail(mobile).password(password).build();
         assertError(() -> LoginApi.loginWithMobileOrEmailRaw(loginCommand), MEMBER_ALREADY_DEACTIVATED);
@@ -151,16 +284,16 @@ class LoginControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_authentication_if_deactivated() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        MemberApi.deactivateMember(response.jwt(), memberResponse.getMemberId());
+        MemberApi.deactivateMember(response.getJwt(), memberResponse.getMemberId());
         assertError(() -> MemberApi.myProfileRaw(memberResponse.getJwt()), MEMBER_ALREADY_DEACTIVATED);
     }
 
     @Test
     public void should_fail_authentication_if_tenant_deactivated() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
         Member member = memberRepository.byId(memberResponse.getMemberId());
         ReflectionTestUtils.setField(member, "tenantActive", false);
         memberRepository.save(member);

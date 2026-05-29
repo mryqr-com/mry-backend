@@ -11,10 +11,6 @@ public class PlateIdValidator implements ConstraintValidator<PlateId, String> {
 
     private static final Pattern PATTERN = Pattern.compile("^MRY[0-9]{17,19}$");
 
-    public static boolean isPlateId(String plateId) {
-        return PATTERN.matcher(plateId).matches();
-    }
-
     @Override
     public void initialize(PlateId constraintAnnotation) {
     }
@@ -26,6 +22,10 @@ public class PlateIdValidator implements ConstraintValidator<PlateId, String> {
         }
 
         return isPlateId(plateId);
+    }
+
+    public static boolean isPlateId(String plateId) {
+        return PATTERN.matcher(plateId).matches();
     }
 
 }

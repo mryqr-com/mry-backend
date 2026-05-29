@@ -50,10 +50,10 @@ public class SubmissionCommandService {
     @Transactional
     public String newSubmission(NewSubmissionCommand command, User user) {
         AppedQr appedQr = qrRepository.appedQrById(command.getQrId());
-        App app = appedQr.app();
+        App app = appedQr.getApp();
         mryRateLimiter.applyFor(app.getTenantId(), "Submission:New", 50);
 
-        QR qr = appedQr.qr();
+        QR qr = appedQr.getQr();
         app.checkActive();
         qr.checkActive(app);
 
@@ -110,8 +110,8 @@ public class SubmissionCommandService {
 
         Submission submission = submissionRepository.byIdAndCheckTenantShip(submissionId, user);
         AppedQr appedQr = qrRepository.appedQrById(submission.getQrId());
-        App app = appedQr.app();
-        QR qr = appedQr.qr();
+        App app = appedQr.getApp();
+        QR qr = appedQr.getQr();
         app.checkActive();
         qr.checkActive(app);
 

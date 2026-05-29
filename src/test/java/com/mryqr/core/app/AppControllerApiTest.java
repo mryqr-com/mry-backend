@@ -83,7 +83,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void tenant_admin_can_create_app() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
 
         String appName = rAppName();
         CreateAppResponse appResponse = AppApi.createApp(jwt, appName);
@@ -118,10 +118,10 @@ class AppControllerApiTest extends BaseApiTest {
     public void create_app_should_raise_event() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
 
-        AppCreatedEvent event = latestEventFor(response.appId(), APP_CREATED, AppCreatedEvent.class);
+        AppCreatedEvent event = latestEventFor(response.getAppId(), APP_CREATED, AppCreatedEvent.class);
 
-        assertEquals(response.appId(), event.getAppId());
-        assertEquals(1, tenantRepository.byId(response.tenantId()).getResourceUsage().getAppCount());
+        assertEquals(response.getAppId(), event.getAppId());
+        assertEquals(1, tenantRepository.byId(response.getTenantId()).getResourceUsage().getAppCount());
     }
 
     @Test
@@ -129,15 +129,15 @@ class AppControllerApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         String appName = rAppName();
-        CreateAppResponse createAppResponse = AppApi.copyApp(response.jwt(),
-                CopyAppCommand.builder().name(appName).sourceAppId(response.appId()).build());
+        CreateAppResponse createAppResponse = AppApi.copyApp(response.getJwt(),
+                CopyAppCommand.builder().name(appName).sourceAppId(response.getAppId()).build());
 
         App copiedApp = appRepository.byId(createAppResponse.getAppId());
         Group group = groupRepository.byId(createAppResponse.getDefaultGroupId());
         assertEquals(appName, copiedApp.getName());
         assertEquals(copiedApp.getId(), group.getAppId());
 
-        App sourceApp = appRepository.byId(response.appId());
+        App sourceApp = appRepository.byId(response.getAppId());
         assertEquals(sourceApp.getSetting(), copiedApp.getSetting());
 
         GroupHierarchy groupHierarchy = groupHierarchyRepository.byAppId(copiedApp.getId());
@@ -151,10 +151,10 @@ class AppControllerApiTest extends BaseApiTest {
     public void non_tenant_admin_should_not_copy_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt());
-        AppApi.setAppManagers(response.jwt(), response.appId(), memberResponse.getMemberId());
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt());
+        AppApi.setAppManagers(response.getJwt(), response.getAppId(), memberResponse.getMemberId());
         assertError(() -> AppApi.copyAppRaw(memberResponse.getJwt(),
-                CopyAppCommand.builder().name(rAppName()).sourceAppId(response.appId()).build()), ACCESS_DENIED);
+                CopyAppCommand.builder().name(rAppName()).sourceAppId(response.getAppId()).build()), ACCESS_DENIED);
     }
 
     @Test
@@ -162,9 +162,9 @@ class AppControllerApiTest extends BaseApiTest {
         LoginResponse loginResponse = setupApi.registerWithLogin();
 
         String name = rAppName();
-        CreateAppResponse appResponse = AppApi.createApp(loginResponse.jwt(), name);
+        CreateAppResponse appResponse = AppApi.createApp(loginResponse.getJwt(), name);
         assertError(
-                () -> AppApi.copyAppRaw(loginResponse.jwt(), CopyAppCommand.builder().name(name).sourceAppId(appResponse.getAppId()).build()),
+                () -> AppApi.copyAppRaw(loginResponse.getJwt(), CopyAppCommand.builder().name(name).sourceAppId(appResponse.getAppId()).build()),
                 APP_WITH_NAME_ALREADY_EXISTS);
     }
 
@@ -173,12 +173,12 @@ class AppControllerApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PTimeSegmentControl control = defaultTimeSegmentControlBuilder().build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withSupportedControlTypes(allControlTypesExcept(TIME_SEGMENT)));
 
         assertError(
-                () -> AppApi.copyAppRaw(response.jwt(), CopyAppCommand.builder().name(rAppName()).sourceAppId(response.appId()).build()),
+                () -> AppApi.copyAppRaw(response.getJwt(), CopyAppCommand.builder().name(rAppName()).sourceAppId(response.getAppId()).build()),
                 COPY_APP_NOT_ALLOWED);
     }
 
@@ -186,12 +186,12 @@ class AppControllerApiTest extends BaseApiTest {
     public void should_fail_copy_app_if_max_app_count_reached() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        Tenant tenant = tenantRepository.byId(response.tenantId());
+        Tenant tenant = tenantRepository.byId(response.getTenantId());
         tenant.setAppCount(tenant.currentPlan().getMaxAppCount(), NO_USER);
         tenantRepository.save(tenant);
 
         assertError(
-                () -> AppApi.copyAppRaw(response.jwt(), CopyAppCommand.builder().name(rAppName()).sourceAppId(response.appId()).build()),
+                () -> AppApi.copyAppRaw(response.getJwt(), CopyAppCommand.builder().name(rAppName()).sourceAppId(response.getAppId()).build()),
                 APP_COUNT_LIMIT_REACHED);
     }
 
@@ -201,16 +201,16 @@ class AppControllerApiTest extends BaseApiTest {
         Page homePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(PUBLIC).build()).build();
         Page childPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_TENANT_MEMBER).build()).build();
 
-        AppApi.updateAppPages(response.jwt(), response.appId(), homePage, childPage);
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), homePage, childPage);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         assertEquals(PUBLIC, app.requiredPermission());
     }
 
     @Test
     public void app_operation_permission_should_be_max_of_app_permission_and_operation_permission() {
         LoginResponse response = setupApi.registerWithLogin();
-        CreateAppResponse appResponse = AppApi.createApp(response.jwt(), AS_GROUP_MEMBER, AS_TENANT_MEMBER);
+        CreateAppResponse appResponse = AppApi.createApp(response.getJwt(), AS_GROUP_MEMBER, AS_TENANT_MEMBER);
 
         App app = appRepository.byId(appResponse.getAppId());
         assertEquals(AS_GROUP_MEMBER, app.getOperationPermission());
@@ -223,28 +223,28 @@ class AppControllerApiTest extends BaseApiTest {
         FSingleLineTextControl toBeStayControl = defaultSingleLineTextControl();
         FSingleLineTextControl toBeDeleteControl = defaultSingleLineTextControl();
         FSingleLineTextControl toBeAddControl = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), toBeStayControl, toBeDeleteControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), toBeStayControl, toBeDeleteControl);
 
-        App app = appRepository.byId(response.appId());
-        assertTrue(app.hasControlIndexKey(response.homePageId(), toBeStayControl.getId()));
-        assertTrue(app.hasControlIndexKey(response.homePageId(), toBeDeleteControl.getId()));
-        IndexedField stayField = app.indexedFieldForControlOptional(response.homePageId(), toBeStayControl.getId()).get();
+        App app = appRepository.byId(response.getAppId());
+        assertTrue(app.hasControlIndexKey(response.getHomePageId(), toBeStayControl.getId()));
+        assertTrue(app.hasControlIndexKey(response.getHomePageId(), toBeDeleteControl.getId()));
+        IndexedField stayField = app.indexedFieldForControlOptional(response.getHomePageId(), toBeStayControl.getId()).get();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), toBeStayControl, toBeAddControl);
-        App updatedApp = appRepository.byId(response.appId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), toBeStayControl, toBeAddControl);
+        App updatedApp = appRepository.byId(response.getAppId());
 
-        assertTrue(updatedApp.hasControlIndexKey(response.homePageId(), toBeStayControl.getId()));
-        assertFalse(updatedApp.hasControlIndexKey(response.homePageId(), toBeDeleteControl.getId()));
-        assertTrue(updatedApp.hasControlIndexKey(response.homePageId(), toBeAddControl.getId()));
+        assertTrue(updatedApp.hasControlIndexKey(response.getHomePageId(), toBeStayControl.getId()));
+        assertFalse(updatedApp.hasControlIndexKey(response.getHomePageId(), toBeDeleteControl.getId()));
+        assertTrue(updatedApp.hasControlIndexKey(response.getHomePageId(), toBeAddControl.getId()));
 
-        IndexedField updatedStayField = updatedApp.indexedFieldForControlOptional(response.homePageId(), toBeStayControl.getId()).get();
+        IndexedField updatedStayField = updatedApp.indexedFieldForControlOptional(response.getHomePageId(), toBeStayControl.getId()).get();
         assertEquals(stayField, updatedStayField);
     }
 
     @Test
     public void create_app_should_populate_attribute_index_value_registry() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
 
         String tobeStayAttributeId = newAttributeId();
         Attribute tobeStayAttribute = Attribute.builder()
@@ -267,12 +267,12 @@ class AppControllerApiTest extends BaseApiTest {
                 .id(tobeAddedAttributeId)
                 .name(rAttributeName())
                 .type(AttributeType.PAGE_SUBMIT_COUNT)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .range(AttributeStatisticRange.NO_LIMIT)
                 .build();
 
         //insert
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), tobeStayAttribute, tobeDeleteAttribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), tobeStayAttribute, tobeDeleteAttribute);
         App appAfterInsert = appRepository.byId(appId);
         IndexedFieldRegistry updatedRegistry = appAfterInsert.getAttributeIndexedValueRegistry();
         assertTrue(updatedRegistry.hasKey(tobeStayAttributeId));
@@ -282,7 +282,7 @@ class AppControllerApiTest extends BaseApiTest {
         IndexedField tobeDeleteFieldAfterInsert = updatedRegistry.fieldByKeyOptional(tobeDeleteAttributeId).get();
 
         //add
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), tobeStayAttribute, tobeDeleteAttribute, tobeAddedAttribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), tobeStayAttribute, tobeDeleteAttribute, tobeAddedAttribute);
         App appAfterAdd = appRepository.byId(appId);
         IndexedFieldRegistry registryAfterAdd = appAfterAdd.getAttributeIndexedValueRegistry();
         assertTrue(registryAfterAdd.hasKey(tobeStayAttributeId));
@@ -296,7 +296,7 @@ class AppControllerApiTest extends BaseApiTest {
         assertEquals(tobeDeleteFieldAfterInsert, tobeDeleteFieldAfterAdd);
 
         //delete
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), tobeStayAttribute, tobeAddedAttribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), tobeStayAttribute, tobeAddedAttribute);
         App appAfterDelete = appRepository.byId(appId);
         IndexedFieldRegistry registryAfterDelete = appAfterDelete.getAttributeIndexedValueRegistry();
         assertTrue(registryAfterDelete.hasKey(tobeStayAttributeId));
@@ -318,7 +318,7 @@ class AppControllerApiTest extends BaseApiTest {
                 .id(newAttributeId())
                 .name(rAttributeName())
                 .type(AttributeType.PAGE_SUBMIT_COUNT)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .range(THIS_WEEK)
                 .build();
 
@@ -326,7 +326,7 @@ class AppControllerApiTest extends BaseApiTest {
                 .id(newAttributeId())
                 .name(rAttributeName())
                 .type(AttributeType.PAGE_SUBMIT_COUNT)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .range(THIS_MONTH)
                 .build();
 
@@ -334,7 +334,7 @@ class AppControllerApiTest extends BaseApiTest {
                 .id(newAttributeId())
                 .name(rAttributeName())
                 .type(AttributeType.PAGE_SUBMIT_COUNT)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .range(THIS_SEASON)
                 .build();
 
@@ -342,14 +342,14 @@ class AppControllerApiTest extends BaseApiTest {
                 .id(newAttributeId())
                 .name(rAttributeName())
                 .type(AttributeType.PAGE_SUBMIT_COUNT)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .range(THIS_YEAR)
                 .build();
 
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), weeklyResetAttribute, monthlyResetAttribute, seasonlyResetAttribute,
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), weeklyResetAttribute, monthlyResetAttribute, seasonlyResetAttribute,
                 yearlyResetAttribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         assertTrue(app.isHasWeeklyResetAttributes());
         assertTrue(app.isHasMonthlyResetAttributes());
         assertTrue(app.isHasSeasonlyResetAttributes());
@@ -360,7 +360,7 @@ class AppControllerApiTest extends BaseApiTest {
     public void non_tenant_admin_should_fail_to_create_app() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
 
-        CreateMemberResponse memberResponse = createMemberAndLogin(loginResponse.jwt());
+        CreateMemberResponse memberResponse = createMemberAndLogin(loginResponse.getJwt());
         CreateAppCommand command = CreateAppCommand.builder().name(rAppName()).build();
 
         assertError(() -> AppApi.createAppRaw(memberResponse.getJwt(), command), ACCESS_DENIED);
@@ -368,7 +368,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_create_app_if_name_already_exists() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
 
         String appName = rAppName();
         AppApi.createApp(jwt, appName);
@@ -379,17 +379,17 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void should_fail_create_app_if_exceed_packages_limit() {
         LoginResponse admin = setupApi.registerWithLogin(rMobile(), rPassword());
-        Tenant tenant = tenantRepository.byId(admin.tenantId());
+        Tenant tenant = tenantRepository.byId(admin.getTenantId());
         tenant.setAppCount(tenant.currentPlan().getMaxAppCount(), NO_USER);
         tenantRepository.save(tenant);
 
         CreateAppCommand command = CreateAppCommand.builder().name(rAppName()).build();
-        assertError(() -> AppApi.createAppRaw(admin.jwt(), command), APP_COUNT_LIMIT_REACHED);
+        assertError(() -> AppApi.createAppRaw(admin.getJwt(), command), APP_COUNT_LIMIT_REACHED);
     }
 
     @Test
     public void tenant_admin_should_rename_app() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
 
         String newAppName = rAppName();
@@ -402,10 +402,10 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_be_able_to_rename_app() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        String appId = AppApi.createApp(loginResponse.jwt(), rAppName()).getAppId();
-        CreateMemberResponse newMember = createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        String appId = AppApi.createApp(loginResponse.getJwt(), rAppName()).getAppId();
+        CreateMemberResponse newMember = createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
         SetAppManagersCommand command = SetAppManagersCommand.builder().managers(newArrayList(newMember.getMemberId())).build();
-        AppApi.setAppManagers(loginResponse.jwt(), appId, command);
+        AppApi.setAppManagers(loginResponse.getJwt(), appId, command);
 
         String newAppName = rAppName();
         AppApi.renameApp(newMember.getJwt(), appId, RenameAppCommand.builder().name(newAppName).build());
@@ -416,7 +416,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_rename_app_if_name_already_exists() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appName = rAppName();
         AppApi.createApp(jwt, appName);
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
@@ -428,8 +428,8 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void non_app_manager_should_not_rename_app() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        String appId = AppApi.createApp(loginResponse.jwt(), rAppName()).getAppId();
-        CreateMemberResponse newMember = createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        String appId = AppApi.createApp(loginResponse.getJwt(), rAppName()).getAppId();
+        CreateMemberResponse newMember = createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
 
         RenameAppCommand command = RenameAppCommand.builder().name(rAppName()).build();
         assertError(() -> AppApi.renameAppRaw(newMember.getJwt(), appId, command), ACCESS_DENIED);
@@ -437,7 +437,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_deactivate_app() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
 
         AppApi.deactivateApp(jwt, appId);
@@ -446,7 +446,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_activate_app() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
         AppApi.deactivateApp(jwt, appId);
         assertFalse(appRepository.byId(appId).isActive());
@@ -458,12 +458,12 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void should_lock_and_unlock_app() {
         PreparedAppResponse response = setupApi.registerWithApp(rEmail(), rPassword());
-        String appId = response.appId();
-        AppApi.lockApp(response.jwt(), appId);
+        String appId = response.getAppId();
+        AppApi.lockApp(response.getJwt(), appId);
         App app = appRepository.byId(appId);
         assertTrue(app.isLocked());
 
-        AppApi.unlockApp(response.jwt(), appId);
+        AppApi.unlockApp(response.getJwt(), appId);
         App unlockedApp = appRepository.byId(appId);
         assertFalse(unlockedApp.isLocked());
     }
@@ -471,20 +471,20 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void should_set_app_managers() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        String jwt = loginResponse.jwt();
+        String jwt = loginResponse.getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
 
-        SetAppManagersCommand command = SetAppManagersCommand.builder().managers(newArrayList(loginResponse.memberId())).build();
+        SetAppManagersCommand command = SetAppManagersCommand.builder().managers(newArrayList(loginResponse.getMemberId())).build();
         AppApi.setAppManagers(jwt, appId, command);
 
         App app = appRepository.byId(appId);
-        assertTrue(app.getManagers().contains(loginResponse.memberId()));
+        assertTrue(app.getManagers().contains(loginResponse.getMemberId()));
     }
 
     @Test
     public void should_fail_set_app_managers_if_has_non_exists_member() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        String jwt = loginResponse.jwt();
+        String jwt = loginResponse.getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
 
         String newMemberId = newMemberId();
@@ -495,19 +495,19 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void tenant_admin_should_update_app_setting() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppPermission(response.jwt(), response.appId(), AS_GROUP_MEMBER);
-        App app = appRepository.byId(response.appId());
+        AppApi.updateAppPermission(response.getJwt(), response.getAppId(), AS_GROUP_MEMBER);
+        App app = appRepository.byId(response.getAppId());
         assertEquals(AS_GROUP_MEMBER, app.requiredPermission());
     }
 
     @Test
     public void should_update_app_setting_if_no_change() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
 
-        String version = AppApi.updateAppSetting(response.jwt(), response.appId(), app.getVersion(), app.getSetting());
+        String version = AppApi.updateAppSetting(response.getJwt(), response.getAppId(), app.getVersion(), app.getSetting());
 
-        App updatedApp = appRepository.byId(response.appId());
+        App updatedApp = appRepository.byId(response.getAppId());
         assertEquals(version, updatedApp.getVersion());
         assertEquals(version, app.getVersion());
         assertEquals(app.getSetting(), updatedApp.getSetting());
@@ -516,7 +516,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void should_update_app_config() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         AppConfig config = AppConfig.builder()
@@ -534,7 +534,7 @@ class AppControllerApiTest extends BaseApiTest {
 
         ReflectionTestUtils.setField(setting, "config", config);
 
-        AppApi.updateAppSetting(response.jwt(), appId, setting);
+        AppApi.updateAppSetting(response.getJwt(), appId, setting);
         App updatedApp = appRepository.byId(appId);
         assertEquals(config, updatedApp.getSetting().getConfig());
     }
@@ -542,43 +542,43 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_update_app_setting() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt());
-        AppApi.setAppManager(response.jwt(), response.appId(), createMemberResponse.getMemberId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt());
+        AppApi.setAppManager(response.getJwt(), response.getAppId(), createMemberResponse.getMemberId());
 
-        AppApi.updateAppPermission(createMemberResponse.getJwt(), response.appId(), AS_GROUP_MEMBER);
-        App app = appRepository.byId(response.appId());
+        AppApi.updateAppPermission(createMemberResponse.getJwt(), response.getAppId(), AS_GROUP_MEMBER);
+        App app = appRepository.byId(response.getAppId());
         assertEquals(AS_GROUP_MEMBER, app.requiredPermission());
     }
 
     @Test
     public void should_fail_update_app_setting_if_home_page_not_exist() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         String nonExistsHomePageId = Page.newPageId();
 
         ReflectionTestUtils.setField(setting.getConfig(), "homePageId", nonExistsHomePageId);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), NO_APP_HOME_PAGE);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), NO_APP_HOME_PAGE);
     }
 
     @Test
     public void should_fail_update_setting_if_app_is_locked() {
         PreparedAppResponse response = setupApi.registerWithApp(rEmail(), rPassword());
-        AppApi.lockApp(response.jwt(), response.appId());
+        AppApi.lockApp(response.getJwt(), response.getAppId());
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         AppConfig config = setting.getConfig();
         ReflectionTestUtils.setField(config, "instanceAlias", "Alias");
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), APP_ALREADY_LOCKED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), APP_ALREADY_LOCKED);
     }
 
     @Test
     public void should_fail_update_setting_if_version_mismatch() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
@@ -589,7 +589,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_update_if_instance_alias_too_short() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
@@ -600,7 +600,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_update_if_group_alias_too_short() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
@@ -611,7 +611,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_update_if_custom_id_alias_too_short() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
@@ -622,7 +622,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_update_if_instance_alias_not_allowed() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
@@ -633,7 +633,7 @@ class AppControllerApiTest extends BaseApiTest {
 
     @Test
     public void should_fail_update_if_group_alias_not_allowed() {
-        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).jwt();
+        String jwt = setupApi.registerWithLogin(rMobile(), rPassword()).getJwt();
         String appId = AppApi.createApp(jwt, rAppName()).getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
@@ -645,7 +645,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void should_delete_app() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        String jwt = loginResponse.jwt();
+        String jwt = loginResponse.getJwt();
         CreateAppResponse appResponse = AppApi.createApp(jwt, rAppName());
         String appId = appResponse.getAppId();
 
@@ -658,15 +658,15 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void delete_app_should_raise_event() {
         PreparedQrResponse response = setupApi.registerWithQr(rMobile(), rPassword());
-        String tenantId = response.tenantId();
-        String appId = response.appId();
+        String tenantId = response.getTenantId();
+        String appId = response.getAppId();
 
         FSingleLineTextControl control = defaultSingleLineTextControl();
         SingleLineTextAnswer answer = rAnswer(control);
 
-        AppApi.updateAppControls(response.jwt(), appId, control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
-        PlateBatchApi.createPlateBatch(response.jwt(), appId, 100);
+        AppApi.updateAppControls(response.getJwt(), appId, control);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        PlateBatchApi.createPlateBatch(response.getJwt(), appId, 100);
 
         assertEquals(1, groupRepository.count(tenantId));
         assertEquals(1, qrRepository.count(tenantId));
@@ -682,7 +682,7 @@ class AppControllerApiTest extends BaseApiTest {
         assertEquals(1, tenant.getResourceUsage().getAppCount());
         assertEquals(1, tenant.getResourceUsage().getQrCountForApp(appId));
 
-        AppApi.deleteApp(response.jwt(), appId);
+        AppApi.deleteApp(response.getJwt(), appId);
         AppDeletedEvent event = latestEventFor(appId, APP_DELETED, AppDeletedEvent.class);
         assertEquals(appId, event.getAppId());
 
@@ -705,9 +705,9 @@ class AppControllerApiTest extends BaseApiTest {
     public void root_should_fetch_all_managed_app_list() {
         LoginResponse response = setupApi.registerWithLogin();
 
-        IntStream.rangeClosed(1, 30).forEach(value -> AppApi.createApp(response.jwt(), rAppName()));
+        IntStream.rangeClosed(1, 30).forEach(value -> AppApi.createApp(response.getJwt(), rAppName()));
 
-        PagedList<QManagedListApp> firstPage = AppApi.listMyManagedApps(response.jwt(),
+        PagedList<QManagedListApp> firstPage = AppApi.listMyManagedApps(response.getJwt(),
                 ListMyManagedAppsQuery.builder().pageIndex(1).pageSize(20).build());
         assertEquals(20, firstPage.getData().size());
         assertEquals(30, firstPage.getTotalNumber());
@@ -726,7 +726,7 @@ class AppControllerApiTest extends BaseApiTest {
         assertEquals(app.isActive(), firstApp.isActive());
         assertEquals(app.isLocked(), firstApp.isLocked());
 
-        PagedList<QManagedListApp> secondPage = AppApi.listMyManagedApps(response.jwt(),
+        PagedList<QManagedListApp> secondPage = AppApi.listMyManagedApps(response.getJwt(),
                 ListMyManagedAppsQuery.builder().pageIndex(2).pageSize(20).build());
         assertEquals(10, secondPage.getData().size());
         assertEquals(30, secondPage.getTotalNumber());
@@ -738,10 +738,10 @@ class AppControllerApiTest extends BaseApiTest {
     public void app_manager_should_only_fetch_own_managed_app_list() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
         String appName = rAppName();
-        String appId = AppApi.createApp(loginResponse.jwt(), appName).getAppId();
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
-        AppApi.setAppManagers(loginResponse.jwt(), appId, createMemberResponse.getMemberId());
-        AppApi.createApp(loginResponse.jwt(), rAppName());
+        String appId = AppApi.createApp(loginResponse.getJwt(), appName).getAppId();
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.setAppManagers(loginResponse.getJwt(), appId, createMemberResponse.getMemberId());
+        AppApi.createApp(loginResponse.getJwt(), rAppName());
 
         PagedList<QManagedListApp> list = AppApi.listMyManagedApps(createMemberResponse.getJwt(),
                 ListMyManagedAppsQuery.builder().pageIndex(1).pageSize(10).build());
@@ -756,7 +756,7 @@ class AppControllerApiTest extends BaseApiTest {
     public void should_search_managed_app_list() {
         String mobile = rMobile();
         String password = rPassword();
-        String jwt = setupApi.registerWithLogin(mobile, password).jwt();
+        String jwt = setupApi.registerWithLogin(mobile, password).getJwt();
         AppApi.createApp(jwt, rAppName());
         String name = rAppName();
         CreateAppResponse app = AppApi.createApp(jwt, name);
@@ -773,7 +773,7 @@ class AppControllerApiTest extends BaseApiTest {
     public void should_search_app_id_for_app_list() {
         String mobile = rMobile();
         String password = rPassword();
-        String jwt = setupApi.registerWithLogin(mobile, password).jwt();
+        String jwt = setupApi.registerWithLogin(mobile, password).getJwt();
         AppApi.createApp(jwt, rAppName());
         String name = rAppName();
         CreateAppResponse app = AppApi.createApp(jwt, name);
@@ -789,7 +789,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void tenant_admin_should_fetch_own_viewable_apps() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
-        String loginResponseJwt = loginResponse.jwt();
+        String loginResponseJwt = loginResponse.getJwt();
 
         CreateAppResponse appResponse1 = AppApi.createApp(loginResponseJwt, AS_TENANT_MEMBER, AS_TENANT_MEMBER);
         CreateAppResponse appResponse2 = AppApi.createApp(loginResponseJwt, AS_TENANT_MEMBER, AS_GROUP_MEMBER);
@@ -813,12 +813,12 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_fetch_own_viewable_apps() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        CreateAppResponse appResponse1 = AppApi.createApp(response.jwt(), AS_TENANT_MEMBER, CAN_MANAGE_APP);
-        CreateAppResponse appResponse2 = AppApi.createApp(response.jwt(), AS_TENANT_MEMBER, CAN_MANAGE_APP);
+        CreateAppResponse appResponse1 = AppApi.createApp(response.getJwt(), AS_TENANT_MEMBER, CAN_MANAGE_APP);
+        CreateAppResponse appResponse2 = AppApi.createApp(response.getJwt(), AS_TENANT_MEMBER, CAN_MANAGE_APP);
 
-        AppApi.setAppManagers(response.jwt(), appResponse1.getAppId(),
+        AppApi.setAppManagers(response.getJwt(), appResponse1.getAppId(),
                 SetAppManagersCommand.builder().managers(newArrayList(memberResponse.getMemberId())).build());
 
         List<QViewableListApp> appSummaries = AppApi.myViewableApps(memberResponse.getJwt());
@@ -830,11 +830,11 @@ class AppControllerApiTest extends BaseApiTest {
     public void group_member_should_fetch_own_viewable_apps() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
 
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        CreateAppResponse appResponse1 = AppApi.createApp(response.jwt(), AS_TENANT_MEMBER, AS_GROUP_MEMBER);
-        GroupApi.addGroupMembers(response.jwt(), appResponse1.getDefaultGroupId(), memberResponse.getMemberId());
-        CreateAppResponse appResponse2 = AppApi.createApp(response.jwt(), AS_TENANT_MEMBER, CAN_MANAGE_GROUP);
+        CreateAppResponse appResponse1 = AppApi.createApp(response.getJwt(), AS_TENANT_MEMBER, AS_GROUP_MEMBER);
+        GroupApi.addGroupMembers(response.getJwt(), appResponse1.getDefaultGroupId(), memberResponse.getMemberId());
+        CreateAppResponse appResponse2 = AppApi.createApp(response.getJwt(), AS_TENANT_MEMBER, CAN_MANAGE_GROUP);
 
         List<QViewableListApp> appSummaries = AppApi.myViewableApps(memberResponse.getJwt());
         assertEquals(1, appSummaries.size());
@@ -844,10 +844,10 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void tenant_common_member_should_fetch_own_viewable_apps() {
         LoginResponse response = setupApi.registerWithLogin(rMobile(), rPassword());
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        CreateAppResponse appResponse1 = AppApi.createApp(response.jwt(), AS_TENANT_MEMBER, AS_TENANT_MEMBER);
-        CreateAppResponse appResponse2 = AppApi.createApp(response.jwt(), AS_TENANT_MEMBER, CAN_MANAGE_APP);
+        CreateAppResponse appResponse1 = AppApi.createApp(response.getJwt(), AS_TENANT_MEMBER, AS_TENANT_MEMBER);
+        CreateAppResponse appResponse2 = AppApi.createApp(response.getJwt(), AS_TENANT_MEMBER, CAN_MANAGE_APP);
 
         List<QViewableListApp> appSummaries = AppApi.myViewableApps(memberResponse.getJwt());
         assertEquals(1, appSummaries.size());
@@ -857,8 +857,8 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void non_app_manager_should_only_view_active_apps() {
         PreparedAppResponse response = setupApi.registerWithApp(rEmail(), rPassword());
-        AppApi.deactivateApp(response.jwt(), response.appId());
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.deactivateApp(response.getJwt(), response.getAppId());
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
         List<QViewableListApp> appSummaries = AppApi.myViewableApps(memberResponse.getJwt());
         assertTrue(appSummaries.isEmpty());
@@ -867,21 +867,21 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void app_manager_should_view_inactive_apps() {
         PreparedAppResponse response = setupApi.registerWithApp(rEmail(), rPassword());
-        AppApi.deactivateApp(response.jwt(), response.appId());
+        AppApi.deactivateApp(response.getJwt(), response.getAppId());
 
-        List<QViewableListApp> appSummaries = AppApi.myViewableApps(response.jwt());
+        List<QViewableListApp> appSummaries = AppApi.myViewableApps(response.getJwt());
         assertEquals(1, appSummaries.size());
     }
 
     @Test
     public void should_view_apps_based_on_operation_permission() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), CAN_MANAGE_APP);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), CAN_MANAGE_APP);
 
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt());
         assertTrue(isEmpty(AppApi.myViewableApps(memberResponse.getJwt())));
 
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         assertTrue(isNotEmpty(AppApi.myViewableApps(memberResponse.getJwt())));
     }
 
@@ -894,21 +894,21 @@ class AppControllerApiTest extends BaseApiTest {
         Page nonPublicFillablePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_GROUP_MEMBER).build()).build();
         Page approvablePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_GROUP_MEMBER)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).build()).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), nonFillablePage, publicFillablePage, nonPublicFillablePage,
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), nonFillablePage, publicFillablePage, nonPublicFillablePage,
                 approvablePage);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), groupId);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), groupId);
 
-        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(response.jwt(), response.appId());
+        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(response.getJwt(), response.getAppId());
 
-        assertEquals(response.appId(), qOperationalApp.getId());
+        assertEquals(response.getAppId(), qOperationalApp.getId());
         assertNotNull(qOperationalApp.getSetting());
         assertNotNull(qOperationalApp.getReportSetting());
         assertTrue(qOperationalApp.isCanManageApp());
-        Set<String> allGroupIds = newHashSet(response.defaultGroupId(), groupId, subGroupId);
+        Set<String> allGroupIds = newHashSet(response.getDefaultGroupId(), groupId, subGroupId);
         Map<String, String> groupFullNames = qOperationalApp.getGroupFullNames();
         assertTrue(groupFullNames.keySet().containsAll(allGroupIds));
-        Group defaultGroup = groupRepository.byId(response.defaultGroupId());
+        Group defaultGroup = groupRepository.byId(response.getDefaultGroupId());
         Group group = groupRepository.byId(groupId);
         Group subGroup = groupRepository.byId(subGroupId);
         assertEquals(defaultGroup.getName(), groupFullNames.get(defaultGroup.getId()));
@@ -941,20 +941,20 @@ class AppControllerApiTest extends BaseApiTest {
         Page nonPublicFillablePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_APP).build()).build();
         Page approvablePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_GROUP_MEMBER)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).build()).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), nonFillablePage, publicFillablePage, nonPublicFillablePage,
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), nonFillablePage, publicFillablePage, nonPublicFillablePage,
                 approvablePage);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        AppApi.setAppManagers(response.jwt(), response.appId(), createMemberResponse.getMemberId());
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.setAppManagers(response.getJwt(), response.getAppId(), createMemberResponse.getMemberId());
 
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), groupId);
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), groupId);
 
-        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.appId());
+        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.getAppId());
 
-        assertEquals(response.appId(), qOperationalApp.getId());
+        assertEquals(response.getAppId(), qOperationalApp.getId());
         assertNotNull(qOperationalApp.getSetting());
         assertTrue(qOperationalApp.isCanManageApp());
-        Set<String> allGroupIds = newHashSet(response.defaultGroupId(), groupId, subGroupId);
+        Set<String> allGroupIds = newHashSet(response.getDefaultGroupId(), groupId, subGroupId);
         assertTrue(qOperationalApp.getGroupFullNames().keySet().containsAll(allGroupIds));
         assertTrue(qOperationalApp.getViewableGroupIds().containsAll(allGroupIds));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonFillablePage.getId()));
@@ -976,7 +976,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void group_manager_should_fetch_group_manager_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), CAN_MANAGE_GROUP);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), CAN_MANAGE_GROUP);
         Page nonFillablePage = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(PUBLIC).build())
                 .build();
         Page publicPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(PUBLIC).build()).build();
@@ -986,29 +986,29 @@ class AppControllerApiTest extends BaseApiTest {
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_GROUP).build()).build()).build();
         Page cannotApprovePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), permissionedPage,
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), permissionedPage,
                 nonFillablePage,
                 publicPage,
                 nonPermissionedPage,
                 canApprovePage,
                 cannotApprovePage);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), groupId);
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupManagers(response.jwt(), groupId, createMemberResponse.getMemberId());
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), groupId);
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupManagers(response.getJwt(), groupId, createMemberResponse.getMemberId());
 
-        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.appId());
+        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.getAppId());
 
-        assertEquals(response.appId(), qOperationalApp.getId());
+        assertEquals(response.getAppId(), qOperationalApp.getId());
         assertNotNull(qOperationalApp.getSetting());
         assertFalse(qOperationalApp.isCanManageApp());
         Set<String> resultGroupIds = Set.of(groupId, subGroupId);
         Set<String> operationalAppGroupIds = qOperationalApp.getGroupFullNames().keySet();
         assertTrue(operationalAppGroupIds.containsAll(resultGroupIds));
-        assertFalse(operationalAppGroupIds.contains(response.defaultGroupId()));
+        assertFalse(operationalAppGroupIds.contains(response.getDefaultGroupId()));
 
         assertTrue(qOperationalApp.getViewableGroupIds().containsAll(resultGroupIds));
-        assertFalse(qOperationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonPermissionedPage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(publicPage.getId()));
@@ -1019,7 +1019,7 @@ class AppControllerApiTest extends BaseApiTest {
         )));
 
         assertTrue(qOperationalApp.getManagableGroupIds().containsAll(resultGroupIds));
-        assertFalse(qOperationalApp.getManagableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getManagableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getManagablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getManagablePageIds().contains(nonPermissionedPage.getId()));
         assertTrue(qOperationalApp.getManagablePageIds().containsAll(newHashSet(
@@ -1030,7 +1030,7 @@ class AppControllerApiTest extends BaseApiTest {
         )));
 
         assertTrue(qOperationalApp.getApprovableGroupIds().containsAll(resultGroupIds));
-        assertFalse(qOperationalApp.getApprovableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getApprovableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(nonPermissionedPage.getId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(publicPage.getId()));
@@ -1042,7 +1042,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void group_manager_should_fetch_group_member_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_GROUP_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_GROUP_MEMBER);
         Page nonFillablePage = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(PUBLIC).build())
                 .build();
         Page publicPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(PUBLIC).build()).build();
@@ -1052,30 +1052,30 @@ class AppControllerApiTest extends BaseApiTest {
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_GROUP).build()).build()).build();
         Page cannotApprovePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), permissionedPage,
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), permissionedPage,
                 nonFillablePage,
                 publicPage,
                 nonPermissionedPage,
                 canApprovePage,
                 cannotApprovePage);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), groupId);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), groupId);
 
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupManagers(response.jwt(), groupId, createMemberResponse.getMemberId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupManagers(response.getJwt(), groupId, createMemberResponse.getMemberId());
 
-        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.appId());
+        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.getAppId());
 
-        assertEquals(response.appId(), qOperationalApp.getId());
+        assertEquals(response.getAppId(), qOperationalApp.getId());
         assertNotNull(qOperationalApp.getSetting());
         assertFalse(qOperationalApp.isCanManageApp());
         Set<String> resultGroupIds = Set.of(groupId, subGroupId);
         Set<String> operationalAppGroupIds = qOperationalApp.getGroupFullNames().keySet();
         assertTrue(operationalAppGroupIds.containsAll(resultGroupIds));
-        assertFalse(operationalAppGroupIds.contains(response.defaultGroupId()));
+        assertFalse(operationalAppGroupIds.contains(response.getDefaultGroupId()));
 
         assertTrue(qOperationalApp.getViewableGroupIds().containsAll(resultGroupIds));
-        assertFalse(qOperationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonPermissionedPage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(publicPage.getId()));
@@ -1086,7 +1086,7 @@ class AppControllerApiTest extends BaseApiTest {
         )));
 
         assertTrue(qOperationalApp.getManagableGroupIds().containsAll(resultGroupIds));
-        assertFalse(qOperationalApp.getManagableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getManagableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getManagablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getManagablePageIds().contains(nonPermissionedPage.getId()));
         assertTrue(qOperationalApp.getManagablePageIds().containsAll(newHashSet(
@@ -1097,7 +1097,7 @@ class AppControllerApiTest extends BaseApiTest {
         )));
 
         assertTrue(qOperationalApp.getApprovableGroupIds().containsAll(resultGroupIds));
-        assertFalse(qOperationalApp.getApprovableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getApprovableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(nonPermissionedPage.getId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(publicPage.getId()));
@@ -1109,7 +1109,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void group_manager_should_fetch_tenant_member_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         Page nonFillablePage = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(PUBLIC).build())
                 .build();
         Page publicPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(PUBLIC).build()).build();
@@ -1119,29 +1119,29 @@ class AppControllerApiTest extends BaseApiTest {
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_GROUP).build()).build()).build();
         Page cannotApprovePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_APP).build()).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), permissionedPage,
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), permissionedPage,
                 nonFillablePage,
                 publicPage,
                 nonPermissionedPage,
                 canApprovePage,
                 cannotApprovePage);
 
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), groupId);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), groupId);
 
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupManagers(response.jwt(), groupId, createMemberResponse.getMemberId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupManagers(response.getJwt(), groupId, createMemberResponse.getMemberId());
 
-        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.appId());
+        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.getAppId());
 
-        assertEquals(response.appId(), qOperationalApp.getId());
+        assertEquals(response.getAppId(), qOperationalApp.getId());
         assertNotNull(qOperationalApp.getSetting());
         assertFalse(qOperationalApp.isCanManageApp());
-        Set<String> allGroupIds = newHashSet(response.defaultGroupId(), groupId, subGroupId);
+        Set<String> allGroupIds = newHashSet(response.getDefaultGroupId(), groupId, subGroupId);
         assertTrue(qOperationalApp.getGroupFullNames().keySet().containsAll(allGroupIds));
 
         assertTrue(qOperationalApp.getViewableGroupIds().containsAll(allGroupIds));
-        assertTrue(qOperationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
+        assertTrue(qOperationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonPermissionedPage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(publicPage.getId()));
@@ -1152,7 +1152,7 @@ class AppControllerApiTest extends BaseApiTest {
         )));
 
         assertTrue(qOperationalApp.getManagableGroupIds().containsAll(Set.of(groupId, subGroupId)));
-        assertFalse(qOperationalApp.getManagableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getManagableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getManagablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getManagablePageIds().contains(nonPermissionedPage.getId()));
         assertTrue(qOperationalApp.getManagablePageIds().containsAll(newHashSet(
@@ -1163,7 +1163,7 @@ class AppControllerApiTest extends BaseApiTest {
         )));
 
         assertTrue(qOperationalApp.getApprovableGroupIds().containsAll(Set.of(groupId, subGroupId)));
-        assertFalse(qOperationalApp.getApprovableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getApprovableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(nonPermissionedPage.getId()));
         assertFalse(qOperationalApp.getApprovablePageIds().contains(publicPage.getId()));
@@ -1175,20 +1175,20 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void fetch_operational_app_should_exclude_archived_groups() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String anotherGroupId = GroupApi.createGroup(response.jwt(), response.appId());
+        String anotherGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
 
-        QOperationalApp operationalApp = AppApi.fetchOperationalApp(response.jwt(), response.appId());
-        assertTrue(operationalApp.getManagableGroupIds().contains(response.defaultGroupId()));
-        assertTrue(operationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
-        assertTrue(operationalApp.getGroupFullNames().keySet().containsAll(List.of(response.defaultGroupId(), anotherGroupId)));
+        QOperationalApp operationalApp = AppApi.fetchOperationalApp(response.getJwt(), response.getAppId());
+        assertTrue(operationalApp.getManagableGroupIds().contains(response.getDefaultGroupId()));
+        assertTrue(operationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
+        assertTrue(operationalApp.getGroupFullNames().keySet().containsAll(List.of(response.getDefaultGroupId(), anotherGroupId)));
         assertTrue(operationalApp.getManagableGroupIds().contains(anotherGroupId));
         assertTrue(operationalApp.getViewableGroupIds().contains(anotherGroupId));
 
-        GroupApi.archiveGroup(response.jwt(), response.defaultGroupId());
-        QOperationalApp updatedOperationalApp = AppApi.fetchOperationalApp(response.jwt(), response.appId());
-        assertFalse(updatedOperationalApp.getManagableGroupIds().contains(response.defaultGroupId()));
-        assertFalse(updatedOperationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
-        assertFalse(updatedOperationalApp.getGroupFullNames().containsKey(response.defaultGroupId()));
+        GroupApi.archiveGroup(response.getJwt(), response.getDefaultGroupId());
+        QOperationalApp updatedOperationalApp = AppApi.fetchOperationalApp(response.getJwt(), response.getAppId());
+        assertFalse(updatedOperationalApp.getManagableGroupIds().contains(response.getDefaultGroupId()));
+        assertFalse(updatedOperationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
+        assertFalse(updatedOperationalApp.getGroupFullNames().containsKey(response.getDefaultGroupId()));
         assertTrue(updatedOperationalApp.getManagableGroupIds().contains(anotherGroupId));
         assertTrue(updatedOperationalApp.getViewableGroupIds().contains(anotherGroupId));
         assertTrue(updatedOperationalApp.getGroupFullNames().containsKey(anotherGroupId));
@@ -1197,20 +1197,20 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void fetch_operational_app_should_exclude_inactive_groups() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String anotherGroupId = GroupApi.createGroup(response.jwt(), response.appId());
+        String anotherGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
 
-        QOperationalApp operationalApp = AppApi.fetchOperationalApp(response.jwt(), response.appId());
-        assertTrue(operationalApp.getManagableGroupIds().contains(response.defaultGroupId()));
-        assertTrue(operationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
-        assertTrue(operationalApp.getGroupFullNames().keySet().containsAll(List.of(response.defaultGroupId(), anotherGroupId)));
+        QOperationalApp operationalApp = AppApi.fetchOperationalApp(response.getJwt(), response.getAppId());
+        assertTrue(operationalApp.getManagableGroupIds().contains(response.getDefaultGroupId()));
+        assertTrue(operationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
+        assertTrue(operationalApp.getGroupFullNames().keySet().containsAll(List.of(response.getDefaultGroupId(), anotherGroupId)));
         assertTrue(operationalApp.getManagableGroupIds().contains(anotherGroupId));
         assertTrue(operationalApp.getViewableGroupIds().contains(anotherGroupId));
 
-        GroupApi.deactivateGroup(response.jwt(), response.defaultGroupId());
-        QOperationalApp updatedOperationalApp = AppApi.fetchOperationalApp(response.jwt(), response.appId());
-        assertFalse(updatedOperationalApp.getManagableGroupIds().contains(response.defaultGroupId()));
-        assertFalse(updatedOperationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
-        assertFalse(updatedOperationalApp.getGroupFullNames().containsKey(response.defaultGroupId()));
+        GroupApi.deactivateGroup(response.getJwt(), response.getDefaultGroupId());
+        QOperationalApp updatedOperationalApp = AppApi.fetchOperationalApp(response.getJwt(), response.getAppId());
+        assertFalse(updatedOperationalApp.getManagableGroupIds().contains(response.getDefaultGroupId()));
+        assertFalse(updatedOperationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
+        assertFalse(updatedOperationalApp.getGroupFullNames().containsKey(response.getDefaultGroupId()));
         assertTrue(updatedOperationalApp.getManagableGroupIds().contains(anotherGroupId));
         assertTrue(updatedOperationalApp.getViewableGroupIds().contains(anotherGroupId));
         assertTrue(updatedOperationalApp.getGroupFullNames().containsKey(anotherGroupId));
@@ -1219,18 +1219,18 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void fetch_operational_app_should_exclude_invisible_groups_for_group_manager_permission() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), CAN_MANAGE_GROUP);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), CAN_MANAGE_GROUP);
 
-        String managedGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), response.defaultGroupId());
-        String deactivatedGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), managedGroupId);
-        String archivedGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), managedGroupId);
+        String managedGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), response.getDefaultGroupId());
+        String deactivatedGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), managedGroupId);
+        String archivedGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), managedGroupId);
 
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), managedGroupId, memberResponse.getMemberId());
-        GroupApi.deactivateGroup(response.jwt(), deactivatedGroupId);
-        GroupApi.archiveGroup(response.jwt(), archivedGroupId);
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), managedGroupId, memberResponse.getMemberId());
+        GroupApi.deactivateGroup(response.getJwt(), deactivatedGroupId);
+        GroupApi.archiveGroup(response.getJwt(), archivedGroupId);
 
-        QOperationalApp operationalApp = AppApi.fetchOperationalApp(memberResponse.getJwt(), response.appId());
+        QOperationalApp operationalApp = AppApi.fetchOperationalApp(memberResponse.getJwt(), response.getAppId());
         assertTrue(operationalApp.getManagableGroupIds().contains(managedGroupId));
         assertFalse(operationalApp.getManagableGroupIds().contains(deactivatedGroupId));
         assertFalse(operationalApp.getManagableGroupIds().contains(archivedGroupId));
@@ -1239,18 +1239,18 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void group_manager_should_fail_fetch_app_manager_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), CAN_MANAGE_APP);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupManagers(response.jwt(), groupId, createMemberResponse.getMemberId());
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), CAN_MANAGE_APP);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupManagers(response.getJwt(), groupId, createMemberResponse.getMemberId());
 
-        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.appId()), ACCESS_DENIED);
+        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.getAppId()), ACCESS_DENIED);
     }
 
     @Test
     public void group_member_should_fetch_group_member_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_GROUP_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_GROUP_MEMBER);
         Page nonFillablePage = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(PUBLIC).build())
                 .build();
         Page publicPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(PUBLIC).build()).build();
@@ -1258,28 +1258,28 @@ class AppControllerApiTest extends BaseApiTest {
         Page nonPermissionedPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_APP).build()).build();
         Page approvablePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_GROUP_MEMBER)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_GROUP).build()).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), permissionedPage,
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), permissionedPage,
                 nonFillablePage,
                 publicPage,
                 nonPermissionedPage,
                 approvablePage);
 
-        String parentGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String groupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), parentGroupId);
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupMembers(response.jwt(), groupId, createMemberResponse.getMemberId());
+        String parentGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String groupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), parentGroupId);
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupMembers(response.getJwt(), groupId, createMemberResponse.getMemberId());
 
-        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.appId());
+        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.getAppId());
 
-        assertEquals(response.appId(), qOperationalApp.getId());
+        assertEquals(response.getAppId(), qOperationalApp.getId());
         assertNotNull(qOperationalApp.getSetting());
         assertFalse(qOperationalApp.isCanManageApp());
         Set<String> operationalAppGroupIds = qOperationalApp.getGroupFullNames().keySet();
         assertTrue(operationalAppGroupIds.containsAll(List.of(parentGroupId, groupId)));
-        assertFalse(operationalAppGroupIds.contains(response.defaultGroupId()));
+        assertFalse(operationalAppGroupIds.contains(response.getDefaultGroupId()));
 
         assertTrue(qOperationalApp.getViewableGroupIds().containsAll(List.of(parentGroupId, groupId)));
-        assertFalse(qOperationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
+        assertFalse(qOperationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonPermissionedPage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(publicPage.getId()));
@@ -1298,7 +1298,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void group_member_should_fetch_tenant_member_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         Page nonFillablePage = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(PUBLIC).build())
                 .build();
         Page publicPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(PUBLIC).build()).build();
@@ -1306,23 +1306,23 @@ class AppControllerApiTest extends BaseApiTest {
         Page nonPermissionedPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_APP).build()).build();
         Page approvablePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_GROUP_MEMBER)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_GROUP).build()).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), permissionedPage,
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), permissionedPage,
                 nonFillablePage,
                 publicPage,
                 nonPermissionedPage,
                 approvablePage);
 
-        String parentGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String groupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), parentGroupId);
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupMembers(response.jwt(), groupId, createMemberResponse.getMemberId());
+        String parentGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String groupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), parentGroupId);
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupMembers(response.getJwt(), groupId, createMemberResponse.getMemberId());
 
-        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.appId());
+        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.getAppId());
 
-        assertEquals(response.appId(), qOperationalApp.getId());
+        assertEquals(response.getAppId(), qOperationalApp.getId());
         assertNotNull(qOperationalApp.getSetting());
         assertFalse(qOperationalApp.isCanManageApp());
-        Set<String> allGroupIds = newHashSet(response.defaultGroupId(), groupId, parentGroupId);
+        Set<String> allGroupIds = newHashSet(response.getDefaultGroupId(), groupId, parentGroupId);
         assertTrue(qOperationalApp.getGroupFullNames().keySet().containsAll(allGroupIds));
 
         assertTrue(qOperationalApp.getViewableGroupIds().containsAll(allGroupIds));
@@ -1345,23 +1345,23 @@ class AppControllerApiTest extends BaseApiTest {
     public void should_fetch_operational_app_without_invisible_groups_for_group_member_permission() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_GROUP_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_GROUP_MEMBER);
 
-        String managedGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String deactivatedGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), managedGroupId);
-        String archivedGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), managedGroupId);
+        String managedGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String deactivatedGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), managedGroupId);
+        String archivedGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), managedGroupId);
 
-        String memberParentGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String asMemberGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), memberParentGroupId);
+        String memberParentGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String asMemberGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), memberParentGroupId);
 
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), managedGroupId, memberResponse.getMemberId());
-        GroupApi.addGroupMembers(response.jwt(), asMemberGroupId, memberResponse.getMemberId());
-        GroupApi.deactivateGroup(response.jwt(), deactivatedGroupId);
-        GroupApi.archiveGroup(response.jwt(), archivedGroupId);
-        GroupApi.archiveGroup(response.jwt(), asMemberGroupId);
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), managedGroupId, memberResponse.getMemberId());
+        GroupApi.addGroupMembers(response.getJwt(), asMemberGroupId, memberResponse.getMemberId());
+        GroupApi.deactivateGroup(response.getJwt(), deactivatedGroupId);
+        GroupApi.archiveGroup(response.getJwt(), archivedGroupId);
+        GroupApi.archiveGroup(response.getJwt(), asMemberGroupId);
 
-        QOperationalApp operationalApp = AppApi.fetchOperationalApp(memberResponse.getJwt(), response.appId());
+        QOperationalApp operationalApp = AppApi.fetchOperationalApp(memberResponse.getJwt(), response.getAppId());
         assertEquals(1, operationalApp.getManagableGroupIds().size());
         assertTrue(operationalApp.getManagableGroupIds().contains(managedGroupId));
 
@@ -1372,31 +1372,31 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void group_member_should_fail_fetch_app_manager_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), CAN_MANAGE_APP);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupMembers(response.jwt(), groupId, createMemberResponse.getMemberId());
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), CAN_MANAGE_APP);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupMembers(response.getJwt(), groupId, createMemberResponse.getMemberId());
 
-        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.appId()), ACCESS_DENIED);
+        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.getAppId()), ACCESS_DENIED);
     }
 
     @Test
     public void group_member_should_fail_fetch_group_manager_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), CAN_MANAGE_GROUP);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), CAN_MANAGE_GROUP);
         Page nonPermissionedPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), nonPermissionedPage);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
-        GroupApi.addGroupMembers(response.jwt(), groupId, createMemberResponse.getMemberId());
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), nonPermissionedPage);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
+        GroupApi.addGroupMembers(response.getJwt(), groupId, createMemberResponse.getMemberId());
 
-        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.appId()), ACCESS_DENIED);
+        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.getAppId()), ACCESS_DENIED);
     }
 
     @Test
     public void tenant_member_should_fetch_tenant_member_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
         Page nonFillablePage = defaultPageBuilder().controls(newArrayList()).setting(defaultPageSettingBuilder().permission(PUBLIC).build())
                 .build();
         Page publicPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(PUBLIC).build()).build();
@@ -1404,26 +1404,26 @@ class AppControllerApiTest extends BaseApiTest {
         Page nonPermissionedPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_APP).build()).build();
         Page approvablePage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_TENANT_MEMBER)
                 .approvalSetting(defaultPageApproveSettingBuilder().approvalEnabled(true).permission(CAN_MANAGE_GROUP).build()).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), permissionedPage,
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), permissionedPage,
                 nonFillablePage,
                 publicPage,
                 nonPermissionedPage,
                 approvablePage);
 
-        String parentGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String groupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), parentGroupId);
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        String parentGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String groupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), parentGroupId);
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.appId());
+        QOperationalApp qOperationalApp = AppApi.fetchOperationalApp(createMemberResponse.getJwt(), response.getAppId());
 
-        assertEquals(response.appId(), qOperationalApp.getId());
+        assertEquals(response.getAppId(), qOperationalApp.getId());
         assertNotNull(qOperationalApp.getSetting());
         assertFalse(qOperationalApp.isCanManageApp());
-        Set<String> allGroupIds = newHashSet(response.defaultGroupId(), groupId, parentGroupId);
+        Set<String> allGroupIds = newHashSet(response.getDefaultGroupId(), groupId, parentGroupId);
         assertTrue(qOperationalApp.getGroupFullNames().keySet().containsAll(allGroupIds));
 
         assertTrue(qOperationalApp.getViewableGroupIds().containsAll(allGroupIds));
-        assertTrue(qOperationalApp.getViewableGroupIds().contains(response.defaultGroupId()));
+        assertTrue(qOperationalApp.getViewableGroupIds().contains(response.getDefaultGroupId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonFillablePage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(nonPermissionedPage.getId()));
         assertFalse(qOperationalApp.getViewablePageIds().contains(publicPage.getId()));
@@ -1443,105 +1443,105 @@ class AppControllerApiTest extends BaseApiTest {
     public void should_fetch_operational_app_without_invisible_groups_for_tenant_member_permission() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_TENANT_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_TENANT_MEMBER);
 
-        String managedGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String deactivatedGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), managedGroupId);
-        String archivedGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), managedGroupId);
+        String managedGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String deactivatedGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), managedGroupId);
+        String archivedGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), managedGroupId);
 
-        String memberParentGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        String asMemberGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), memberParentGroupId);
+        String memberParentGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        String asMemberGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), memberParentGroupId);
 
-        CreateMemberResponse memberResponse = createMemberAndLogin(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), managedGroupId, memberResponse.getMemberId());
-        GroupApi.addGroupMembers(response.jwt(), asMemberGroupId, memberResponse.getMemberId());
-        GroupApi.deactivateGroup(response.jwt(), deactivatedGroupId);
-        GroupApi.archiveGroup(response.jwt(), archivedGroupId);
-        GroupApi.archiveGroup(response.jwt(), asMemberGroupId);
+        CreateMemberResponse memberResponse = createMemberAndLogin(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), managedGroupId, memberResponse.getMemberId());
+        GroupApi.addGroupMembers(response.getJwt(), asMemberGroupId, memberResponse.getMemberId());
+        GroupApi.deactivateGroup(response.getJwt(), deactivatedGroupId);
+        GroupApi.archiveGroup(response.getJwt(), archivedGroupId);
+        GroupApi.archiveGroup(response.getJwt(), asMemberGroupId);
 
-        QOperationalApp operationalApp = AppApi.fetchOperationalApp(memberResponse.getJwt(), response.appId());
+        QOperationalApp operationalApp = AppApi.fetchOperationalApp(memberResponse.getJwt(), response.getAppId());
         assertEquals(1, operationalApp.getManagableGroupIds().size());
         assertTrue(operationalApp.getManagableGroupIds().contains(managedGroupId));
 
         assertEquals(3, operationalApp.getViewableGroupIds().size());
-        assertTrue(operationalApp.getViewableGroupIds().containsAll(Set.of(managedGroupId, memberParentGroupId, response.defaultGroupId())));
+        assertTrue(operationalApp.getViewableGroupIds().containsAll(Set.of(managedGroupId, memberParentGroupId, response.getDefaultGroupId())));
     }
 
     @Test
     public void tenant_member_should_fail_fetch_app_manager_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), CAN_MANAGE_APP);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), CAN_MANAGE_APP);
         Page nonPermissionedPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_APP).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), nonPermissionedPage);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), nonPermissionedPage);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.appId()), ACCESS_DENIED);
+        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.getAppId()), ACCESS_DENIED);
     }
 
     @Test
     public void tenant_member_should_fail_fetch_group_manager_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), CAN_MANAGE_GROUP);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), CAN_MANAGE_GROUP);
         Page nonPermissionedPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), nonPermissionedPage);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), nonPermissionedPage);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.appId()), ACCESS_DENIED);
+        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.getAppId()), ACCESS_DENIED);
     }
 
     @Test
     public void tenant_member_should_fail_fetch_group_member_required_operational_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        AppApi.updateAppOperationPermission(response.jwt(), response.appId(), AS_GROUP_MEMBER);
+        AppApi.updateAppOperationPermission(response.getJwt(), response.getAppId(), AS_GROUP_MEMBER);
         Page nonPermissionedPage = defaultPageBuilder().setting(defaultPageSettingBuilder().permission(AS_GROUP_MEMBER).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), nonPermissionedPage);
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.jwt(), rMemberName(), rMobile(), rPassword());
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), nonPermissionedPage);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(response.getJwt(), rMemberName(), rMobile(), rPassword());
 
-        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.appId()), ACCESS_DENIED);
+        assertError(() -> AppApi.fetchOperationalAppRaw(createMemberResponse.getJwt(), response.getAppId()), ACCESS_DENIED);
     }
 
     @Test
     public void should_fetch_updatable_app() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
         String appName = rAppName();
-        String appId = AppApi.createApp(loginResponse.jwt(), appName).getAppId();
-        QUpdatableApp appDetail = AppApi.fetchUpdatableApp(loginResponse.jwt(), appId);
+        String appId = AppApi.createApp(loginResponse.getJwt(), appName).getAppId();
+        QUpdatableApp appDetail = AppApi.fetchUpdatableApp(loginResponse.getJwt(), appId);
         assertEquals(appId, appDetail.getId());
         assertEquals(appName, appDetail.getName());
-        assertEquals(loginResponse.tenantId(), appDetail.getTenantId());
+        assertEquals(loginResponse.getTenantId(), appDetail.getTenantId());
         assertNotNull(appDetail.getSetting());
     }
 
     @Test
     public void should_fail_fetch_updatable_app_if_app_is_locked() {
         PreparedAppResponse response = setupApi.registerWithApp(rEmail(), rPassword());
-        AppApi.lockApp(response.jwt(), response.appId());
-        assertError(() -> AppApi.fetchUpdatableAppRaw(response.jwt(), response.appId()), APP_ALREADY_LOCKED);
+        AppApi.lockApp(response.getJwt(), response.getAppId());
+        assertError(() -> AppApi.fetchUpdatableAppRaw(response.getJwt(), response.getAppId()), APP_ALREADY_LOCKED);
     }
 
     @Test
     public void should_fetch_app_managers() {
         LoginResponse loginResponse = setupApi.registerWithLogin(rMobile(), rPassword());
 
-        String appId = AppApi.createApp(loginResponse.jwt(), rAppName()).getAppId();
+        String appId = AppApi.createApp(loginResponse.getJwt(), rAppName()).getAppId();
 
-        CreateMemberResponse createMemberResponse = createMemberAndLogin(loginResponse.jwt(), rMemberName(), rMobile(), rPassword());
+        CreateMemberResponse createMemberResponse = createMemberAndLogin(loginResponse.getJwt(), rMemberName(), rMobile(), rPassword());
         SetAppManagersCommand command = SetAppManagersCommand.builder().managers(newArrayList(createMemberResponse.getMemberId())).build();
-        AppApi.setAppManagers(loginResponse.jwt(), appId, command);
+        AppApi.setAppManagers(loginResponse.getJwt(), appId, command);
 
-        List<String> managers = AppApi.fetchAppManagers(loginResponse.jwt(), appId);
+        List<String> managers = AppApi.fetchAppManagers(loginResponse.getJwt(), appId);
         assertTrue(managers.contains(createMemberResponse.getMemberId()));
     }
 
     @Test
     public void should_fetch_app_resource_usages() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
-        QAppResourceUsages usages = AppApi.fetchAppResourceUsages(response.jwt(), response.appId());
+        QAppResourceUsages usages = AppApi.fetchAppResourceUsages(response.getJwt(), response.getAppId());
         assertEquals(1, usages.getUsedQrCount());
         assertEquals(1, usages.getUsedGroupCount());
         assertEquals(1, usages.getUsedSubmissionCount());
@@ -1557,7 +1557,7 @@ class AppControllerApiTest extends BaseApiTest {
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).submitType(ONCE_PER_INSTANCE).build()).build();
         Page notEligiblePage = defaultPageBuilder().controls(newArrayList(notEligiblePageControl))
                 .setting(defaultPageSettingBuilder().permission(CAN_MANAGE_GROUP).build()).build();
-        AppApi.updateAppPages(response.jwt(), response.appId(), homePage, notEligiblePage);
+        AppApi.updateAppPages(response.getJwt(), response.getAppId(), homePage, notEligiblePage);
 
         Attribute direstAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(DIRECT_INPUT).build();
         Attribute lastAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(homePage.getId())
@@ -1569,10 +1569,10 @@ class AppControllerApiTest extends BaseApiTest {
         Attribute notEligiblePageAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
                 .pageId(notEligiblePage.getId()).controlId(notEligiblePageControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
 
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), direstAttribute, lastAttribute, firstAttribute, notEligibleAttribute,
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), direstAttribute, lastAttribute, firstAttribute, notEligibleAttribute,
                 notEligiblePageAttribute);
 
-        byte[] templateBytes = AppApi.fetchQrImportTemplate(response.jwt(), response.appId());
+        byte[] templateBytes = AppApi.fetchQrImportTemplate(response.getJwt(), response.getAppId());
 
         Set<String> result = newHashSet();
         EasyExcel.read(new ByteArrayInputStream(templateBytes), new AnalysisEventListener<Map<Integer, String>>() {
@@ -1602,7 +1602,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void should_update_webhook_setting() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withDeveloperAllowed(true));
 
         WebhookSetting setting = WebhookSetting.builder()
@@ -1614,8 +1614,8 @@ class AppControllerApiTest extends BaseApiTest {
                 .build();
 
         UpdateAppWebhookSettingCommand command = UpdateAppWebhookSettingCommand.builder().webhookSetting(setting).build();
-        AppApi.updateWebhookSetting(response.jwt(), response.appId(), command);
-        App app = appRepository.byId(response.appId());
+        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), command);
+        App app = appRepository.byId(response.getAppId());
         WebhookSetting webhookSetting = app.getWebhookSetting();
         assertFalse(webhookSetting.isNotAccessible());
         assertTrue(webhookSetting.isEnabled());
@@ -1627,7 +1627,7 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void should_not_update_webhook_setting_if_plan_not_allowed() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withDeveloperAllowed(false));
 
         UpdateAppWebhookSettingCommand command = UpdateAppWebhookSettingCommand.builder().webhookSetting(WebhookSetting.builder()
@@ -1638,13 +1638,13 @@ class AppControllerApiTest extends BaseApiTest {
                         .password(randomAlphanumeric(10))
                         .build())
                 .build();
-        assertError(() -> AppApi.updateWebhookSettingRaw(response.jwt(), response.appId(), command), UPDATE_WEBHOOK_SETTING_NOT_ALLOWED);
+        assertError(() -> AppApi.updateWebhookSettingRaw(response.getJwt(), response.getAppId(), command), UPDATE_WEBHOOK_SETTING_NOT_ALLOWED);
     }
 
     @Test
     public void should_fetch_app_webhook_setting() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withDeveloperAllowed(true));
 
         WebhookSetting setting = WebhookSetting.builder()
@@ -1656,39 +1656,39 @@ class AppControllerApiTest extends BaseApiTest {
                 .build();
 
         UpdateAppWebhookSettingCommand command = UpdateAppWebhookSettingCommand.builder().webhookSetting(setting).build();
-        AppApi.updateWebhookSetting(response.jwt(), response.appId(), command);
+        AppApi.updateWebhookSetting(response.getJwt(), response.getAppId(), command);
 
-        QAppWebhookSetting qAppWebhookSetting = AppApi.fetchWebhookSetting(response.jwt(), response.appId());
-        App app = appRepository.byId(response.appId());
+        QAppWebhookSetting qAppWebhookSetting = AppApi.fetchWebhookSetting(response.getJwt(), response.getAppId());
+        App app = appRepository.byId(response.getAppId());
         assertEquals(app.getWebhookSetting(), qAppWebhookSetting.getWebhookSetting());
     }
 
     @Test
     public void should_enable_group_sync() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        assertFalse(appRepository.byId(response.appId()).isGroupSynced());
-        AppApi.enableGroupSync(response.jwt(), response.appId());
-        assertTrue(appRepository.byId(response.appId()).isGroupSynced());
-        AppGroupSyncEnabledEvent event = latestEventFor(response.appId(), APP_GROUP_SYNC_ENABLED, AppGroupSyncEnabledEvent.class);
-        assertEquals(response.appId(), event.getAppId());
+        assertFalse(appRepository.byId(response.getAppId()).isGroupSynced());
+        AppApi.enableGroupSync(response.getJwt(), response.getAppId());
+        assertTrue(appRepository.byId(response.getAppId()).isGroupSynced());
+        AppGroupSyncEnabledEvent event = latestEventFor(response.getAppId(), APP_GROUP_SYNC_ENABLED, AppGroupSyncEnabledEvent.class);
+        assertEquals(response.getAppId(), event.getAppId());
     }
 
     @Test
     public void enable_group_sync_should_do_sync() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String departmentId = DepartmentApi.createDepartment(response.jwt(), rDepartmentName());
-        String subDepartmentId = DepartmentApi.createDepartmentWithParent(response.jwt(), departmentId, rDepartmentName());
-        AppApi.enableGroupSync(response.jwt(), response.appId());
+        String departmentId = DepartmentApi.createDepartment(response.getJwt(), rDepartmentName());
+        String subDepartmentId = DepartmentApi.createDepartmentWithParent(response.getJwt(), departmentId, rDepartmentName());
+        AppApi.enableGroupSync(response.getJwt(), response.getAppId());
 
-        Group group = groupRepository.byDepartmentIdOptional(departmentId, response.appId()).get();
+        Group group = groupRepository.byDepartmentIdOptional(departmentId, response.getAppId()).get();
         assertEquals(departmentId, group.getDepartmentId());
-        Group subGroup = groupRepository.byDepartmentIdOptional(subDepartmentId, response.appId()).get();
+        Group subGroup = groupRepository.byDepartmentIdOptional(subDepartmentId, response.getAppId()).get();
         assertEquals(subDepartmentId, subGroup.getDepartmentId());
-        assertEquals(3, groupRepository.cachedAppAllGroups(response.appId()).size());
+        assertEquals(3, groupRepository.cachedAppAllGroups(response.getAppId()).size());
 
-        GroupHierarchy hierarchy = groupHierarchyRepository.byAppId(response.appId());
+        GroupHierarchy hierarchy = groupHierarchyRepository.byAppId(response.getAppId());
         Set<String> strings = hierarchy.allGroupIds();
-        assertTrue(strings.containsAll(Set.of(response.defaultGroupId(), group.getId(), subGroup.getId())));
+        assertTrue(strings.containsAll(Set.of(response.getDefaultGroupId(), group.getId(), subGroup.getId())));
         assertEquals(group.getId() + "/" + subGroup.getId(), hierarchy.getHierarchy().schemaOf(subGroup.getId()));
     }
 
@@ -1702,13 +1702,13 @@ class AppControllerApiTest extends BaseApiTest {
                 .options(List.of(option1, option2))
                 .initOptionId(option1.getId())
                 .statusAfterSubmissions(
-                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.homePageId()).build()))
+                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.getHomePageId()).build()))
                 .statusPermissions(List.of(
-                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.homePageId()))
+                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.getHomePageId()))
                                 .build()))
                 .build();
-        AppApi.updateCirculationStatusSetting(response.jwt(), response.appId(), setting);
-        App app = appRepository.byId(response.appId());
+        AppApi.updateCirculationStatusSetting(response.getJwt(), response.getAppId(), setting);
+        App app = appRepository.byId(response.getAppId());
         CirculationStatusSetting updatedSetting = app.getSetting().getCirculationStatusSetting();
         assertEquals(setting, updatedSetting);
     }
@@ -1723,17 +1723,17 @@ class AppControllerApiTest extends BaseApiTest {
                 .options(List.of(option1, option2))
                 .initOptionId(option1.getId())
                 .statusAfterSubmissions(List.of(
-                        StatusAfterSubmission.builder().id(newShortUuid()).optionId(null).pageId(response.homePageId()).build(),
+                        StatusAfterSubmission.builder().id(newShortUuid()).optionId(null).pageId(response.getHomePageId()).build(),
                         StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(null).build()
                 ))
                 .statusPermissions(List.of(
-                        StatusPermission.builder().id(newShortUuid()).optionId(null).notAllowedPageIds(List.of(response.homePageId())).build(),
+                        StatusPermission.builder().id(newShortUuid()).optionId(null).notAllowedPageIds(List.of(response.getHomePageId())).build(),
                         StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of()).build()
                 ))
                 .build();
 
-        AppApi.updateCirculationStatusSetting(response.jwt(), response.appId(), setting);
-        App app = appRepository.byId(response.appId());
+        AppApi.updateCirculationStatusSetting(response.getJwt(), response.getAppId(), setting);
+        App app = appRepository.byId(response.getAppId());
         CirculationStatusSetting updatedSetting = app.getSetting().getCirculationStatusSetting();
         assertTrue(updatedSetting.getStatusAfterSubmissions().isEmpty());
         assertTrue(updatedSetting.getStatusPermissions().isEmpty());
@@ -1750,7 +1750,7 @@ class AppControllerApiTest extends BaseApiTest {
                 .statusAfterSubmissions(List.of())
                 .statusPermissions(List.of())
                 .build();
-        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.jwt(), response.appId(), setting), TEXT_OPTION_ID_DUPLICATED);
+        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.getJwt(), response.getAppId(), setting), TEXT_OPTION_ID_DUPLICATED);
     }
 
     @Test
@@ -1764,14 +1764,14 @@ class AppControllerApiTest extends BaseApiTest {
                 .options(List.of(option1, option2))
                 .initOptionId(option1.getId())
                 .statusAfterSubmissions(List.of(
-                        StatusAfterSubmission.builder().id(id).optionId(option1.getId()).pageId(response.homePageId()).build(),
-                        StatusAfterSubmission.builder().id(id).optionId(option2.getId()).pageId(response.homePageId()).build()
+                        StatusAfterSubmission.builder().id(id).optionId(option1.getId()).pageId(response.getHomePageId()).build(),
+                        StatusAfterSubmission.builder().id(id).optionId(option2.getId()).pageId(response.getHomePageId()).build()
                 ))
                 .statusPermissions(List.of(
-                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.homePageId()))
+                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.getHomePageId()))
                                 .build()))
                 .build();
-        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.jwt(), response.appId(), setting),
+        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.getJwt(), response.getAppId(), setting),
                 CIRCULATION_AFTER_SUBMISSION_ID_DUPLICATED);
     }
 
@@ -1786,13 +1786,13 @@ class AppControllerApiTest extends BaseApiTest {
                 .options(List.of(option1, option2))
                 .initOptionId(option1.getId())
                 .statusAfterSubmissions(
-                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.homePageId()).build()))
+                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.getHomePageId()).build()))
                 .statusPermissions(List.of(
-                        StatusPermission.builder().id(id).optionId(option1.getId()).notAllowedPageIds(List.of(response.homePageId())).build(),
-                        StatusPermission.builder().id(id).optionId(option2.getId()).notAllowedPageIds(List.of(response.homePageId())).build()
+                        StatusPermission.builder().id(id).optionId(option1.getId()).notAllowedPageIds(List.of(response.getHomePageId())).build(),
+                        StatusPermission.builder().id(id).optionId(option2.getId()).notAllowedPageIds(List.of(response.getHomePageId())).build()
                 ))
                 .build();
-        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.jwt(), response.appId(), setting),
+        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.getJwt(), response.getAppId(), setting),
                 CIRCULATION_PERMISSION_ID_DUPLICATED);
     }
 
@@ -1806,12 +1806,12 @@ class AppControllerApiTest extends BaseApiTest {
                 .options(List.of(option1, option2))
                 .initOptionId(newShortUuid())
                 .statusAfterSubmissions(
-                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.homePageId()).build()))
+                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.getHomePageId()).build()))
                 .statusPermissions(List.of(
-                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.homePageId()))
+                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.getHomePageId()))
                                 .build()))
                 .build();
-        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.jwt(), response.appId(), setting),
+        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.getJwt(), response.getAppId(), setting),
                 CIRCULATION_OPTION_NOT_EXISTS);
     }
 
@@ -1827,10 +1827,10 @@ class AppControllerApiTest extends BaseApiTest {
                 .statusAfterSubmissions(
                         List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(Page.newPageId()).build()))
                 .statusPermissions(List.of(
-                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.homePageId()))
+                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.getHomePageId()))
                                 .build()))
                 .build();
-        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.jwt(), response.appId(), setting), VALIDATION_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.getJwt(), response.getAppId(), setting), VALIDATION_PAGE_NOT_EXIST);
     }
 
     @Test
@@ -1843,12 +1843,12 @@ class AppControllerApiTest extends BaseApiTest {
                 .options(List.of(option1, option2))
                 .initOptionId(null)
                 .statusAfterSubmissions(
-                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(newShortUuid()).pageId(response.homePageId()).build()))
+                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(newShortUuid()).pageId(response.getHomePageId()).build()))
                 .statusPermissions(List.of(
-                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.homePageId()))
+                        StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(response.getHomePageId()))
                                 .build()))
                 .build();
-        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.jwt(), response.appId(), setting),
+        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.getJwt(), response.getAppId(), setting),
                 CIRCULATION_OPTION_NOT_EXISTS);
     }
 
@@ -1862,12 +1862,12 @@ class AppControllerApiTest extends BaseApiTest {
                 .options(List.of(option1, option2))
                 .initOptionId(null)
                 .statusAfterSubmissions(
-                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.homePageId()).build()))
+                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.getHomePageId()).build()))
                 .statusPermissions(List.of(
-                        StatusPermission.builder().id(newShortUuid()).optionId(newShortUuid()).notAllowedPageIds(List.of(response.homePageId()))
+                        StatusPermission.builder().id(newShortUuid()).optionId(newShortUuid()).notAllowedPageIds(List.of(response.getHomePageId()))
                                 .build()))
                 .build();
-        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.jwt(), response.appId(), setting),
+        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.getJwt(), response.getAppId(), setting),
                 CIRCULATION_OPTION_NOT_EXISTS);
     }
 
@@ -1881,57 +1881,58 @@ class AppControllerApiTest extends BaseApiTest {
                 .options(List.of(option1, option2))
                 .initOptionId(null)
                 .statusAfterSubmissions(
-                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.homePageId()).build()))
+                        List.of(StatusAfterSubmission.builder().id(newShortUuid()).optionId(option1.getId()).pageId(response.getHomePageId()).build()))
                 .statusPermissions(List.of(
                         StatusPermission.builder().id(newShortUuid()).optionId(option2.getId()).notAllowedPageIds(List.of(Page.newPageId())).build()))
                 .build();
-        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.jwt(), response.appId(), setting), VALIDATION_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateCirculationStatusSettingRaw(response.getJwt(), response.getAppId(), setting), VALIDATION_PAGE_NOT_EXIST);
     }
 
     @Test
     public void should_cache_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String key = "Cache:APP::" + response.appId();
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
-        appRepository.cachedById(response.appId());
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        String key = "Cache:APP::" + response.getAppId();
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        appRepository.cachedById(response.getAppId());
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         appRepository.save(app);
 
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+        PollingAssertion.pollAssert().run(() ->   assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
     public void should_cache_tenant_apps() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String key = "Cache:TENANT_APPS::" + response.tenantId();
+        String key = "Cache:TENANT_APPS::" + response.getTenantId();
         PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
-        appRepository.cachedTenantAllApps(response.tenantId());
+        appRepository.cachedTenantAllApps(response.getTenantId());
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         appRepository.save(app);
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
+
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 
     @Test
     public void save_app_should_evict_cache() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateAppResponse anotherApp = AppApi.createApp(response.jwt());
-        String appKey = "Cache:APP::" + response.appId();
+        CreateAppResponse anotherApp = AppApi.createApp(response.getJwt());
+        String appKey = "Cache:APP::" + response.getAppId();
         String anotherAppKey = "Cache:APP::" + anotherApp.getAppId();
-        String appsKey = "Cache:TENANT_APPS::" + response.tenantId();
+        String appsKey = "Cache:TENANT_APPS::" + response.getTenantId();
 
-        appRepository.cachedById(response.appId());
+        appRepository.cachedById(response.getAppId());
         appRepository.cachedById(anotherApp.getAppId());
-        appRepository.cachedTenantAllApps(response.tenantId());
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(anotherAppKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
+        appRepository.cachedTenantAllApps(response.getTenantId());
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(anotherAppKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         appRepository.save(app);
         PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(anotherAppKey)));
@@ -1941,34 +1942,34 @@ class AppControllerApiTest extends BaseApiTest {
     @Test
     public void delete_app_should_evict_cache() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        CreateAppResponse newApp = AppApi.createApp(response.jwt());
-        String appKey = "Cache:APP::" + response.appId();
+        CreateAppResponse newApp = AppApi.createApp(response.getJwt());
+        String appKey = "Cache:APP::" + response.getAppId();
         String newAppKey = "Cache:APP::" + newApp.getAppId();
-        String appsKey = "Cache:TENANT_APPS::" + response.tenantId();
+        String appsKey = "Cache:TENANT_APPS::" + response.getTenantId();
 
-        appRepository.cachedById(response.appId());
+        appRepository.cachedById(response.getAppId());
         appRepository.cachedById(newApp.getAppId());
-        appRepository.cachedTenantAllApps(response.tenantId());
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(newAppKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
+        appRepository.cachedTenantAllApps(response.getTenantId());
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() ->   assertEquals(TRUE, stringRedisTemplate.hasKey(newAppKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         app.onDelete(NO_USER);
         appRepository.delete(app);
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
-        PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(newAppKey)));
-        PollingAssertion.pollAssert().run(() -> assertNotEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(appKey)));
+        PollingAssertion.pollAssert().run(() ->  assertEquals(TRUE, stringRedisTemplate.hasKey(newAppKey)));
+        PollingAssertion.pollAssert().run(() ->  assertNotEquals(TRUE, stringRedisTemplate.hasKey(appsKey)));
     }
 
     @Test
     public void should_fetch_first_qr_for_app() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        assertEquals(qrResponse.getPlateId(), AppApi.fetchFirstQrPlateId(response.jwt(), response.appId()).getPlateId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        assertEquals(qrResponse.getPlateId(), AppApi.fetchFirstQrPlateId(response.getJwt(), response.getAppId()).getPlateId());
 
-        QrApi.createQr(response.jwt(), response.defaultGroupId());
-        assertEquals(qrResponse.getPlateId(), AppApi.fetchFirstQrPlateId(response.jwt(), response.appId()).getPlateId());
+        QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        assertEquals(qrResponse.getPlateId(), AppApi.fetchFirstQrPlateId(response.getJwt(), response.getAppId()).getPlateId());
     }
 }

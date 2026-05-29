@@ -44,9 +44,9 @@ public class GeolocationControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FGeolocationControl control = defaultGeolocationControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -56,14 +56,14 @@ public class GeolocationControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FGeolocationControl control = defaultGeolocationControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         GeolocationAnswer answer = rAnswer(control);
         Address address = answer.getGeolocation().getAddress();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
+        App app = appRepository.byId(response.getAppId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         GeolocationAnswer updatedAnswer = (GeolocationAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -80,40 +80,40 @@ public class GeolocationControlApiTest extends BaseApiTest {
 
         FGeolocationControl control = defaultGeolocationControlBuilder().fillableSetting(
                 defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         Geolocation geolocation = Geolocation.builder().point(Geopoint.builder().build()).address(rAddress()).build();
         GeolocationAnswer answer = rAnswerBuilder(control).geolocation(geolocation).build();
 
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_fail_answer_if_geolocation_is_out_of_range() {
         PreparedQrResponse response = setupApi.registerWithQr();
 
-        AppApi.enableAppPosition(response.jwt(), response.appId());
+        AppApi.enableAppPosition(response.getJwt(), response.getAppId());
         FGeolocationControl control = defaultGeolocationControlBuilder().offsetRestrictionEnabled(true).offsetRestrictionRadius(500).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Geolocation qrPosition = rGeolocation();
         UpdateQrBaseSettingCommand updateQrBaseSettingCommand = UpdateQrBaseSettingCommand.builder()
                 .name(rQrName())
                 .geolocation(qrPosition)
                 .build();
-        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(), updateQrBaseSettingCommand);
+        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(), updateQrBaseSettingCommand);
 
         Geolocation offsetGeolocation = Geolocation.builder().point(
                         Geopoint.builder().latitude(qrPosition.getPoint().getLatitude() - 1).longitude(qrPosition.getPoint().getLongitude() - 1).build())
                 .address(rAddress()).build();
         GeolocationAnswer answer = rAnswerBuilder(control).geolocation(offsetGeolocation).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), OUT_OF_OFF_SET_RADIUS);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), OUT_OF_OFF_SET_RADIUS);
 
         //合法answer
         GeolocationAnswer validAnswer = rAnswerBuilder(control).geolocation(qrPosition).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), validAnswer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), validAnswer);
     }
 
     @Test
@@ -121,20 +121,20 @@ public class GeolocationControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FGeolocationControl control = defaultGeolocationControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST)
-                .pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         GeolocationAnswer answer = rAnswer(control);
         Geolocation geolocation = answer.getGeolocation();
         Address address = geolocation.getAddress();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         GeolocationAttributeValue attributeValue = (GeolocationAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(geolocation, attributeValue.getGeolocation());
         Set<String> textValues = qr.getIndexedValues().valueOf(indexedField).getTv();
@@ -148,20 +148,20 @@ public class GeolocationControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FGeolocationControl control = defaultGeolocationControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         GeolocationAnswer answer = rAnswer(control);
         Geolocation geolocation = answer.getGeolocation();
         Address address = geolocation.getAddress();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         GeolocationAttributeValue attributeValue = (GeolocationAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(geolocation, attributeValue.getGeolocation());
         Set<String> textValues = qr.getIndexedValues().valueOf(indexedField).getTv();

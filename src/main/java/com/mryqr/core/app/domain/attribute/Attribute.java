@@ -13,10 +13,7 @@ import com.mryqr.core.app.domain.page.control.Control;
 import com.mryqr.core.app.domain.page.control.ControlType;
 import com.mryqr.core.app.domain.page.control.FNumberInputControl;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.*;
 
 import java.util.Set;
 
@@ -50,16 +47,24 @@ public class Attribute implements Identified {
 
     @NotNull
     private final AttributeType type;//属性类型
-    private final boolean manualInput;//是否在QR的基本信息编辑页面显示，只针对填入值类型
-    private final boolean pcListEligible;//是否显示在电脑端实例列表中
-    private final boolean mobileListEligible;//是否显示在手机端实例列表中
+
     @Size(max = 100)
     private String fixedValue;//固定值(只对固定值类型起作用)
+
+    private final boolean manualInput;//是否在QR的基本信息编辑页面显示，只针对填入值类型
+
     @PageId
     private String pageId;//所引用的页面ID
+
     @ControlId
     private String controlId;//所引用的控件ID
+
     private AttributeStatisticRange range;//统计时间范围，仅对某些属性生效，比如总和、最大值等
+
+    private final boolean pcListEligible;//是否显示在电脑端实例列表中
+
+    private final boolean mobileListEligible;//是否显示在手机端实例列表中
+
     private boolean kanbanEligible;//是否显示为状态看板
 
     @NoSpace
@@ -240,14 +245,21 @@ public class Attribute implements Identified {
         return this.type.isControlAware();
     }
 
+    @Value
+    @Builder
+    @AllArgsConstructor(access = PRIVATE)
+    private static class AttributeSchema {//用于检查attribute是否发生变更
+        private String id;
+        private AttributeType type;
+        private String pageId;
+        private String controlId;
+        private AttributeStatisticRange range;
+        private ValueType valueType;
+    }
+
     @Override
     public String getIdentifier() {
         return id;
-    }
-
-    @Builder
-    private record AttributeSchema(String id, AttributeType type, String pageId, String controlId,
-                                   AttributeStatisticRange range, ValueType valueType) {//用于检查attribute是否发生变更
     }
 }
 

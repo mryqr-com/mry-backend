@@ -48,9 +48,9 @@ public class DropdownControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FDropdownControl control = defaultDropdownControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control.getId(), updatedControl.getId());
     }
@@ -63,11 +63,11 @@ public class DropdownControlApiTest extends BaseApiTest {
         TextOption option1 = TextOption.builder().id(optionsId).name(randomAlphabetic(10) + "选项").build();
         TextOption option2 = TextOption.builder().id(optionsId).name(randomAlphabetic(10) + "选项").build();
         FDropdownControl control = defaultDropdownControlBuilder().options(newArrayList(option1, option2)).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), TEXT_OPTION_ID_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), TEXT_OPTION_ID_DUPLICATED);
     }
 
     @Test
@@ -75,11 +75,11 @@ public class DropdownControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FDropdownControl control = defaultDropdownControlBuilder().multiple(true).minMaxSetting(minMaxOf(1, 101)).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), MAX_OVERFLOW);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), MAX_OVERFLOW);
     }
 
     @Test
@@ -87,11 +87,11 @@ public class DropdownControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FDropdownControl control = defaultDropdownControlBuilder().multiple(true).minMaxSetting(minMaxOf(-1, 10)).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), MIN_OVERFLOW);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), MIN_OVERFLOW);
     }
 
     @Test
@@ -99,9 +99,9 @@ public class DropdownControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FDropdownControl control = defaultDropdownControlBuilder().multiple(false).minMaxSetting(minMaxOf(5, 100)).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         FDropdownControl updatedControl = (FDropdownControl) app.controlByIdOptional(control.getId()).get();
         assertEquals(0, updatedControl.getMinMaxSetting().getMin());
         assertEquals(10, updatedControl.getMinMaxSetting().getMax());
@@ -111,14 +111,14 @@ public class DropdownControlApiTest extends BaseApiTest {
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDropdownControl control = defaultDropdownControlBuilder().multiple(rBool()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         DropdownAnswer answer = rAnswer(control);
         List<String> optionIds = answer.getOptionIds();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
+        App app = appRepository.byId(response.getAppId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         DropdownAnswer updatedAnswer = (DropdownAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -152,9 +152,9 @@ public class DropdownControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), dependantControl, calculatedControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), dependantControl, calculatedControl);
         DropdownAnswer answer = rAnswerBuilder(dependantControl).optionIds(newArrayList(optionId1, optionId2)).build();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
         Submission submission = submissionRepository.byId(submissionId);
         NumberInputAnswer updatedAnswer = (NumberInputAnswer) submission.getAnswers().get(calculatedControl.getId());
         assertEquals(16, updatedAnswer.getNumber());
@@ -164,80 +164,80 @@ public class DropdownControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_has_option_not_in_control() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDropdownControl control = defaultDropdownControlBuilder().multiple(true).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         DropdownAnswer answer = rAnswerBuilder(control).optionIds(newArrayList(newShortUuid())).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), NOT_ALL_ANSWERS_IN_DROPDOWN_OPTIONS);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), NOT_ALL_ANSWERS_IN_DROPDOWN_OPTIONS);
     }
 
     @Test
     public void should_fail_answer_for_multiple_if_filled_size_greater_than_max() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDropdownControl control = defaultDropdownControlBuilder().options(rTextOptions(10)).multiple(true).minMaxSetting(minMaxOf(1, 3)).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         DropdownAnswer answer = rAnswerBuilder(control).optionIds(newArrayList(control.allOptionIds())).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), DROPDOWN_MAX_SELECTION_REACHED);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), DROPDOWN_MAX_SELECTION_REACHED);
     }
 
     @Test
     public void should_fail_answer_for_multiple_if_filled_size_is_less_than_min() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDropdownControl control = defaultDropdownControlBuilder().multiple(true).minMaxSetting(minMaxOf(3, 5)).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         DropdownAnswer validAnswer = rAnswerBuilder(control).optionIds(newArrayList()).build();
-        NewSubmissionCommand validCommand = newSubmissionCommand(response.qrId(), response.homePageId(), validAnswer);
-        SubmissionApi.newSubmission(response.jwt(), validCommand);//无填值时，最小限制不起作用
+        NewSubmissionCommand validCommand = newSubmissionCommand(response.getQrId(), response.getHomePageId(), validAnswer);
+        SubmissionApi.newSubmission(response.getJwt(), validCommand);//无填值时，最小限制不起作用
 
         DropdownAnswer answer = rAnswerBuilder(control).optionIds(newArrayList(control.allOptionIds().stream().findAny().get())).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
-        assertError(() -> newSubmissionRaw(response.jwt(), command), DROPDOWN_MIN_SELECTION_NOT_REACHED);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), DROPDOWN_MIN_SELECTION_NOT_REACHED);
     }
 
     @Test
     public void should_fail_answer_for_non_multiple_if_option_size_greater_than_1() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDropdownControl control = defaultDropdownControlBuilder().multiple(false).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         DropdownAnswer answer = rAnswerBuilder(control).optionIds(newArrayList(control.allOptionIds())).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> newSubmissionRaw(response.jwt(), command), SINGLE_DROPDOWN_ONLY_ALLOW_SINGLE_ANSWER);
+        assertError(() -> newSubmissionRaw(response.getJwt(), command), SINGLE_DROPDOWN_ONLY_ALLOW_SINGLE_ANSWER);
     }
 
     @Test
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDropdownControl control = defaultDropdownControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         DropdownAnswer answer = rAnswerBuilder(control).optionIds(newArrayList()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDropdownControl control = defaultDropdownControlBuilder().multiple(rBool()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         DropdownAnswer answer = rAnswer(control);
         List<String> optionIds = answer.getOptionIds();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         DropdownAttributeValue attributeValue = (DropdownAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(control.getId(), attributeValue.getControlId());
         assertEquals(optionIds, attributeValue.getOptionIds());
@@ -250,18 +250,18 @@ public class DropdownControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FDropdownControl control = defaultDropdownControlBuilder().multiple(rBool()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         DropdownAnswer answer = rAnswer(control);
         List<String> optionIds = answer.getOptionIds();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         DropdownAttributeValue attributeValue = (DropdownAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(control.getId(), attributeValue.getControlId());
         assertEquals(optionIds, attributeValue.getOptionIds());

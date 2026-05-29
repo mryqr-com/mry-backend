@@ -47,7 +47,7 @@ public class MemberDomainService {
         member.update(name, departmentIds, mobile, email, user);
     }
 
-    public void checkMinActiveTenantAdminLimit(String tenantId) {
+    public void checkMinTenantAdminLimit(String tenantId) {
         int count = memberRepository.activeTenantAdminCountFor(tenantId);
         if (count < 1) {
             throw new MryException(NO_ACTIVE_TENANT_ADMIN_LEFT, "必须保留至少一个可用的系统管理员。",
@@ -55,7 +55,7 @@ public class MemberDomainService {
         }
     }
 
-    public void checkMaxActiveTenantAdminLimit(String tenantId) {
+    public void checkMaxTenantAdminLimit(String tenantId) {
         int count = memberRepository.activeTenantAdminCountFor(tenantId);
         if (count > 10) {
             throw new MryException(MAX_TENANT_ADMIN_REACHED, "可用系统管理员数量已超出最大限制（10名）。",

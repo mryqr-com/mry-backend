@@ -27,10 +27,10 @@ public class SubmissionReferenceControlApiTest extends BaseApiTest {
     public void should_create_control_normally() {
         PreparedAppResponse response = setupApi.registerWithApp();
 
-        PSubmissionReferenceControl control = defaultSubmissionReferenceControlBuilder().pageId(response.homePageId()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        PSubmissionReferenceControl control = defaultSubmissionReferenceControlBuilder().pageId(response.getHomePageId()).build();
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -41,9 +41,9 @@ public class SubmissionReferenceControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PSubmissionReferenceControl control = defaultSubmissionReferenceControlBuilder().pageId(null).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -53,11 +53,11 @@ public class SubmissionReferenceControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PSubmissionReferenceControl control = defaultSubmissionReferenceControlBuilder().pageId(Page.newPageId()).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_PAGE_NOT_EXIST);
     }
 
@@ -66,15 +66,15 @@ public class SubmissionReferenceControlApiTest extends BaseApiTest {
         PreparedQrResponse qrResponse = setupApi.registerWithQr();
 
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
-        PSubmissionReferenceControl referenceControl = defaultSubmissionReferenceControlBuilder().pageId(qrResponse.homePageId()).build();
-        AppApi.updateAppControls(qrResponse.jwt(), qrResponse.appId(), singleLineTextControl, referenceControl);
+        PSubmissionReferenceControl referenceControl = defaultSubmissionReferenceControlBuilder().pageId(qrResponse.getHomePageId()).build();
+        AppApi.updateAppControls(qrResponse.getJwt(), qrResponse.getAppId(), singleLineTextControl, referenceControl);
         //first submission, will not be targeted
-        SubmissionApi.newSubmission(qrResponse.jwt(), qrResponse.qrId(), qrResponse.homePageId(), rAnswer(singleLineTextControl));
+        SubmissionApi.newSubmission(qrResponse.getJwt(), qrResponse.getQrId(), qrResponse.getHomePageId(), rAnswer(singleLineTextControl));
 
         SingleLineTextAnswer singleLineTextAnswer = rAnswer(singleLineTextControl);
-        SubmissionApi.newSubmission(qrResponse.jwt(), qrResponse.qrId(), qrResponse.homePageId(), singleLineTextAnswer);
+        SubmissionApi.newSubmission(qrResponse.getJwt(), qrResponse.getQrId(), qrResponse.getHomePageId(), singleLineTextAnswer);
         QSubmissionReferencePresentation presentation = (QSubmissionReferencePresentation) PresentationApi.fetchPresentation(
-                qrResponse.jwt(), qrResponse.qrId(), qrResponse.homePageId(), referenceControl.getId());
+                qrResponse.getJwt(), qrResponse.getQrId(), qrResponse.getHomePageId(), referenceControl.getId());
 
         TextDisplayValue value = (TextDisplayValue) presentation.getValues().get(singleLineTextControl.getId());
         assertEquals(singleLineTextAnswer.getContent(), value.getText());

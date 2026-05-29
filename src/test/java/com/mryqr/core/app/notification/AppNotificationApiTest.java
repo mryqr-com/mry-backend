@@ -43,9 +43,9 @@ public class AppNotificationApiTest extends BaseApiTest {
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .notificationSetting(notificationSetting)
                 .build();
-        AppApi.updateAppHomePageSetting(response.jwt(), response.appId(), pageSetting);
+        AppApi.updateAppHomePageSetting(response.getJwt(), response.getAppId(), pageSetting);
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
         assertEquals(submissionId, FakeNotificationService.id);
     }
 
@@ -63,11 +63,11 @@ public class AppNotificationApiTest extends BaseApiTest {
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .notificationSetting(notificationSetting)
                 .build();
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, checkboxControl);
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, checkboxControl);
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
-        SubmissionApi.updateSubmission(response.jwt(), submissionId, rAnswer(checkboxControl));
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId, rAnswer(checkboxControl));
         assertEquals(submissionId, FakeNotificationService.id);
     }
 
@@ -85,18 +85,18 @@ public class AppNotificationApiTest extends BaseApiTest {
                 .approvalSetting(ApprovalSetting.builder().approvalEnabled(true).permission(CAN_MANAGE_APP).notifySubmitter(true).build())
                 .build();
 
-        AppApi.updateAppHomePageSettingAndControls(response.jwt(), response.appId(), pageSetting, newArrayList(control));
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppHomePageSettingAndControls(response.getJwt(), response.getAppId(), pageSetting, newArrayList(control));
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         ApproveSubmissionCommand command = approveSubmissionCommand(true);
-        SubmissionApi.approveSubmission(response.jwt(), submissionId, command);
+        SubmissionApi.approveSubmission(response.getJwt(), submissionId, command);
         assertEquals(submissionId, FakeNotificationService.id);
     }
 
     @Test
     public void should_not_notify_if_package_too_low() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        Tenant theTenant = tenantRepository.byId(response.tenantId());
+        Tenant theTenant = tenantRepository.byId(response.getTenantId());
         setupApi.updateTenantPlan(theTenant, theTenant.currentPlan().withSubmissionNotifyAllowed(false));
 
         NotificationSetting notificationSetting = NotificationSetting.builder()
@@ -107,9 +107,9 @@ public class AppNotificationApiTest extends BaseApiTest {
         PageSetting pageSetting = defaultPageSettingBuilder()
                 .notificationSetting(notificationSetting)
                 .build();
-        AppApi.updateAppHomePageSetting(response.jwt(), response.appId(), pageSetting);
+        AppApi.updateAppHomePageSetting(response.getJwt(), response.getAppId(), pageSetting);
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
         assertNotEquals(submissionId, FakeNotificationService.id);
     }
 }

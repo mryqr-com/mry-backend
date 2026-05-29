@@ -58,6 +58,11 @@ public class OrderController {
         return orderQueryService.fetchDetailedOrder(orderId, user);
     }
 
+    @GetMapping(value = "/{orderId}/shipment")
+    public QOrderShipment fetchOrderShipment(@PathVariable("orderId") @NotBlank @OrderId String orderId, @AuthenticationPrincipal User user) {
+        return orderQueryService.fetchOrderShipment(orderId, user);
+    }
+
     @PostMapping(value = "/quotations")
     public QPriceQuotation requestQuote(@RequestBody @Valid QuotePriceQuery queryCommand, @AuthenticationPrincipal User user) {
         return orderQueryService.quoteOrderPrice(queryCommand, user);

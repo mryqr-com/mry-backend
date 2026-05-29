@@ -34,9 +34,9 @@ public class TimeControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FTimeControl control = defaultTimeControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -45,10 +45,10 @@ public class TimeControlApiTest extends BaseApiTest {
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FTimeControl control = defaultTimeControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         TimeAnswer answer = RandomTestFixture.rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         TimeAnswer updatedAnswer = (TimeAnswer) submission.allAnswers().get(control.getId());
@@ -60,27 +60,27 @@ public class TimeControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FTimeControl control = defaultTimeControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         TimeAnswer answer = rAnswerBuilder(control).time(null).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FTimeControl control = defaultTimeControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         TimeAnswer answer = RandomTestFixture.rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), RandomTestFixture.rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), RandomTestFixture.rAnswer(control));
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         LocalTimeAttributeValue attributeValue = (LocalTimeAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getTime(), attributeValue.getTime());
         assertNull(qr.getIndexedValues());
@@ -90,15 +90,15 @@ public class TimeControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FTimeControl control = defaultTimeControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         TimeAnswer answer = RandomTestFixture.rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), RandomTestFixture.rAnswer(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), RandomTestFixture.rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         LocalTimeAttributeValue attributeValue = (LocalTimeAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(answer.getTime(), attributeValue.getTime());
         assertNull(qr.getIndexedValues());

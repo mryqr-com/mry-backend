@@ -58,17 +58,17 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_managed_assignments() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-08").time("17:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-08").time("23:00").build();
 
-        createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(), response.jwt(), EVERY_DAY);
+        createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(), response.getJwt(), EVERY_DAY);
 
         IntStream.range(8, 20).forEach(value -> createAssignmentsJob.run(of(2020, 7, value, 17, 0)));
 
-        PagedList<QListAssignment> firstPage = AssignmentApi.listManagedAssignments(response.jwt(), ListMyManagedAssignmentsQuery.builder()
-                .appId(response.appId())
+        PagedList<QListAssignment> firstPage = AssignmentApi.listManagedAssignments(response.getJwt(), ListMyManagedAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .pageIndex(1)
                 .pageSize(10)
                 .build());
@@ -76,8 +76,8 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         assertEquals(10, firstPage.getData().size());
         assertEquals(12, firstPage.getTotalNumber());
 
-        PagedList<QListAssignment> secondPage = AssignmentApi.listManagedAssignments(response.jwt(), ListMyManagedAssignmentsQuery.builder()
-                .appId(response.appId())
+        PagedList<QListAssignment> secondPage = AssignmentApi.listManagedAssignments(response.getJwt(), ListMyManagedAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .pageIndex(2)
                 .pageSize(10)
                 .build());
@@ -90,20 +90,20 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_managed_assignments_with_correct_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2021-07-08").time("01:00").build();
         DateTime expireDateTime = DateTime.builder().date("2021-07-08").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
-        AssignmentPlanApi.setGroupOperators(response.jwt(), assignmentPlanId,
-                SetGroupOperatorsCommand.builder().groupId(response.defaultGroupId()).memberIds(List.of(response.memberId())).build());
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
+        AssignmentPlanApi.setGroupOperators(response.getJwt(), assignmentPlanId,
+                SetGroupOperatorsCommand.builder().groupId(response.getDefaultGroupId()).memberIds(List.of(response.getMemberId())).build());
         createAssignmentsJob.run(of(2021, 7, 8, 1, 0));
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
 
-        PagedList<QListAssignment> assignments = AssignmentApi.listManagedAssignments(response.jwt(), ListMyManagedAssignmentsQuery.builder()
-                .appId(response.appId())
+        PagedList<QListAssignment> assignments = AssignmentApi.listManagedAssignments(response.getJwt(), ListMyManagedAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .pageIndex(1)
                 .pageSize(20)
                 .build());
@@ -121,7 +121,7 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         assertEquals(assignment.getStatus(), qAssignment.getStatus());
         assertEquals(0, qAssignment.getFinishedQrCount());
         assertEquals(1, qAssignment.getAllQrCount());
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertTrue(qAssignment.getOperatorNames().contains(member.getName()));
         assertTrue(qAssignment.getOperators().contains(member.getId()));
         assertEquals(1, qAssignment.getOperators().size());
@@ -131,31 +131,31 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_managed_assignments_filtered_by_group() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        QrApi.createQr(response.jwt(), groupId);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        QrApi.createQr(response.getJwt(), groupId);
 
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), groupId);
-        QrApi.createQr(response.jwt(), subGroupId);
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), groupId);
+        QrApi.createQr(response.getJwt(), subGroupId);
 
         DateTime startDateTime = DateTime.builder().date("2021-07-08").time("02:00").build();
         DateTime expireDateTime = DateTime.builder().date("2021-07-08").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_DAY);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_DAY);
         createAssignmentsJob.run(of(2021, 7, 8, 2, 0));
 
-        PagedList<QListAssignment> assignments = AssignmentApi.listManagedAssignments(response.jwt(), ListMyManagedAssignmentsQuery.builder()
-                .appId(response.appId())
+        PagedList<QListAssignment> assignments = AssignmentApi.listManagedAssignments(response.getJwt(), ListMyManagedAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .pageIndex(1)
                 .pageSize(20)
                 .build());
         assertEquals(3, assignments.getData().size());
 
-        PagedList<QListAssignment> groupFiltered = AssignmentApi.listManagedAssignments(response.jwt(),
+        PagedList<QListAssignment> groupFiltered = AssignmentApi.listManagedAssignments(response.getJwt(),
                 ListMyManagedAssignmentsQuery.builder()
-                        .appId(response.appId())
+                        .appId(response.getAppId())
                         .groupId(groupId)
                         .pageIndex(1)
                         .pageSize(20)
@@ -169,28 +169,28 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_managed_assignments_filtered_by_assignment_plan() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2021-07-08").time("03:00").build();
         DateTime expireDateTime = DateTime.builder().date("2021-07-08").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
-        String assignmentPlanId2 = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
+        String assignmentPlanId2 = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(2021, 7, 8, 3, 0));
 
-        PagedList<QListAssignment> assignments = AssignmentApi.listManagedAssignments(response.jwt(), ListMyManagedAssignmentsQuery.builder()
-                .appId(response.appId())
+        PagedList<QListAssignment> assignments = AssignmentApi.listManagedAssignments(response.getJwt(), ListMyManagedAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .pageIndex(1)
                 .pageSize(20)
                 .build());
         assertEquals(2, assignments.getData().size());
 
-        PagedList<QListAssignment> groupFiltered = AssignmentApi.listManagedAssignments(response.jwt(),
+        PagedList<QListAssignment> groupFiltered = AssignmentApi.listManagedAssignments(response.getJwt(),
                 ListMyManagedAssignmentsQuery.builder()
-                        .appId(response.appId())
+                        .appId(response.getAppId())
                         .assignmentPlanId(assignmentPlanId)
                         .pageIndex(1)
                         .pageSize(20)
@@ -202,20 +202,20 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_delete_assignment() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("04:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(2020, 7, 9, 4, 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
         assertNotNull(assignment);
 
-        AssignmentApi.deleteAssignment(response.jwt(), assignment.getId());
+        AssignmentApi.deleteAssignment(response.getJwt(), assignment.getId());
 
         assertFalse(assignmentRepository.exists(assignment.getId()));
     }
@@ -223,87 +223,87 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_set_operator_for_assignment() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("05:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(2020, 7, 9, 5, 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
         assertTrue(assignment.getOperators().isEmpty());
 
-        AssignmentApi.setOperators(response.jwt(), assignment.getId(),
-                SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.memberId())).build());
+        AssignmentApi.setOperators(response.getJwt(), assignment.getId(),
+                SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.getMemberId())).build());
 
         Assignment updated = assignmentRepository.byId(assignment.getId());
         assertEquals(1, updated.getOperators().size());
-        assertEquals(response.memberId(), updated.getOperators().get(0));
+        assertEquals(response.getMemberId(), updated.getOperators().get(0));
     }
 
     @Test
     public void delete_app_should_also_delete_assignment_under_it() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("06:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(2020, 7, 9, 6, 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
         assertTrue(assignment.getOperators().isEmpty());
 
-        AppApi.deleteApp(response.jwt(), response.appId());
+        AppApi.deleteApp(response.getJwt(), response.getAppId());
         assertFalse(assignmentRepository.exists(assignment.getId()));
     }
 
     @Test
     public void delete_group_should_also_delete_assignment_for_it() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        String newGroupId = GroupApi.createGroup(response.jwt(), response.appId());
-        QrApi.createQr(response.jwt(), newGroupId);
+        String newGroupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        QrApi.createQr(response.getJwt(), newGroupId);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("07:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(2020, 7, 9, 7, 0));
         Assignment assignment = assignmentRepository.latestForGroup(newGroupId).get();
         assertNotNull(assignment);
 
-        GroupApi.deleteGroup(response.jwt(), newGroupId);
+        GroupApi.deleteGroup(response.getJwt(), newGroupId);
         assertFalse(assignmentRepository.exists(assignment.getId()));
     }
 
     @Test
     public void delete_page_should_also_delete_assignments_for_it() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("08:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(2021, 7, 9, 8, 0));
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
         assertNotNull(assignment);
 
-        String appId = response.appId();
+        String appId = response.getAppId();
         Page newPage = defaultPage(defaultRadioControl());
-        AppApi.updateAppPage(response.jwt(), appId, newPage);
+        AppApi.updateAppPage(response.getJwt(), appId, newPage);
 
         assertFalse(assignmentRepository.exists(assignment.getId()));
     }
@@ -311,36 +311,36 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void delete_member_should_delete_operator_for_assignments() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        String memberId = MemberApi.createMember(response.jwt());
+        String memberId = MemberApi.createMember(response.getJwt());
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("09:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(2020, 7, 9, 9, 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
         assertTrue(assignment.getOperators().isEmpty());
 
-        AssignmentApi.setOperators(response.jwt(), assignment.getId(),
+        AssignmentApi.setOperators(response.getJwt(), assignment.getId(),
                 SetAssignmentOperatorsCommand.builder().memberIds(List.of(memberId)).build());
 
         Assignment updated = assignmentRepository.byId(assignment.getId());
         assertEquals(1, updated.getOperators().size());
         assertEquals(memberId, updated.getOperators().get(0));
 
-        MemberApi.deleteMember(response.jwt(), memberId);
+        MemberApi.deleteMember(response.getJwt(), memberId);
         assertTrue(assignmentRepository.byId(assignment.getId()).getOperators().isEmpty());
     }
 
     @Test
     public void should_finish_qr_for_assignment() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         LocalDateTime now = LocalDateTime.now().withMinute(0);
         String startTime = DateTimeFormatter.ofPattern("HH:mm").format(now);
@@ -351,42 +351,42 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         DateTime startDateTime = DateTime.builder().date(now.toLocalDate().toString()).time(startTime).build();
         DateTime expireDateTime = DateTime.builder().date(expire.toLocalDate().toString()).time(expireTime).build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
         assertEquals(1, assignment.getAllQrCount());
         assertEquals(0, assignment.getFinishedQrCount());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
         Assignment updated = assignmentRepository.byId(assignment.getId());
         assertEquals(1, updated.getFinishedQrCount());
         assertEquals(1, updated.getFinishedQrs().size());
-        AssignmentFinishedQr finishedQr = updated.getFinishedQrs().get(response.qrId());
+        AssignmentFinishedQr finishedQr = updated.getFinishedQrs().get(response.getQrId());
         assertEquals(submissionId, finishedQr.getSubmissionId());
-        assertEquals(response.qrId(), finishedQr.getQrId());
-        assertEquals(response.memberId(), finishedQr.getOperatorId());
+        assertEquals(response.getQrId(), finishedQr.getQrId());
+        assertEquals(response.getMemberId(), finishedQr.getOperatorId());
         assertNotNull(finishedQr.getFinishedAt());
     }
 
     @Test
     public void should_not_finished_qr_for_assignment_if_submission_not_fall_in_range() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("10:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(2020, 7, 9, 10, 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
         Assignment updated = assignmentRepository.byId(assignment.getId());
         assertEquals(0, updated.getFinishedQrs().size());
@@ -395,9 +395,9 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_assignment_managed_qrs() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        CreateQrResponse newQrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse newQrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
 
         LocalDateTime now = LocalDateTime.now().withMinute(0);
         String startTime = DateTimeFormatter.ofPattern("HH:mm").format(now);
@@ -408,18 +408,18 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         DateTime startDateTime = DateTime.builder().date(now.toLocalDate().toString()).time(startTime).build();
         DateTime expireDateTime = DateTime.builder().date(expire.toLocalDate().toString()).time(expireTime).build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
-        AssignmentApi.setOperators(response.jwt(), assignment.getId(),
-                SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.memberId())).build());
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
+        AssignmentApi.setOperators(response.getJwt(), assignment.getId(),
+                SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.getMemberId())).build());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
-        PagedList<QAssignmentListQr> qrs = AssignmentApi.listAssignmentQrs(response.jwt(),
+        PagedList<QAssignmentListQr> qrs = AssignmentApi.listAssignmentQrs(response.getJwt(),
                 assignment.getId(),
                 ListAssignmentQrsQuery.builder()
                         .pageIndex(1)
@@ -436,8 +436,8 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         assertNull(firstQr.getOperatorName());
         assertNull(firstQr.getSubmissionId());
 
-        QR dbSecondQr = qrRepository.byId(response.qrId());
-        Member member = memberRepository.byId(response.memberId());
+        QR dbSecondQr = qrRepository.byId(response.getQrId());
+        Member member = memberRepository.byId(response.getMemberId());
         QAssignmentListQr secondQr = qrs.getData().get(1);
         assertEquals(dbSecondQr.getId(), secondQr.getId());
         assertEquals(dbSecondQr.getPlateId(), secondQr.getPlateId());
@@ -445,15 +445,15 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         assertNotNull(secondQr.getFinishedAt());
         assertEquals(member.getName(), secondQr.getOperatorName());
         assertEquals(submissionId, secondQr.getSubmissionId());
-        assertEquals(response.memberId(), secondQr.getOperatorId());
+        assertEquals(response.getMemberId(), secondQr.getOperatorId());
     }
 
     @Test
     public void should_search_assignment_qrs() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        CreateQrResponse newQrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse newQrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
 
         LocalDateTime now = LocalDateTime.now().withMinute(0);
         String startTime = DateTimeFormatter.ofPattern("HH:mm").format(now);
@@ -464,16 +464,16 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         DateTime startDateTime = DateTime.builder().date(now.toLocalDate().toString()).time(startTime).build();
         DateTime expireDateTime = DateTime.builder().date(expire.toLocalDate().toString()).time(expireTime).build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
-        QR qr = qrRepository.byId(response.qrId());
-        PagedList<QAssignmentListQr> qrs = AssignmentApi.listAssignmentQrs(response.jwt(),
+        QR qr = qrRepository.byId(response.getQrId());
+        PagedList<QAssignmentListQr> qrs = AssignmentApi.listAssignmentQrs(response.getJwt(),
                 assignment.getId(),
                 ListAssignmentQrsQuery.builder()
                         .pageIndex(1)
@@ -482,10 +482,10 @@ public class AssignmentControllerApiTest extends BaseApiTest {
                         .build());
 
         assertEquals(1, qrs.getData().size());
-        assertEquals(response.qrId(), qrs.getData().get(0).getId());
+        assertEquals(response.getQrId(), qrs.getData().get(0).getId());
 
         QR qr2 = qrRepository.byId(newQrResponse.getQrId());
-        PagedList<QAssignmentListQr> qrs2 = AssignmentApi.listAssignmentQrs(response.jwt(),
+        PagedList<QAssignmentListQr> qrs2 = AssignmentApi.listAssignmentQrs(response.getJwt(),
                 assignment.getId(),
                 ListAssignmentQrsQuery.builder()
                         .pageIndex(1)
@@ -495,7 +495,7 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         assertEquals(1, qrs2.getData().size());
         assertEquals(qr2.getId(), qrs2.getData().get(0).getId());
 
-        PagedList<QAssignmentListQr> qrs3 = AssignmentApi.listAssignmentQrs(response.jwt(),
+        PagedList<QAssignmentListQr> qrs3 = AssignmentApi.listAssignmentQrs(response.getJwt(),
                 assignment.getId(),
                 ListAssignmentQrsQuery.builder()
                         .pageIndex(1)
@@ -505,7 +505,7 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         assertEquals(1, qrs3.getData().size());
         assertEquals(qr.getId(), qrs3.getData().get(0).getId());
 
-        PagedList<QAssignmentListQr> qrs4 = AssignmentApi.listAssignmentQrs(response.jwt(),
+        PagedList<QAssignmentListQr> qrs4 = AssignmentApi.listAssignmentQrs(response.getJwt(),
                 assignment.getId(),
                 ListAssignmentQrsQuery.builder()
                         .pageIndex(1)
@@ -519,27 +519,27 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_my_assignments() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("11:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_DAY);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_DAY);
 
         IntStream.range(9, 20).forEach(value -> {
             createAssignmentsJob.run(of(2020, 7, value, 11, 1));
-            Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
-            AssignmentApi.setOperators(response.jwt(), assignment.getId(),
-                    SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.memberId())).build());
+            Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
+            AssignmentApi.setOperators(response.getJwt(), assignment.getId(),
+                    SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.getMemberId())).build());
         });
 
         IntStream.range(21, 22).forEach(value -> {
             createAssignmentsJob.run(of(2020, 7, value, 11, 1));
         });
 
-        PagedList<QListAssignment> firstPage = AssignmentApi.listMyAssignments(response.jwt(), ListMyAssignmentsQuery.builder()
-                .appId(response.appId())
+        PagedList<QListAssignment> firstPage = AssignmentApi.listMyAssignments(response.getJwt(), ListMyAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .pageIndex(1)
                 .pageSize(10)
                 .build());
@@ -547,8 +547,8 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         assertEquals(10, firstPage.getData().size());
         assertEquals(11, firstPage.getTotalNumber());
 
-        PagedList<QListAssignment> secondPage = AssignmentApi.listMyAssignments(response.jwt(), ListMyAssignmentsQuery.builder()
-                .appId(response.appId())
+        PagedList<QListAssignment> secondPage = AssignmentApi.listMyAssignments(response.getJwt(), ListMyAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .pageIndex(2)
                 .pageSize(10)
                 .build());
@@ -560,34 +560,34 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_my_assignments_filtered_by_group() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        String groupId = GroupApi.createGroup(response.jwt(), response.appId());
-        QrApi.createQr(response.jwt(), groupId);
-        String subGroupId = GroupApi.createGroupWithParent(response.jwt(), response.appId(), groupId);
-        QrApi.createQr(response.jwt(), subGroupId);
+        String groupId = GroupApi.createGroup(response.getJwt(), response.getAppId());
+        QrApi.createQr(response.getJwt(), groupId);
+        String subGroupId = GroupApi.createGroupWithParent(response.getJwt(), response.getAppId(), groupId);
+        QrApi.createQr(response.getJwt(), subGroupId);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("12:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_DAY);
-        AssignmentPlanApi.setGroupOperators(response.jwt(), assignmentPlanId,
-                SetGroupOperatorsCommand.builder().groupId(response.defaultGroupId()).memberIds(List.of(response.memberId())).build());
-        AssignmentPlanApi.setGroupOperators(response.jwt(), assignmentPlanId,
-                SetGroupOperatorsCommand.builder().groupId(groupId).memberIds(List.of(response.memberId())).build());
-        AssignmentPlanApi.setGroupOperators(response.jwt(), assignmentPlanId,
-                SetGroupOperatorsCommand.builder().groupId(subGroupId).memberIds(List.of(response.memberId())).build());
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_DAY);
+        AssignmentPlanApi.setGroupOperators(response.getJwt(), assignmentPlanId,
+                SetGroupOperatorsCommand.builder().groupId(response.getDefaultGroupId()).memberIds(List.of(response.getMemberId())).build());
+        AssignmentPlanApi.setGroupOperators(response.getJwt(), assignmentPlanId,
+                SetGroupOperatorsCommand.builder().groupId(groupId).memberIds(List.of(response.getMemberId())).build());
+        AssignmentPlanApi.setGroupOperators(response.getJwt(), assignmentPlanId,
+                SetGroupOperatorsCommand.builder().groupId(subGroupId).memberIds(List.of(response.getMemberId())).build());
         createAssignmentsJob.run(of(2020, 7, 9, 12, 1));
 
-        assertEquals(3, AssignmentApi.listMyAssignments(response.jwt(), ListMyAssignmentsQuery.builder()
-                .appId(response.appId())
+        assertEquals(3, AssignmentApi.listMyAssignments(response.getJwt(), ListMyAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .pageIndex(1)
                 .pageSize(10)
                 .build()).getData().size());
 
-        PagedList<QListAssignment> result = AssignmentApi.listMyAssignments(response.jwt(), ListMyAssignmentsQuery.builder()
-                .appId(response.appId())
+        PagedList<QListAssignment> result = AssignmentApi.listMyAssignments(response.getJwt(), ListMyAssignmentsQuery.builder()
+                .appId(response.getAppId())
                 .groupId(groupId)
                 .pageIndex(1)
                 .pageSize(10)
@@ -601,11 +601,11 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_my_assignment_qrs() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        IntStream.range(1, 15).forEach(value -> QrApi.createQr(response.jwt(), response.defaultGroupId()));
+        IntStream.range(1, 15).forEach(value -> QrApi.createQr(response.getJwt(), response.getDefaultGroupId()));
 
         LocalDateTime now = LocalDateTime.now().withMinute(0);
         String startTime = DateTimeFormatter.ofPattern("HH:mm").format(now);
@@ -616,18 +616,18 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         DateTime startDateTime = DateTime.builder().date(now.toLocalDate().toString()).time(startTime).build();
         DateTime expireDateTime = DateTime.builder().date(expire.toLocalDate().toString()).time(expireTime).build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
-        AssignmentApi.setOperators(response.jwt(), assignment.getId(),
-                SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.memberId(), memberResponse.getMemberId())).build());
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
+        AssignmentApi.setOperators(response.getJwt(), assignment.getId(),
+                SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.getMemberId(), memberResponse.getMemberId())).build());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
-        PagedList<QAssignmentListQr> pagedList1 = AssignmentApi.listAssignmentQrs(response.jwt(),
+        PagedList<QAssignmentListQr> pagedList1 = AssignmentApi.listAssignmentQrs(response.getJwt(),
                 assignment.getId(),
                 ListAssignmentQrsQuery.builder()
                         .pageIndex(1)
@@ -641,8 +641,8 @@ public class AssignmentControllerApiTest extends BaseApiTest {
                         .pageSize(10)
                         .build());
 
-        QR dbSecondQr = qrRepository.byId(response.qrId());
-        Member member = memberRepository.byId(response.memberId());
+        QR dbSecondQr = qrRepository.byId(response.getQrId());
+        Member member = memberRepository.byId(response.getMemberId());
         QAssignmentListQr secondQr = pagedList2.getData().get(4);
         assertTrue(secondQr.isFinished());
         assertEquals(dbSecondQr.getId(), secondQr.getId());
@@ -656,11 +656,11 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_my_assignment_qrs_by_geolocation() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        CreateQrResponse qr1Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        CreateQrResponse qr2Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        CreateQrResponse qr3Response = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qr1Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qr2Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qr3Response = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
 
         Geolocation geolocation1 = Geolocation.builder()
                 .address(rAddress())
@@ -674,11 +674,11 @@ public class AssignmentControllerApiTest extends BaseApiTest {
                 .address(rAddress())
                 .point(Geopoint.builder().longitude(120f).latitude(30f).build())
                 .build();
-        QrApi.updateQrBaseSetting(response.jwt(), qr1Response.getQrId(),
+        QrApi.updateQrBaseSetting(response.getJwt(), qr1Response.getQrId(),
                 UpdateQrBaseSettingCommand.builder().name(rQrName()).geolocation(geolocation1).build());
-        QrApi.updateQrBaseSetting(response.jwt(), qr2Response.getQrId(),
+        QrApi.updateQrBaseSetting(response.getJwt(), qr2Response.getQrId(),
                 UpdateQrBaseSettingCommand.builder().name(rQrName()).geolocation(geolocation2).build());
-        QrApi.updateQrBaseSetting(response.jwt(), qr3Response.getQrId(),
+        QrApi.updateQrBaseSetting(response.getJwt(), qr3Response.getQrId(),
                 UpdateQrBaseSettingCommand.builder().name(rQrName()).geolocation(geolocation3).build());
 
         Geopoint currentPoint = Geopoint.builder().longitude(120f).latitude(29f).build();
@@ -692,16 +692,16 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         DateTime startDateTime = DateTime.builder().date(now.toLocalDate().toString()).time(startTime).build();
         DateTime expireDateTime = DateTime.builder().date(expire.toLocalDate().toString()).time(expireTime).build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
-        AssignmentApi.setOperators(response.jwt(), assignment.getId(),
-                SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.memberId())).build());
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
+        AssignmentApi.setOperators(response.getJwt(), assignment.getId(),
+                SetAssignmentOperatorsCommand.builder().memberIds(List.of(response.getMemberId())).build());
 
-        PagedList<QAssignmentListQr> pagedList = AssignmentApi.listAssignmentQrs(response.jwt(),
+        PagedList<QAssignmentListQr> pagedList = AssignmentApi.listAssignmentQrs(response.getJwt(),
                 assignment.getId(),
                 ListAssignmentQrsQuery.builder()
                         .pageIndex(1)
@@ -719,9 +719,9 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_list_my_assignment_qrs_if_member_is_not_assignment_operator() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         LocalDateTime now = LocalDateTime.now().withMinute(0);
         String startTime = DateTimeFormatter.ofPattern("HH:mm").format(now);
@@ -732,12 +732,12 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         DateTime startDateTime = DateTime.builder().date(now.toLocalDate().toString()).time(startTime).build();
         DateTime expireDateTime = DateTime.builder().date(expire.toLocalDate().toString()).time(expireTime).build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
 
         assertError(() -> AssignmentApi.listAssignmentQrsRaw(memberResponse.getJwt(),
                 assignment.getId(),
@@ -750,19 +750,19 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void manager_should_fetch_assignment_detail() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("13:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
-        AssignmentPlanApi.setGroupOperators(response.jwt(), assignmentPlanId,
-                SetGroupOperatorsCommand.builder().groupId(response.defaultGroupId()).memberIds(List.of(response.memberId())).build());
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
+        AssignmentPlanApi.setGroupOperators(response.getJwt(), assignmentPlanId,
+                SetGroupOperatorsCommand.builder().groupId(response.getDefaultGroupId()).memberIds(List.of(response.getMemberId())).build());
         createAssignmentsJob.run(of(2020, 7, 9, 13, 1));
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
 
-        QAssignmentDetail detail = AssignmentApi.fetchAssignmentDetail(response.jwt(), assignment.getId());
+        QAssignmentDetail detail = AssignmentApi.fetchAssignmentDetail(response.getJwt(), assignment.getId());
         assertEquals(assignment.getId(), detail.getId());
         assertEquals(assignment.getName(), detail.getName());
         assertEquals(assignment.getGroupId(), detail.getGroupId());
@@ -772,26 +772,26 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         assertEquals(assignment.getStatus(), detail.getStatus());
         assertEquals(assignment.getStartAt(), detail.getStartAt());
         assertEquals(assignment.getExpireAt(), detail.getExpireAt());
-        Member member = memberRepository.byId(response.memberId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertTrue(detail.getOperatorNames().contains(member.getName()));
     }
 
     @Test
     public void assignment_operator_should_fetch_assignment_detail() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("14:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
-        AssignmentPlanApi.setGroupOperators(response.jwt(), assignmentPlanId,
-                SetGroupOperatorsCommand.builder().groupId(response.defaultGroupId()).memberIds(List.of(memberResponse.getMemberId())).build());
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
+        AssignmentPlanApi.setGroupOperators(response.getJwt(), assignmentPlanId,
+                SetGroupOperatorsCommand.builder().groupId(response.getDefaultGroupId()).memberIds(List.of(memberResponse.getMemberId())).build());
         createAssignmentsJob.run(of(2020, 7, 9, 14, 1));
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
 
         QAssignmentDetail detail = AssignmentApi.fetchAssignmentDetail(memberResponse.getJwt(), assignment.getId());
         assertEquals(assignment.getId(), detail.getId());
@@ -800,17 +800,17 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void non_assignment_operator_should_fail_fetch_assignment_detail() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         DateTime startDateTime = DateTime.builder().date("2020-07-09").time("14:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-09").time("23:00").build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
         createAssignmentsJob.run(of(2020, 7, 9, 14, 1));
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
 
         assertError(() -> AssignmentApi.fetchAssignmentDetailRaw(memberResponse.getJwt(), assignment.getId()), ACCESS_DENIED);
     }
@@ -818,9 +818,9 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_fetch_assignment_qr_detail() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
         LocalDateTime now = LocalDateTime.now().withMinute(0);
         String startTime = DateTimeFormatter.ofPattern("HH:mm").format(now);
@@ -831,41 +831,41 @@ public class AssignmentControllerApiTest extends BaseApiTest {
         DateTime startDateTime = DateTime.builder().date(now.toLocalDate().toString()).time(startTime).build();
         DateTime expireDateTime = DateTime.builder().date(expire.toLocalDate().toString()).time(expireTime).build();
 
-        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(),
-                response.jwt(), EVERY_MONTH);
+        String assignmentPlanId = createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(),
+                response.getJwt(), EVERY_MONTH);
 
         createAssignmentsJob.run(of(now.getYear(), now.getMonthValue(), now.getDayOfMonth(), now.getHour(), 0));
 
-        Assignment assignment = assignmentRepository.latestForGroup(response.defaultGroupId()).get();
-        AssignmentApi.setOperators(response.jwt(), assignment.getId(),
+        Assignment assignment = assignmentRepository.latestForGroup(response.getDefaultGroupId()).get();
+        AssignmentApi.setOperators(response.getJwt(), assignment.getId(),
                 SetAssignmentOperatorsCommand.builder().memberIds(List.of(memberResponse.getMemberId())).build());
 
         assertEquals(1, assignment.getAllQrCount());
         assertEquals(0, assignment.getFinishedQrCount());
-        QAssignmentQrDetail qrDetail = AssignmentApi.fetchAssignmentQrDetail(response.jwt(), assignment.getId(), response.qrId());
+        QAssignmentQrDetail qrDetail = AssignmentApi.fetchAssignmentQrDetail(response.getJwt(), assignment.getId(), response.getQrId());
         assertEquals(assignment.getId(), qrDetail.getAssignmentId());
         assertEquals(IN_PROGRESS, qrDetail.getStatus());
         assertEquals(1, qrDetail.getAllQrCount());
         assertEquals(0, qrDetail.getFinishedQrCount());
-        assertEquals(response.qrId(), qrDetail.getQrId());
+        assertEquals(response.getQrId(), qrDetail.getQrId());
         assertFalse(qrDetail.isFinished());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        QAssignmentQrDetail updatedQrDetail = AssignmentApi.fetchAssignmentQrDetail(response.jwt(), assignment.getId(), response.qrId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        QAssignmentQrDetail updatedQrDetail = AssignmentApi.fetchAssignmentQrDetail(response.getJwt(), assignment.getId(), response.getQrId());
         assertEquals(assignment.getId(), updatedQrDetail.getAssignmentId());
         assertEquals(SUCCEED, updatedQrDetail.getStatus());
         assertEquals(1, updatedQrDetail.getAllQrCount());
         assertEquals(1, updatedQrDetail.getFinishedQrCount());
-        assertEquals(response.qrId(), updatedQrDetail.getQrId());
+        assertEquals(response.getQrId(), updatedQrDetail.getQrId());
         assertTrue(updatedQrDetail.isFinished());
         assertEquals(submissionId, updatedQrDetail.getSubmissionId());
-        assertEquals(response.memberId(), updatedQrDetail.getOperatorId());
-        Member member = memberRepository.byId(response.memberId());
+        assertEquals(response.getMemberId(), updatedQrDetail.getOperatorId());
+        Member member = memberRepository.byId(response.getMemberId());
         assertEquals(member.getName(), updatedQrDetail.getOperatorName());
         assertNotNull(updatedQrDetail.getFinishedAt());
 
         QAssignmentQrDetail newMemberQrDetail = AssignmentApi.fetchAssignmentQrDetail(memberResponse.getJwt(), assignment.getId(),
-                response.qrId());
+                response.getQrId());
         assertEquals(assignment.getId(), newMemberQrDetail.getAssignmentId());
         assertEquals(member.getName(), newMemberQrDetail.getOperatorName());
     }
@@ -873,18 +873,18 @@ public class AssignmentControllerApiTest extends BaseApiTest {
     @Test
     public void should_cache_open_assignment_app_pages() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.setAppAssignmentEnabled(response.jwt(), response.appId(), true);
+        AppApi.setAppAssignmentEnabled(response.getJwt(), response.getAppId(), true);
 
         DateTime startDateTime = DateTime.builder().date("2020-07-08").time("15:00").build();
         DateTime expireDateTime = DateTime.builder().date("2020-07-08").time("23:00").build();
 
-        createAssignmentPlan(startDateTime, expireDateTime, response.appId(), response.homePageId(), response.jwt(), EVERY_DAY);
+        createAssignmentPlan(startDateTime, expireDateTime, response.getAppId(), response.getHomePageId(), response.getJwt(), EVERY_DAY);
 
         createAssignmentsJob.run(of(2020, 7, 8, 15, 0));
 
-        List<String> pageIds = assignmentRepository.cachedOpenAssignmentPages(response.appId());
-        assertTrue(pageIds.contains(response.homePageId()));
-        String key = "Cache:OPEN_ASSIGNMENT_PAGES::" + response.appId();
+        List<String> pageIds = assignmentRepository.cachedOpenAssignmentPages(response.getAppId());
+        assertTrue(pageIds.contains(response.getHomePageId()));
+        String key = "Cache:OPEN_ASSIGNMENT_PAGES::" + response.getAppId();
         PollingAssertion.pollAssert().run(() -> assertEquals(TRUE, stringRedisTemplate.hasKey(key)));
     }
 

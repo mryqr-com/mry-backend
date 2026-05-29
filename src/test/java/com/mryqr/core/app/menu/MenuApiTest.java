@@ -26,7 +26,7 @@ public class MenuApiTest extends BaseApiTest {
     @Test
     public void update_app_setting_should_also_update_menu() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         Page page = setting.homePage();
@@ -37,7 +37,7 @@ public class MenuApiTest extends BaseApiTest {
         PageLink incompletePageLink = PageLink.builder().id(newShortUuid()).name(rPageLinkName()).type(PAGE).build();
         List<PageLink> links = newArrayList(completeExternalLink, incompleteExternalLink, completePageLink, incompletePageLink);
         setting.getMenu().getLinks().addAll(links);
-        AppApi.updateAppSetting(response.jwt(), appId, setting);
+        AppApi.updateAppSetting(response.getJwt(), appId, setting);
 
         App updatedApp = appRepository.byId(appId);
         List<PageLink> updatedLinks = updatedApp.getSetting().getMenu().getLinks();
@@ -50,7 +50,7 @@ public class MenuApiTest extends BaseApiTest {
     @Test
     public void should_fail_update_app_setting_if_menu_reference_non_exists_page() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
@@ -58,13 +58,13 @@ public class MenuApiTest extends BaseApiTest {
         PageLink pageLink = PageLink.builder().id(newShortUuid()).name(rPageLinkName()).type(PAGE).pageId(nonExistsPageId).build();
         setting.getMenu().getLinks().add(pageLink);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), VALIDATION_LINK_PAGE_NOT_EXIST);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), VALIDATION_LINK_PAGE_NOT_EXIST);
     }
 
     @Test
     public void should_fail_update_app_if_menu_id_duplicated() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
@@ -73,7 +73,7 @@ public class MenuApiTest extends BaseApiTest {
         PageLink link2 = PageLink.builder().id(linkId).name(rPageLinkName()).type(EXTERNAL_URL).url(rUrl()).build();
         setting.getMenu().getLinks().addAll(newArrayList(link1, link2));
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), MENU_LINK_ID_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), MENU_LINK_ID_DUPLICATED);
     }
 
 }

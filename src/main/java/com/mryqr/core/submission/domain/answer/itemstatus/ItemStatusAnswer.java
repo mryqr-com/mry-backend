@@ -32,10 +32,6 @@ public class ItemStatusAnswer extends Answer {
     @ShortUuid
     private String optionId;
 
-    public static ItemStatusAnswer.ItemStatusAnswerBuilder<?, ?> answerBuilder(FItemStatusControl control) {
-        return ItemStatusAnswer.builder().controlId(control.getId()).controlType(control.getType());
-    }
-
     @Override
     public void correctAndValidate() {
     }
@@ -93,6 +89,10 @@ public class ItemStatusAnswer extends Answer {
     protected Double doCalculateNumericalValue(Control control) {
         FItemStatusControl theControl = (FItemStatusControl) control;
         return theControl.numericalValueFor(optionId);
+    }
+
+    public static ItemStatusAnswer.ItemStatusAnswerBuilder<?, ?> answerBuilder(FItemStatusControl control) {
+        return ItemStatusAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

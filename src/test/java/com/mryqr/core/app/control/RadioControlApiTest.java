@@ -45,9 +45,9 @@ public class RadioControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FRadioControl control = defaultRadioControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -60,24 +60,24 @@ public class RadioControlApiTest extends BaseApiTest {
         TextOption option2 = TextOption.builder().id(optionsId).name(randomAlphabetic(5) + "选项").build();
 
         FRadioControl control = defaultRadioControlBuilder().options(newArrayList(option1, option2)).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting), TEXT_OPTION_ID_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting), TEXT_OPTION_ID_DUPLICATED);
     }
 
     @Test
     public void should_answer_normally() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FRadioControl control = defaultRadioControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         RadioAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
+        App app = appRepository.byId(response.getAppId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         RadioAnswer updatedAnswer = (RadioAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -109,9 +109,9 @@ public class RadioControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), dependantControl, calculatedControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), dependantControl, calculatedControl);
         RadioAnswer answer = rAnswerBuilder(dependantControl).optionId(optionId1).build();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
         Submission submission = submissionRepository.byId(submissionId);
         NumberInputAnswer updatedAnswer = (NumberInputAnswer) submission.getAnswers().get(calculatedControl.getId());
         assertEquals(6, updatedAnswer.getNumber());
@@ -121,41 +121,41 @@ public class RadioControlApiTest extends BaseApiTest {
     public void should_fail_answer_if_not_filled_for_mandatory() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FRadioControl control = defaultRadioControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         RadioAnswer answer = rAnswerBuilder(control).optionId(null).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
     public void should_fail_answer_if_option_not_exists() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FRadioControl control = defaultRadioControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         RadioAnswer answer = rAnswerBuilder(control).optionId(newShortUuid()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), NOT_ALL_ANSWERS_IN_RADIO_OPTIONS);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), NOT_ALL_ANSWERS_IN_RADIO_OPTIONS);
     }
 
     @Test
     public void should_calculate_first_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FRadioControl control = defaultRadioControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         RadioAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         RadioAttributeValue attributeValue = (RadioAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(control.getId(), attributeValue.getControlId());
         assertEquals(answer.getOptionId(), attributeValue.getOptionId());
@@ -167,17 +167,17 @@ public class RadioControlApiTest extends BaseApiTest {
     public void should_calculate_last_submission_answer_as_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FRadioControl control = defaultRadioControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST).pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         RadioAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         RadioAttributeValue attributeValue = (RadioAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(control.getId(), attributeValue.getControlId());
         assertEquals(answer.getOptionId(), attributeValue.getOptionId());

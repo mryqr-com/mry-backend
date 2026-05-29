@@ -26,11 +26,11 @@ public class AnswerReferenceControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(response.homePageId())
+        PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(response.getHomePageId())
                 .controlId(checkboxControl.getId()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl, control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl, control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -41,11 +41,11 @@ public class AnswerReferenceControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
         PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().controlId(checkboxControl.getId()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -55,11 +55,11 @@ public class AnswerReferenceControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
-        PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(response.homePageId()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
+        PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(response.getHomePageId()).build();
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -69,14 +69,14 @@ public class AnswerReferenceControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
         PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(Page.newPageId()).controlId(checkboxControl.getId())
                 .build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_PAGE_NOT_EXIST);
     }
 
@@ -85,14 +85,14 @@ public class AnswerReferenceControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
-        PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(response.homePageId())
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
+        PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(response.getHomePageId())
                 .controlId(Control.newControlId()).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -101,14 +101,14 @@ public class AnswerReferenceControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PSectionTitleViewControl sectionTitleControl = defaultSectionTitleControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), sectionTitleControl);
-        PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(response.homePageId())
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), sectionTitleControl);
+        PAnswerReferenceControl control = defaultAnswerReferenceControlBuilder().pageId(response.getHomePageId())
                 .controlId(sectionTitleControl.getId()).build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 CONTROL_NOT_SUPPORT_REFERENCE);
     }
 
@@ -117,16 +117,16 @@ public class AnswerReferenceControlApiTest extends BaseApiTest {
         PreparedQrResponse qrResponse = setupApi.registerWithQr();
 
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
-        PAnswerReferenceControl referenceControl = defaultAnswerReferenceControlBuilder().pageId(qrResponse.homePageId())
+        PAnswerReferenceControl referenceControl = defaultAnswerReferenceControlBuilder().pageId(qrResponse.getHomePageId())
                 .controlId(singleLineTextControl.getId()).build();
-        AppApi.updateAppControls(qrResponse.jwt(), qrResponse.appId(), singleLineTextControl, referenceControl);
+        AppApi.updateAppControls(qrResponse.getJwt(), qrResponse.getAppId(), singleLineTextControl, referenceControl);
         //first submission, will not be targeted
-        SubmissionApi.newSubmission(qrResponse.jwt(), qrResponse.qrId(), qrResponse.homePageId(), rAnswer(singleLineTextControl));
+        SubmissionApi.newSubmission(qrResponse.getJwt(), qrResponse.getQrId(), qrResponse.getHomePageId(), rAnswer(singleLineTextControl));
 
         SingleLineTextAnswer singleLineTextAnswer = rAnswer(singleLineTextControl);
-        SubmissionApi.newSubmission(qrResponse.jwt(), qrResponse.qrId(), qrResponse.homePageId(), singleLineTextAnswer);
-        QAnswerReferencePresentation presentation = (QAnswerReferencePresentation) PresentationApi.fetchPresentation(qrResponse.jwt(),
-                qrResponse.qrId(), qrResponse.homePageId(), referenceControl.getId());
+        SubmissionApi.newSubmission(qrResponse.getJwt(), qrResponse.getQrId(), qrResponse.getHomePageId(), singleLineTextAnswer);
+        QAnswerReferencePresentation presentation = (QAnswerReferencePresentation) PresentationApi.fetchPresentation(qrResponse.getJwt(),
+                qrResponse.getQrId(), qrResponse.getHomePageId(), referenceControl.getId());
 
         TextDisplayValue value = (TextDisplayValue) presentation.getValue();
         assertEquals(singleLineTextAnswer.getContent(), value.getText());

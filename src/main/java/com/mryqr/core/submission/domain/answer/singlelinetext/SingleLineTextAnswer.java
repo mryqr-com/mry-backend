@@ -33,10 +33,6 @@ public class SingleLineTextAnswer extends Answer {
     @Size(max = MAX_ANSWER_LENGTH)
     private String content;
 
-    public static SingleLineTextAnswer.SingleLineTextAnswerBuilder<?, ?> answerBuilder(FSingleLineTextControl control) {
-        return SingleLineTextAnswer.builder().controlId(control.getId()).controlType(control.getType());
-    }
-
     @Override
     public void correctAndValidate() {
     }
@@ -83,6 +79,10 @@ public class SingleLineTextAnswer extends Answer {
     @Override
     protected Double doCalculateNumericalValue(Control control) {
         return null;
+    }
+
+    public static SingleLineTextAnswer.SingleLineTextAnswerBuilder<?, ?> answerBuilder(FSingleLineTextControl control) {
+        return SingleLineTextAnswer.builder().controlId(control.getId()).controlType(control.getType());
     }
 
 }

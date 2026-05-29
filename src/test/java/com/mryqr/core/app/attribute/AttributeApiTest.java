@@ -88,7 +88,7 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_update_app_setting_with_custom_attributes() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         Page page = setting.homePage();
@@ -108,7 +108,7 @@ public class AttributeApiTest extends BaseApiTest {
         List<Attribute> attributes = newArrayList(fixValue, fillableValue, instanceRefValue, pageRefValue, controlRefValue);
         setting.getAttributes().clear();
         setting.getAttributes().addAll(attributes);
-        AppApi.updateAppSetting(response.jwt(), appId, setting);
+        AppApi.updateAppSetting(response.getJwt(), appId, setting);
 
         App updatedApp = appRepository.byId(appId);
         List<Attribute> updatedAttributes = updatedApp.getSetting().getAttributes();
@@ -125,12 +125,12 @@ public class AttributeApiTest extends BaseApiTest {
     public void should_calculate_suffix_and_precision_for_number_input_control() {
         PreparedAppResponse response = setupApi.registerWithApp();
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().suffix("m").precision(2).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(NO_LIMIT).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(numberInputControl.getId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).controlId(numberInputControl.getId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App updatedApp = appRepository.byId(response.appId());
+        App updatedApp = appRepository.byId(response.getAppId());
         Attribute updatedAttribute = updatedApp.getSetting().getAttributes().get(0);
         assertEquals("m", updatedAttribute.getSuffix());
         assertEquals(2, updatedAttribute.getPrecision());
@@ -139,63 +139,63 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_fail_update_app_setting_if_attribute_ref_page_is_null() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
 
         Attribute invalidPageRefValue = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(NO_LIMIT)
                 .type(PAGE_LAST_SUBMITTED_TIME).pageId(null).build();
         AppSetting setting = app.getSetting();
         setting.getAttributes().add(invalidPageRefValue);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 EMPTY_ATTRIBUTE_REF_PAGE_ID);
     }
 
     @Test
     public void should_fail_update_app_setting_if_ref_page_not_exist() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
 
         Attribute invalidPageRefValue = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(NO_LIMIT)
                 .type(PAGE_LAST_SUBMITTED_TIME).pageId(newPageId()).build();
         AppSetting setting = app.getSetting();
         setting.getAttributes().add(invalidPageRefValue);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_ATTRIBUTE_REF_PAGE_NOT_EXIST);
     }
 
     @Test
     public void should_fail_update_app_setting_if_ref_control_is_null() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
 
         Attribute invalidControlRefValue = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(NO_LIMIT).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(null).build();
+                .pageId(response.getHomePageId()).controlId(null).build();
         AppSetting setting = app.getSetting();
         setting.getAttributes().add(invalidControlRefValue);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 EMPTY_ATTRIBUTE_REF_CONTROL_ID);
     }
 
     @Test
     public void should_fail_update_app_setting_if_ref_control_not_exist() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
 
         Attribute invalidControlRefValue = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(NO_LIMIT).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(newControlId()).build();
+                .pageId(response.getHomePageId()).controlId(newControlId()).build();
         AppSetting setting = app.getSetting();
         setting.getAttributes().add(invalidControlRefValue);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_ATTRIBUTE_REF_CONTROL_NOT_EXIST);
     }
 
     @Test
     public void should_fail_update_app_setting_if_attribute_reference_wrong_control_type_for_numbered_control() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         Page page = setting.homePage();
@@ -206,13 +206,13 @@ public class AttributeApiTest extends BaseApiTest {
                 .pageId(page.getId()).controlId(control.getId()).build();
         setting.getAttributes().add(controlRefAttribute);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), WRONG_ATTRIBUTE_REF_CONTROL_TYPE);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), WRONG_ATTRIBUTE_REF_CONTROL_TYPE);
     }
 
     @Test
     public void should_fail_update_app_setting_if_attribute_reference_wrong_control_type_for_non_numbered_control() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
         Page page = setting.homePage();
@@ -223,46 +223,46 @@ public class AttributeApiTest extends BaseApiTest {
                 .pageId(page.getId()).controlId(control.getId()).build();
         setting.getAttributes().add(controlRefAttribute);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), WRONG_ATTRIBUTE_REF_CONTROL_TYPE);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), WRONG_ATTRIBUTE_REF_CONTROL_TYPE);
     }
 
     @Test
     public void should_fail_update_app_setting_if_fixed_attribute_has_no_value() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
 
         Attribute invalidControlRefValue = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(FIXED).fixedValue(null).build();
         AppSetting setting = app.getSetting();
         setting.getAttributes().add(invalidControlRefValue);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 EMPTY_ATTRIBUTE_FIXED_VALUE);
     }
 
     @Test
     public void should_fail_update_app_setting_if_range_not_provided_but_required() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
 
         Attribute invalidControlRefValue = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_SUBMIT_COUNT)
                 .range(null).build();
         AppSetting setting = app.getSetting();
         setting.getAttributes().add(invalidControlRefValue);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 ATTRIBUTE_RANGE_SHOULD_NOT_NULL);
     }
 
     @Test
     public void create_attribute_should_raise_event() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String appId = response.appId();
-        CreateQrResponse qrResponse1 = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        CreateQrResponse qrResponse2 = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        String appId = response.getAppId();
+        CreateQrResponse qrResponse1 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        CreateQrResponse qrResponse2 = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CREATE_TIME).build();
-        AppApi.updateAppAttributes(response.jwt(), appId, attribute);
+        AppApi.updateAppAttributes(response.getJwt(), appId, attribute);
 
         AppAttributesCreatedEvent attributesCreatedEvent = latestEventFor(appId, APP_ATTRIBUTES_CREATED, AppAttributesCreatedEvent.class);
         assertEquals(1, attributesCreatedEvent.getAttributes().size());
@@ -287,11 +287,11 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void delete_attribute_should_raise_event() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String appId = response.appId();
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        String appId = response.getAppId();
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CREATE_TIME).build();
-        AppApi.updateAppAttributes(response.jwt(), appId, attribute);
+        AppApi.updateAppAttributes(response.getJwt(), appId, attribute);
         App app = appRepository.byId(appId);
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
         QR qr = qrRepository.byId(qrResponse.getQrId());
@@ -301,7 +301,7 @@ public class AttributeApiTest extends BaseApiTest {
         assertEquals(attributeId, indexedValue.getRid());
         assertEquals(qr.getCreatedAt().toEpochMilli(), indexedValue.getSv());
 
-        AppApi.updateAppAttributes(response.jwt(), appId);
+        AppApi.updateAppAttributes(response.getJwt(), appId);
 
         AppAttributesDeletedEvent attributesDeletedEvent = latestEventFor(appId, APP_ATTRIBUTES_DELETED, AppAttributesDeletedEvent.class);
         assertEquals(1, attributesDeletedEvent.getAttributes().size());
@@ -315,11 +315,11 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void delete_attribute_with_override_index_field_should_raise_event() {
         PreparedAppResponse response = setupApi.registerWithApp();
-        String appId = response.appId();
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        String appId = response.getAppId();
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CREATE_TIME).build();
-        AppApi.updateAppAttributes(response.jwt(), appId, attribute);
+        AppApi.updateAppAttributes(response.getJwt(), appId, attribute);
         App app = appRepository.byId(appId);
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
         QR qr = qrRepository.byId(qrResponse.getQrId());
@@ -332,7 +332,7 @@ public class AttributeApiTest extends BaseApiTest {
         List<Attribute> newAttributes = IntStream.range(0, 20)
                 .mapToObj(value -> Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_CREATE_TIME).build())
                 .collect(Collectors.toList());
-        AppApi.updateAppAttributes(response.jwt(), appId, newAttributes);
+        AppApi.updateAppAttributes(response.getJwt(), appId, newAttributes);
 
         AppAttributesDeletedEvent attributesDeletedEvent = latestEventFor(appId, APP_ATTRIBUTES_DELETED, AppAttributesDeletedEvent.class);
         assertEquals(1, attributesDeletedEvent.getAttributes().size());
@@ -350,7 +350,7 @@ public class AttributeApiTest extends BaseApiTest {
 
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
                 .type(INSTANCE_SUBMIT_COUNT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         AttributeNumberReport attributeNumberReport = AttributeNumberReport.builder()
                 .id(newShortUuid())
@@ -370,12 +370,12 @@ public class AttributeApiTest extends BaseApiTest {
                         .numberReportSetting(NumberReportSetting.builder().reports(reports)
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
-        AppApi.updateAppReportSetting(response.jwt(), response.appId(), command);
-        assertEquals(1, appRepository.byId(response.appId())
+        AppApi.updateAppReportSetting(response.getJwt(), response.getAppId(), command);
+        assertEquals(1, appRepository.byId(response.getAppId())
                 .getReportSetting().getNumberReportSetting().getReports().size());
 
-        AppApi.updateAppAttributes(response.jwt(), response.appId());
-        assertEquals(0, appRepository.byId(response.appId())
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId());
+        assertEquals(0, appRepository.byId(response.getAppId())
                 .getReportSetting().getNumberReportSetting().getReports().size());
     }
 
@@ -385,7 +385,7 @@ public class AttributeApiTest extends BaseApiTest {
 
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(AttributeStatisticRange.NO_LIMIT)
                 .type(INSTANCE_SUBMIT_COUNT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         AttributeTimeSegmentReport report = AttributeTimeSegmentReport.builder()
                 .id(newShortUuid())
@@ -414,21 +414,21 @@ public class AttributeApiTest extends BaseApiTest {
                         .numberReportSetting(NumberReportSetting.builder().reports(newArrayList())
                                 .configuration(NumberReportConfiguration.builder().gutter(10).height(100).reportPerLine(6).build()).build()).build())
                 .build();
-        AppApi.updateAppReportSetting(response.jwt(), response.appId(), command);
-        List<ChartReport> updatedReports = appRepository.byId(response.appId())
+        AppApi.updateAppReportSetting(response.getJwt(), response.getAppId(), command);
+        List<ChartReport> updatedReports = appRepository.byId(response.getAppId())
                 .getReportSetting().getChartReportSetting().getReports();
         assertEquals(1, updatedReports.size());
         assertEquals(report.getId(), updatedReports.get(0).getId());
 
-        AppApi.updateAppAttributes(response.jwt(), response.appId());
-        assertEquals(0, appRepository.byId(response.appId())
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId());
+        assertEquals(0, appRepository.byId(response.getAppId())
                 .getReportSetting().getChartReportSetting().getReports().size());
     }
 
     @Test
     public void should_fail_update_app_setting_if_attribute_id_duplicated() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
@@ -440,13 +440,13 @@ public class AttributeApiTest extends BaseApiTest {
         List<Attribute> attributes = newArrayList(pageRefAttribute1, pageRefAttribute2);
         setting.getAttributes().addAll(attributes);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), ATTRIBUTE_ID_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), ATTRIBUTE_ID_DUPLICATED);
     }
 
     @Test
     public void should_fail_update_app_setting_if_attribute_name_duplicated() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
 
@@ -458,17 +458,17 @@ public class AttributeApiTest extends BaseApiTest {
         List<Attribute> attributes = newArrayList(pageRefAttribute1, pageRefAttribute2);
         setting.getAttributes().addAll(attributes);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, app.getVersion(), setting), ATTRIBUTE_NAME_DUPLICATED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, app.getVersion(), setting), ATTRIBUTE_NAME_DUPLICATED);
     }
 
     @Test
     public void should_fail_update_app_setting_if_attribute_schema_changed() {
         PreparedAppResponse response = setupApi.registerWithApp(rMobile(), rPassword());
-        String appId = response.appId();
+        String appId = response.getAppId();
         String attributeId = newAttributeId();
         Attribute oldAttribute = Attribute.builder().id(attributeId).name(rAttributeName()).range(NO_LIMIT).type(FIXED).fixedValue("whatever")
                 .build();
-        AppApi.updateAppAttributes(response.jwt(), appId, oldAttribute);
+        AppApi.updateAppAttributes(response.getJwt(), appId, oldAttribute);
 
         App app = appRepository.byId(appId);
         AppSetting setting = app.getSetting();
@@ -476,7 +476,7 @@ public class AttributeApiTest extends BaseApiTest {
         setting.getAttributes().clear();
         setting.getAttributes().add(updatedAttribute);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), appId, setting), ATTRIBUTE_SCHEMA_CANNOT_MODIFIED);
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), appId, setting), ATTRIBUTE_SCHEMA_CANNOT_MODIFIED);
     }
 
     @Test
@@ -485,9 +485,9 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CUSTOM_ID).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         assertTrue(qr.getAttributeValues().isEmpty());
         assertNull(qr.getIndexedValues());
     }
@@ -498,9 +498,9 @@ public class AttributeApiTest extends BaseApiTest {
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_NAME).build();
 
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         TextAttributeValue attributeValue = (TextAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_NAME, attributeValue.getAttributeType());
@@ -514,12 +514,12 @@ public class AttributeApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_ACTIVE_STATUS).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        QrApi.deactivate(response.jwt(), qrResponse.getQrId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        QrApi.deactivate(response.getJwt(), qrResponse.getQrId());
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
 
         QR qr = qrRepository.byId(qrResponse.getQrId());
@@ -534,7 +534,7 @@ public class AttributeApiTest extends BaseApiTest {
         assertTrue(indexedValue.getTv().contains(FALSE));
         assertNull(indexedValue.getSv());
 
-        QrApi.activate(response.jwt(), qrResponse.getQrId());
+        QrApi.activate(response.getJwt(), qrResponse.getQrId());
         QR updatedQr = qrRepository.byId(qrResponse.getQrId());
         BooleanAttributeValue updatedAttributeValue = (BooleanAttributeValue) updatedQr.getAttributeValues().get(attributeId);
         assertTrue(updatedAttributeValue.isYes());
@@ -549,12 +549,12 @@ public class AttributeApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_TEMPLATE_STATUS).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        QrApi.markTemplate(response.jwt(), qrResponse.getQrId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        QrApi.markTemplate(response.getJwt(), qrResponse.getQrId());
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
 
         QR qr = qrRepository.byId(qrResponse.getQrId());
@@ -569,7 +569,7 @@ public class AttributeApiTest extends BaseApiTest {
         assertTrue(indexedValue.getTv().contains(TRUE));
         assertNull(indexedValue.getSv());
 
-        QrApi.unmarkTemplate(response.jwt(), qrResponse.getQrId());
+        QrApi.unmarkTemplate(response.getJwt(), qrResponse.getQrId());
         QR updatedQr = qrRepository.byId(qrResponse.getQrId());
         BooleanAttributeValue updatedAttributeValue = (BooleanAttributeValue) updatedQr.getAttributeValues().get(attributeId);
         assertFalse(updatedAttributeValue.isYes());
@@ -585,11 +585,11 @@ public class AttributeApiTest extends BaseApiTest {
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_PLATE_ID).build();
 
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         IdentifierAttributeValue attributeValue = (IdentifierAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_PLATE_ID, attributeValue.getAttributeType());
@@ -605,16 +605,16 @@ public class AttributeApiTest extends BaseApiTest {
     public void should_sync_instance_custom_id_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         String customId = rCustomId();
-        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(),
+        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(),
                 UpdateQrBaseSettingCommand.builder().name(rQrName()).customId(customId).build());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CUSTOM_ID).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         IdentifierAttributeValue attributeValue = (IdentifierAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_CUSTOM_ID, attributeValue.getAttributeType());
@@ -638,15 +638,15 @@ public class AttributeApiTest extends BaseApiTest {
                 .statusAfterSubmissions(List.of())
                 .statusPermissions(List.of())
                 .build();
-        AppApi.updateCirculationStatusSetting(response.jwt(), response.appId(), setting);
+        AppApi.updateCirculationStatusSetting(response.getJwt(), response.getAppId(), setting);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CIRCULATION_STATUS).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
         QR qr = qrRepository.byId(qrResponse.getQrId());
         CirculationStatusAttributeValue attributeValue = (CirculationStatusAttributeValue) qr.getAttributeValues().get(attributeId);
@@ -663,18 +663,18 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_instance_geolocation_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        AppApi.enableAppPosition(response.jwt(), response.appId());
+        AppApi.enableAppPosition(response.getJwt(), response.getAppId());
         Geolocation geolocation = rGeolocation();
-        QrApi.updateQrBaseSetting(response.jwt(), response.qrId(),
+        QrApi.updateQrBaseSetting(response.getJwt(), response.getQrId(),
                 UpdateQrBaseSettingCommand.builder().name(rQrName()).geolocation(geolocation).build());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_GEOLOCATION).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         GeolocationAttributeValue attributeValue = (GeolocationAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_GEOLOCATION, attributeValue.getAttributeType());
@@ -694,11 +694,11 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CREATE_TIME).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         TimestampAttributeValue attributeValue = (TimestampAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_CREATE_TIME, attributeValue.getAttributeType());
@@ -716,11 +716,11 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CREATE_DATE).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         LocalDateAttributeValue attributeValue = (LocalDateAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_CREATE_DATE, attributeValue.getAttributeType());
@@ -739,11 +739,11 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CREATOR).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         MemberAttributeValue attributeValue = (MemberAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_CREATOR, attributeValue.getAttributeType());
@@ -761,11 +761,11 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CREATOR_AND_MOBILE).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         MemberMobileAttributeValue attributeValue = (MemberMobileAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_CREATOR_AND_MOBILE, attributeValue.getAttributeType());
@@ -783,11 +783,11 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_CREATOR_AND_EMAIL).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         MemberEmailAttributeValue attributeValue = (MemberEmailAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_CREATOR_AND_EMAIL, attributeValue.getAttributeType());
@@ -803,16 +803,16 @@ public class AttributeApiTest extends BaseApiTest {
     public void should_sync_instance_submit_count_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FSingleLineTextControl control = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).range(NO_LIMIT).type(INSTANCE_SUBMIT_COUNT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         IntegerAttributeValue attributeValue = (IntegerAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_SUBMIT_COUNT, attributeValue.getAttributeType());
@@ -827,15 +827,15 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_instance_access_count_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        QrApi.fetchSubmissionQr(response.jwt(), response.plateId());
+        QrApi.fetchSubmissionQr(response.getJwt(), response.getPlateId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_ACCESS_COUNT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         IntegerAttributeValue attributeValue = (IntegerAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_ACCESS_COUNT, attributeValue.getAttributeType());
@@ -853,35 +853,35 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_GROUP).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         GroupAttributeValue attributeValue = (GroupAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_GROUP, attributeValue.getAttributeType());
         assertEquals(GROUP_VALUE, attributeValue.getValueType());
-        assertEquals(response.defaultGroupId(), attributeValue.getGroupId());
+        assertEquals(response.getDefaultGroupId(), attributeValue.getGroupId());
         IndexedValue indexedValue = qr.getIndexedValues().valueOf(indexedField);
         assertEquals(attributeId, indexedValue.getRid());
-        assertTrue(indexedValue.getTv().contains(response.defaultGroupId()));
+        assertTrue(indexedValue.getTv().contains(response.getDefaultGroupId()));
         assertNull(indexedValue.getSv());
     }
 
     @Test
     public void should_sync_instance_group_managers_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String memberId = MemberApi.createMember(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberId);
+        String memberId = MemberApi.createMember(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberId);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_GROUP_MANAGERS).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         MembersAttributeValue attributeValue = (MembersAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_GROUP_MANAGERS, attributeValue.getAttributeType());
@@ -896,16 +896,16 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_instance_group_managers_and_mobile_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String memberId = MemberApi.createMember(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberId);
+        String memberId = MemberApi.createMember(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberId);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_GROUP_MANAGERS_AND_MOBILE).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         MembersMobileAttributeValue attributeValue = (MembersMobileAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_GROUP_MANAGERS_AND_MOBILE, attributeValue.getAttributeType());
@@ -920,16 +920,16 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_instance_group_managers_and_email_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String memberId = MemberApi.createMember(response.jwt());
-        GroupApi.addGroupManagers(response.jwt(), response.defaultGroupId(), memberId);
+        String memberId = MemberApi.createMember(response.getJwt());
+        GroupApi.addGroupManagers(response.getJwt(), response.getDefaultGroupId(), memberId);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(INSTANCE_GROUP_MANAGERS_AND_EMAIL).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         MembersEmailAttributeValue attributeValue = (MembersEmailAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(INSTANCE_GROUP_MANAGERS_AND_EMAIL, attributeValue.getAttributeType());
@@ -944,16 +944,16 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_submit_account_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_SUBMIT_COUNT).range(NO_LIMIT)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         IntegerAttributeValue attributeValue = (IntegerAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(PAGE_SUBMIT_COUNT, attributeValue.getAttributeType());
@@ -971,15 +971,15 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_FIRST_SUBMITTED_TIME).range(NO_LIMIT)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         TimestampAttributeValue attributeValue = (TimestampAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -995,17 +995,17 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_first_submitted_date_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_FIRST_SUBMITTED_DATE).range(NO_LIMIT)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         LocalDateAttributeValue attributeValue = (LocalDateAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1022,19 +1022,19 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_first_submitter_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_FIRST_SUBMITTER)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         MemberAttributeValue attributeValue = (MemberAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1050,19 +1050,19 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_first_submitter_and_mobile_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_FIRST_SUBMITTER_AND_MOBILE)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         MemberMobileAttributeValue attributeValue = (MemberMobileAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1078,19 +1078,19 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_first_submitter_and_email_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_FIRST_SUBMITTER_AND_EMAIL)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         MemberEmailAttributeValue attributeValue = (MemberEmailAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1106,17 +1106,17 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_last_submitted_time_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_LAST_SUBMITTED_TIME).range(NO_LIMIT)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         TimestampAttributeValue attributeValue = (TimestampAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1132,17 +1132,17 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_last_submitted_date_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_LAST_SUBMITTED_DATE).range(NO_LIMIT)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         LocalDateAttributeValue attributeValue = (LocalDateAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1159,18 +1159,18 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_last_updated_time_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        SubmissionApi.updateSubmission(response.jwt(), submissionId);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_LAST_SUBMISSION_UPDATED_TIME).range(NO_LIMIT)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         TimestampAttributeValue attributeValue = (TimestampAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1186,18 +1186,18 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_last_update_date_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        SubmissionApi.updateSubmission(response.jwt(), submissionId);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_LAST_SUBMISSION_UPDATE_DATE).range(NO_LIMIT)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         LocalDateAttributeValue attributeValue = (LocalDateAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1214,19 +1214,19 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_last_submitter_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_LAST_SUBMITTER)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         MemberAttributeValue attributeValue = (MemberAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1242,40 +1242,40 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_last_submission_updater_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        SubmissionApi.updateSubmission(response.jwt(), submissionId);
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        SubmissionApi.updateSubmission(response.getJwt(), submissionId);
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_LAST_SUBMISSION_UPDATER).range(NO_LIMIT)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         MemberAttributeValue attributeValue = (MemberAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
         assertEquals(PAGE_LAST_SUBMISSION_UPDATER, attributeValue.getAttributeType());
         assertEquals(MEMBER_VALUE, attributeValue.getValueType());
-        assertEquals(response.memberId(), attributeValue.getMemberId());
+        assertEquals(response.getMemberId(), attributeValue.getMemberId());
     }
 
     @Test
     public void should_sync_page_last_submitter_and_mobile_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_LAST_SUBMITTER_AND_MOBILE)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         MemberMobileAttributeValue attributeValue = (MemberMobileAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1291,19 +1291,19 @@ public class AttributeApiTest extends BaseApiTest {
     @Test
     public void should_sync_page_last_submitter_and_email_attribute_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
-        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.jwt());
+        CreateMemberResponse memberResponse = MemberApi.createMemberAndLogin(response.getJwt());
 
-        SubmissionApi.newSubmission(memberResponse.getJwt(), response.qrId(), response.homePageId());
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        SubmissionApi.newSubmission(memberResponse.getJwt(), response.getQrId(), response.getHomePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_LAST_SUBMITTER_AND_EMAIL)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attributeId).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         Submission submission = submissionRepository.byId(submissionId);
         MemberEmailAttributeValue attributeValue = (MemberEmailAttributeValue) qr.getAttributeValues().get(attributeId);
         assertEquals(attributeId, attributeValue.getAttributeId());
@@ -1322,41 +1322,41 @@ public class AttributeApiTest extends BaseApiTest {
 
         String attributeId = newAttributeId();
         Attribute attribute = Attribute.builder().id(attributeId).name(rAttributeName()).type(PAGE_SUBMISSION_EXISTS)
-                .pageId(response.homePageId()).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
-        assertFalse(((BooleanAttributeValue) qrRepository.byId(response.qrId()).getAttributeValues().get(attributeId)).isYes());
+        assertFalse(((BooleanAttributeValue) qrRepository.byId(response.getQrId()).getAttributeValues().get(attributeId)).isYes());
 
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
 
-        assertTrue(((BooleanAttributeValue) qrRepository.byId(response.qrId()).getAttributeValues().get(attributeId)).isYes());
+        assertTrue(((BooleanAttributeValue) qrRepository.byId(response.getQrId()).getAttributeValues().get(attributeId)).isYes());
     }
 
     @Test
     public void last_empty_answer_should_override_existing_value() {
         PreparedQrResponse response = setupApi.registerWithQr();
         FCheckboxControl control = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         CheckboxAnswer answer = rAnswer(control);
         List<String> optionIds = answer.getOptionIds();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         CheckboxAttributeValue attributeValue = (CheckboxAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(control.getId(), attributeValue.getControlId());
         assertEquals(optionIds, attributeValue.getOptionIds());
         Set<String> textValues = qr.getIndexedValues().valueOf(indexedField).getTv();
         assertTrue(textValues.containsAll(optionIds));
 
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId());
-        QR updatedQr = qrRepository.byId(response.qrId());
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId());
+        QR updatedQr = qrRepository.byId(response.getQrId());
         assertNull(updatedQr.getAttributeValues().get(attribute.getId()));
     }
 }

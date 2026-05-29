@@ -36,10 +36,10 @@ public class BarControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        PBarControl control = defaultBarControlBuilder().pageId(response.homePageId()).basedControlId(checkboxControl.getId()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl, control);
+        PBarControl control = defaultBarControlBuilder().pageId(response.getHomePageId()).basedControlId(checkboxControl.getId()).build();
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl, control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -50,11 +50,11 @@ public class BarControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
         PBarControl control = defaultBarControlBuilder().basedControlId(checkboxControl.getId()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -64,11 +64,11 @@ public class BarControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
-        PBarControl control = defaultBarControlBuilder().pageId(response.homePageId()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
+        PBarControl control = defaultBarControlBuilder().pageId(response.getHomePageId()).build();
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -78,12 +78,12 @@ public class BarControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
-        PBarControl control = defaultBarControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.homePageId())
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
+        PBarControl control = defaultBarControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.getHomePageId())
                 .basedControlId(checkboxControl.getId()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -93,13 +93,13 @@ public class BarControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
         PBarControl control = defaultBarControlBuilder().pageId(Page.newPageId()).basedControlId(checkboxControl.getId()).build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_PAGE_NOT_EXIST);
     }
 
@@ -108,13 +108,13 @@ public class BarControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
-        PBarControl control = defaultBarControlBuilder().pageId(response.homePageId()).basedControlId(newControlId()).build();
-        App app = appRepository.byId(response.appId());
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
+        PBarControl control = defaultBarControlBuilder().pageId(response.getHomePageId()).basedControlId(newControlId()).build();
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -123,14 +123,14 @@ public class BarControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl);
-        PBarControl control = defaultBarControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.homePageId())
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl);
+        PBarControl control = defaultBarControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.getHomePageId())
                 .basedControlId(checkboxControl.getId()).targetControlIds(List.of(newControlId())).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -140,14 +140,14 @@ public class BarControlApiTest extends BaseApiTest {
 
         FCheckboxControl checkboxControl = defaultCheckboxControl();
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), checkboxControl, singleLineTextControl);
-        PBarControl control = defaultBarControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.homePageId())
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), checkboxControl, singleLineTextControl);
+        PBarControl control = defaultBarControlBuilder().segmentType(CONTROL_VALUE_SUM).pageId(response.getHomePageId())
                 .basedControlId(checkboxControl.getId()).targetControlIds(List.of(singleLineTextControl.getId())).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 NOT_SUPPORTED_TARGET_CONTROL_FOR_BAR);
     }
 
@@ -156,13 +156,13 @@ public class BarControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), singleLineTextControl);
-        PBarControl control = defaultBarControlBuilder().pageId(response.homePageId()).basedControlId(singleLineTextControl.getId()).build();
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), singleLineTextControl);
+        PBarControl control = defaultBarControlBuilder().pageId(response.getHomePageId()).basedControlId(singleLineTextControl.getId()).build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 NOT_SUPPORTED_BASED_CONTROL_BAR);
     }
 
@@ -172,35 +172,35 @@ public class BarControlApiTest extends BaseApiTest {
 
         FRadioControl radioControl = defaultRadioControlBuilder().options(rTextOptions(10)).build();
         PBarControl barControl = defaultBarControlBuilder()
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(NO_LIMIT)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         RadioAnswer radioAnswer3 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
 
         //another qr should not be counted
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), radioAnswer1);
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), radioAnswer1);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(5,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -221,46 +221,46 @@ public class BarControlApiTest extends BaseApiTest {
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(CONTROL_VALUE_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of(numberInputControl.getId()))
                 .range(NO_LIMIT)
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl, numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl, numberInputControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(4d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(5d).build());
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(4d).build());
 
         RadioAnswer radioAnswer3 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3,
                 rAnswerBuilder(numberInputControl).number(10d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
 
         //another qr should not be counted
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), radioAnswer1,
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(15,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -281,46 +281,46 @@ public class BarControlApiTest extends BaseApiTest {
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(CONTROL_VALUE_AVG)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of(numberInputControl.getId()))
                 .range(NO_LIMIT)
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl, numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl, numberInputControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(4d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(5d).build());
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(4d).build());
 
         RadioAnswer radioAnswer3 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3,
                 rAnswerBuilder(numberInputControl).number(10d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
 
         //another qr should not be counted
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), radioAnswer1,
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(3,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -341,46 +341,46 @@ public class BarControlApiTest extends BaseApiTest {
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(CONTROL_VALUE_MAX)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of(numberInputControl.getId()))
                 .range(NO_LIMIT)
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl, numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl, numberInputControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(4d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(5d).build());
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(4d).build());
 
         RadioAnswer radioAnswer3 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3,
                 rAnswerBuilder(numberInputControl).number(10d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
 
         //another qr should not be counted
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), radioAnswer1,
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(5,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -401,46 +401,46 @@ public class BarControlApiTest extends BaseApiTest {
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().precision(3).build();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(CONTROL_VALUE_MIN)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of(numberInputControl.getId()))
                 .range(NO_LIMIT)
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl, numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl, numberInputControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(4d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(5d).build());
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(2d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl).number(4d).build());
 
         RadioAnswer radioAnswer3 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3,
                 rAnswerBuilder(numberInputControl).number(10d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
 
         //another qr should not be counted
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), radioAnswer1,
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl).number(1d).build());
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -460,25 +460,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(THIS_WEEK)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(8, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -493,25 +493,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(THIS_MONTH)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(32, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -526,25 +526,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(THIS_SEASON)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(100, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -559,25 +559,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(THIS_YEAR)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(370, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -592,25 +592,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(LAST_7_DAYS)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(8, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -625,25 +625,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(LAST_30_DAYS)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(31, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -658,25 +658,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(LAST_90_DAYS)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(91, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -691,25 +691,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(LAST_HALF_YEAR)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(200, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -724,25 +724,25 @@ public class BarControlApiTest extends BaseApiTest {
         FRadioControl radioControl = defaultRadioControl();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(SUBMIT_COUNT_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of())
                 .range(LAST_ONE_YEAR)
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1);
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        String submissionId2 = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2);
+        String submissionId2 = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2);
 
         Submission submission = submissionRepository.byId(submissionId2);
         ReflectionTestUtils.setField(submission, "createdAt", Instant.now().minus(370, DAYS));
         submissionRepository.save(submission);
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(1,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()
@@ -759,46 +759,46 @@ public class BarControlApiTest extends BaseApiTest {
         FNumberInputControl numberInputControl2 = defaultNumberInputControlBuilder().precision(3).build();
         PBarControl barControl = defaultBarControlBuilder()
                 .segmentType(CONTROL_VALUE_SUM)
-                .pageId(response.homePageId())
+                .pageId(response.getHomePageId())
                 .basedControlId(radioControl.getId())
                 .targetControlIds(List.of(numberInputControl1.getId(), numberInputControl2.getId()))
                 .range(NO_LIMIT)
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), radioControl, barControl, numberInputControl1, numberInputControl2);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), radioControl, barControl, numberInputControl1, numberInputControl2);
 
         RadioAnswer radioAnswer1 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(0).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl1).number(1d).build(), rAnswerBuilder(numberInputControl2).number(10d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl1).number(2d).build(), rAnswerBuilder(numberInputControl2).number(20d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl1).number(3d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl1).number(4d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer1,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl1).number(5d).build());
 
         RadioAnswer radioAnswer2 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(1).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl1).number(2d).build(), rAnswerBuilder(numberInputControl2).number(30d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer2,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer2,
                 rAnswerBuilder(numberInputControl1).number(3d).build(), rAnswerBuilder(numberInputControl2).number(40d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 rAnswerBuilder(numberInputControl1).number(4d).build());
 
         RadioAnswer radioAnswer3 = rAnswerBuilder(radioControl).optionId(radioControl.getOptions().get(2).getId()).build();
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3,
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3,
                 rAnswerBuilder(numberInputControl1).number(10d).build(), rAnswerBuilder(numberInputControl2).number(50d).build());
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), radioAnswer3);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), radioAnswer3);
 
         //another qr should not be counted
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), response.defaultGroupId());
-        SubmissionApi.newSubmission(response.jwt(), qrResponse.getQrId(), response.homePageId(), radioAnswer1,
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), response.getDefaultGroupId());
+        SubmissionApi.newSubmission(response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), radioAnswer1,
                 rAnswerBuilder(numberInputControl1).number(1d).build());
 
-        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.jwt(), response.qrId(),
-                response.homePageId(), barControl.getId());
+        QBarPresentation barValues = (QBarPresentation) PresentationApi.fetchPresentation(response.getJwt(), response.getQrId(),
+                response.getHomePageId(), barControl.getId());
 
         assertEquals(15,
                 barValues.getSegmentsData().get(0).stream().filter(barCount -> barCount.getOption().equals(radioAnswer1.getOptionId())).findFirst()

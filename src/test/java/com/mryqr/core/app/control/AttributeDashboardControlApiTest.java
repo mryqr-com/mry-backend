@@ -56,12 +56,12 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
 
         Attribute fixValueAttribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).range(NO_LIMIT).type(FIXED)
                 .fixedValue("whatever").build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), fixValueAttribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), fixValueAttribute);
         PAttributeDashboardControl control = defaultAttributeDashboardControlBuilder().attributeIds(newArrayList(fixValueAttribute.getId()))
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
         assertTrue(updatedControl.isComplete());
@@ -72,9 +72,9 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         PAttributeDashboardControl control = defaultAttributeDashboardControlBuilder().attributeIds(newArrayList()).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertFalse(updatedControl.isComplete());
     }
@@ -85,11 +85,11 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
 
         PAttributeDashboardControl control = defaultAttributeDashboardControlBuilder().attributeIds(newArrayList(Attribute.newAttributeId()))
                 .build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_ATTRIBUTE_NOT_EXIST);
     }
 
@@ -99,96 +99,96 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
 
         FRadioControl radioControl = defaultRadioControlBuilder().build();
         Attribute radioControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(radioControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(radioControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         RadioAnswer radioAnswer = rAnswer(radioControl);
 
         FCheckboxControl checkboxControl = defaultCheckboxControlBuilder().build();
         Attribute checkboxControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST)
-                .pageId(response.homePageId()).controlId(checkboxControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(checkboxControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         CheckboxAnswer checkboxAnswer = rAnswer(checkboxControl);
 
         FDropdownControl dropdownControl = defaultDropdownControlBuilder().build();
         Attribute dropdownControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(dropdownControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(dropdownControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         DropdownAnswer dropdownAnswer = rAnswer(dropdownControl);
 
         FSingleLineTextControl singleLineTextControl = defaultSingleLineTextControlBuilder().build();
         Attribute singleLineTextControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(singleLineTextControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(singleLineTextControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         SingleLineTextAnswer singleLineTextAnswer = rAnswer(singleLineTextControl);
 
         FMemberSelectControl memberSelectControl = defaultMemberSelectControlBuilder().build();
         Attribute memberSelectControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(memberSelectControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
-        MemberSelectAnswer memberSelectAnswer = rAnswer(memberSelectControl, response.memberId());
+                .pageId(response.getHomePageId()).controlId(memberSelectControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+        MemberSelectAnswer memberSelectAnswer = rAnswer(memberSelectControl, response.getMemberId());
 
         FAddressControl addressControl = defaultAddressControlBuilder().build();
         Attribute addressControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(addressControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(addressControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         AddressAnswer addressAnswer = rAnswer(addressControl);
 
         FGeolocationControl geolocationControl = defaultGeolocationControlBuilder().build();
         Attribute geolocationControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(geolocationControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(geolocationControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         GeolocationAnswer geolocationAnswer = rAnswer(geolocationControl);
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().build();
         Attribute numberInputControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         NumberInputAnswer numberInputAnswer = rAnswer(numberInputControl);
 
         FNumberRankingControl numberRankingControl = defaultNumberRankingControlBuilder().build();
         Attribute numberRankingControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(numberRankingControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(numberRankingControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         NumberRankingAnswer numberRankingAnswer = rAnswer(numberRankingControl);
 
         FMobileNumberControl mobileNumberControl = defaultMobileNumberControlBuilder().build();
         Attribute mobileNumberControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(mobileNumberControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(mobileNumberControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         MobileNumberAnswer mobileNumberAnswer = rAnswer(mobileNumberControl);
 
         FIdentifierControl identifierControl = defaultIdentifierControlBuilder().build();
         Attribute identifierControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(identifierControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(identifierControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         IdentifierAnswer identifierAnswer = rAnswer(identifierControl);
 
         FEmailControl emailControl = defaultEmailControlBuilder().build();
         Attribute emailControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(emailControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(emailControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         EmailAnswer emailAnswer = rAnswer(emailControl);
 
         FDateControl dateControl = defaultDateControlBuilder().build();
         Attribute dateControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(dateControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(dateControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         DateAnswer dateAnswer = rAnswer(dateControl);
 
 
         FDateTimeControl dateTimeControl = defaultDateTimeControlBuilder().build();
         Attribute dateControlTimeRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(dateTimeControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(dateTimeControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         DateTimeAnswer dateTimeAnswer = rAnswer(dateTimeControl);
 
         FTimeControl timeControl = defaultTimeControlBuilder().build();
         Attribute timeControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(timeControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(timeControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         TimeAnswer timeAnswer = rAnswer(timeControl);
 
         FItemCountControl itemCountControl = defaultItemCountControlBuilder().build();
         Attribute itemCountControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(itemCountControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(itemCountControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         ItemCountAnswer itemCountAnswer = rAnswer(itemCountControl);
 
         FItemStatusControl itemStatusControl = defaultItemStatusControlBuilder().build();
         Attribute itemStatusControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(itemStatusControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(itemStatusControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         ItemStatusAnswer itemStatusAnswer = rAnswer(itemStatusControl);
 
         FPointCheckControl pointCheckControl = defaultPointCheckControlBuilder().build();
         Attribute pointCheckControlRefAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(pointCheckControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(pointCheckControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         PointCheckAnswer pointCheckAnswer = rAnswer(pointCheckControl);
 
-        AppApi.updateAppControls(response.jwt(), response.appId(),
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(),
                 radioControl, checkboxControl, dropdownControl, singleLineTextControl, memberSelectControl, addressControl,
                 geolocationControl, numberInputControl, numberRankingControl, mobileNumberControl, identifierControl, emailControl,
                 dateControl, dateTimeControl, timeControl, itemCountControl, itemStatusControl, pointCheckControl);
@@ -216,7 +216,7 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
                 ))
                 .build();
 
-        AppApi.updateAppAttributes(response.jwt(), response.appId(),
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(),
                 newArrayList(
                         radioControlRefAttribute,
                         checkboxControlRefAttribute,
@@ -239,20 +239,20 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
                 )
         );
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(attributeDashboardControl);
-        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
+        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
 
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(),
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(),
                 radioAnswer, checkboxAnswer, dropdownAnswer, singleLineTextAnswer, memberSelectAnswer, addressAnswer,
                 geolocationAnswer, numberInputAnswer, numberRankingAnswer, mobileNumberAnswer, identifierAnswer, emailAnswer,
                 dateAnswer, dateTimeAnswer, timeAnswer, itemCountAnswer, itemStatusAnswer, pointCheckAnswer);
 
-        Member member = memberRepository.byId(response.memberId());
-        CreateMemberResponse fetcherMember = MemberApi.createMemberAndLogin(response.jwt());//只要有足够权限者即可查看
+        Member member = memberRepository.byId(response.getMemberId());
+        CreateMemberResponse fetcherMember = MemberApi.createMemberAndLogin(response.getJwt());//只要有足够权限者即可查看
         QAttributeDashboardPresentation presentation = (QAttributeDashboardPresentation) PresentationApi.fetchPresentation(
-                fetcherMember.getJwt(), response.qrId(), response.homePageId(), attributeDashboardControl.getId());
+                fetcherMember.getJwt(), response.getQrId(), response.getHomePageId(), attributeDashboardControl.getId());
 
         Map<String, DisplayValue> valueMap = presentation.getValues();
 
@@ -317,18 +317,18 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
 
         FNumberInputControl numberInputControl = defaultNumberInputControlBuilder().build();
         Attribute averageAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_AVERAGE)
-                .pageId(response.homePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         Attribute maxAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_MAX)
-                .pageId(response.homePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         Attribute minAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_MIN)
-                .pageId(response.homePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         Attribute sumAttribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_SUM)
-                .pageId(response.homePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
+                .pageId(response.getHomePageId()).controlId(numberInputControl.getId()).range(AttributeStatisticRange.NO_LIMIT).build();
         NumberInputAnswer answer1 = rAnswerBuilder(numberInputControl).number(1d).build();
         NumberInputAnswer answer2 = rAnswerBuilder(numberInputControl).number(2d).build();
         NumberInputAnswer answer3 = rAnswerBuilder(numberInputControl).number(3d).build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl);
 
         PAttributeDashboardControl attributeDashboardControl = defaultAttributeDashboardControlBuilder()
                 .attributeIds(newArrayList(
@@ -339,7 +339,7 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
                 ))
                 .build();
 
-        AppApi.updateAppAttributes(response.jwt(), response.appId(),
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(),
                 newArrayList(
                         averageAttribute,
                         maxAttribute,
@@ -348,18 +348,18 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
                 )
         );
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(attributeDashboardControl);
-        AppApi.updateAppSetting(response.jwt(), response.appId(), setting);
+        AppApi.updateAppSetting(response.getJwt(), response.getAppId(), setting);
 
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer1);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer2);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer3);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer1);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer2);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer3);
 
-        CreateMemberResponse fetcherMember = MemberApi.createMemberAndLogin(response.jwt());//只要有足够权限者即可查看
+        CreateMemberResponse fetcherMember = MemberApi.createMemberAndLogin(response.getJwt());//只要有足够权限者即可查看
         QAttributeDashboardPresentation presentation = (QAttributeDashboardPresentation) PresentationApi.fetchPresentation(
-                fetcherMember.getJwt(), response.qrId(), response.homePageId(), attributeDashboardControl.getId());
+                fetcherMember.getJwt(), response.getQrId(), response.getHomePageId(), attributeDashboardControl.getId());
 
         Map<String, DisplayValue> valueMap = presentation.getValues();
 
@@ -381,14 +381,14 @@ public class AttributeDashboardControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         Attribute attribute = Attribute.builder().id(newAttributeId()).name(rAttributeName()).type(INSTANCE_NAME).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
         PAttributeDashboardControl control = defaultAttributeDashboardControlBuilder().attributeIds(newArrayList(attribute.getId())).build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         String qrName = rQrName();
-        CreateQrResponse qrResponse = QrApi.createQr(response.jwt(), qrName, response.defaultGroupId());
+        CreateQrResponse qrResponse = QrApi.createQr(response.getJwt(), qrName, response.getDefaultGroupId());
 
         QAttributeDashboardPresentation valuesPresentation = (QAttributeDashboardPresentation) PresentationApi.fetchPresentation(
-                response.jwt(), qrResponse.getQrId(), response.homePageId(), control.getId());
+                response.getJwt(), qrResponse.getQrId(), response.getHomePageId(), control.getId());
         TextDisplayValue displayValue = (TextDisplayValue) valuesPresentation.getValues().get(attribute.getId());
         assertEquals(qrName, displayValue.getText());
     }

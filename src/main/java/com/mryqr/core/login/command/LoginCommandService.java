@@ -5,6 +5,7 @@ import com.mryqr.common.exception.MryException;
 import com.mryqr.common.ratelimit.MryRateLimiter;
 import com.mryqr.common.security.jwt.JwtService;
 import com.mryqr.core.login.domain.LoginDomainService;
+import com.mryqr.core.login.domain.WxJwtService;
 import com.mryqr.core.member.domain.Member;
 import com.mryqr.core.member.domain.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ public class LoginCommandService {
     private final LoginDomainService loginDomainService;
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
+    private final WxJwtService wxJwtService;
     private final MryRateLimiter mryRateLimiter;
 
     @Transactional
@@ -31,7 +33,10 @@ public class LoginCommandService {
         mryRateLimiter.applyFor("Login:MobileOrEmail:" + mobileOrEmail, 1);
 
         try {
-            String token = loginDomainService.loginWithMobileOrEmail(mobileOrEmail, command.getPassword());
+            String token = loginDomainService.loginWithMobileOrEmail(
+                    mobileOrEmail,
+                    command.getPassword(),
+                    wxJwtService.wxIdInfoFromJwt(command.getWxIdInfo()));
             log.info("User[{}] logged in using password.", maskMobileOrEmail(command.getMobileOrEmail()));
             return token;
         } catch (Throwable t) {
@@ -51,7 +56,10 @@ public class LoginCommandService {
         mryRateLimiter.applyFor("Login:MobileOrEmail:" + mobileOrEmail, 1);
 
         try {
-            String token = loginDomainService.loginWithVerificationCode(mobileOrEmail, command.getVerification());
+            String token = loginDomainService.loginWithVerificationCode(
+                    mobileOrEmail,
+                    command.getVerification(),
+                    wxJwtService.wxIdInfoFromJwt(command.getWxIdInfo()));
             log.info("User[{}] logged in using verification code.", maskMobileOrEmail(command.getMobileOrEmail()));
             return token;
         } catch (Throwable t) {
@@ -73,4 +81,8 @@ public class LoginCommandService {
         return jwtService.generateJwt(member.getId());
     }
 
+    public String wxLoginMember(String memberId) {
+        mryRateLimiter.applyFor("Login:WxLogin:All", 1000);
+        return jwtService.generateJwt(memberId);
+    }
 }

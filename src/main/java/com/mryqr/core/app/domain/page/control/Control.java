@@ -94,32 +94,44 @@ public abstract class Control implements Identified {
     public static final List<Permission> ALLOWED_PERMISSIONS = List.of(CAN_MANAGE_GROUP, CAN_MANAGE_APP);
     public final static int MAX_NAME_LENGTH = 100;
     public final static int MAX_DESCRIPTION_LENGTH = 500;
-    @EqualsAndHashCode.Exclude
-    protected boolean complete;//主要针对具有外部引用的展示型控件，用于标记控件配置是否完整，前端可根据该值决定是否显示相关数据，后端可根据该值决定时候计算相关数据
+
     @NotBlank
     @ControlId
     private String id;//控件ID
+
     @NotNull
     private ControlType type;//控件类型
+
     @Size(max = MAX_NAME_LENGTH)
     private String name;//名称
+
     @Valid
     @NotNull
     private ControlNameSetting nameSetting;//名称样式
+
     @Size(max = MAX_DESCRIPTION_LENGTH)
     private String description;//描述
+
     @Valid
     @NotNull
     private BoxedTextStyle descriptionStyle;//描述样式
+
     @Valid
     @NotNull
     private ControlStyleSetting styleSetting;//整体样式
+
     @Valid
     private ControlFillableSetting fillableSetting;//填值型控件的通用设置
+
     private boolean permissionEnabled;//是否启用权限
+
     @NotNull
     private Permission permission;//控件权限
+
     private boolean submitterViewable;//对原始提交者可见,仅作用于填值控件
+
+    @EqualsAndHashCode.Exclude
+    protected boolean complete;//主要针对具有外部引用的展示型控件，用于标记控件配置是否完整，前端可根据该值决定是否显示相关数据，后端可根据该值决定时候计算相关数据
 
     public static String newControlId() {
         return "c_" + newShortUuid();

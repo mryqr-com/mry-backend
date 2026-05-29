@@ -43,9 +43,9 @@ public class ItemStatusControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FItemStatusControl control = defaultItemStatusControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         Control updatedControl = app.controlByIdOptional(control.getId()).get();
         assertEquals(control, updatedControl);
     }
@@ -80,9 +80,9 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, itemStatusControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, itemStatusControl);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         FItemStatusControl updatedControl = (FItemStatusControl) app.controlByIdOptional(itemStatusControl.getId()).get();
         assertEquals(itemStatusControl.getAutoCalculateSetting(), updatedControl.getAutoCalculateSetting());
         assertFalse(updatedControl.getFillableSetting().isAutoFill());
@@ -97,11 +97,11 @@ public class ItemStatusControlApiTest extends BaseApiTest {
         TextOption option1 = TextOption.builder().id(optionsId).name(randomAlphabetic(5) + "选项").build();
         TextOption option2 = TextOption.builder().id(optionsId).name(randomAlphabetic(5) + "选项").build();
         FItemStatusControl control = defaultItemStatusControlBuilder().options(newArrayList(option1, option2)).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 TEXT_OPTION_ID_DUPLICATED);
     }
 
@@ -110,11 +110,11 @@ public class ItemStatusControlApiTest extends BaseApiTest {
         PreparedAppResponse response = setupApi.registerWithApp();
 
         FItemStatusControl control = defaultItemStatusControlBuilder().initialOptionId(newShortUuid()).build();
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(control);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 INITIAL_ITEM_STATUS_NOT_VALID);
     }
 
@@ -144,11 +144,11 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().add(itemStatusControl);
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_CONTROL_NOT_EXIST);
     }
 
@@ -175,11 +175,11 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().addAll(newArrayList(numberInputControl, itemStatusControl));
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 VALIDATION_STATUS_OPTION_NOT_EXISTS);
     }
 
@@ -210,11 +210,11 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         AppSetting setting = app.getSetting();
         setting.homePage().getControls().addAll(newArrayList(lineTextControl, itemStatusControl));
 
-        assertError(() -> AppApi.updateAppSettingRaw(response.jwt(), response.appId(), app.getVersion(), setting),
+        assertError(() -> AppApi.updateAppSettingRaw(response.getJwt(), response.getAppId(), app.getVersion(), setting),
                 CONTROL_NOT_NUMERICAL_VALUED);
     }
 
@@ -223,13 +223,13 @@ public class ItemStatusControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemStatusControl control = defaultItemStatusControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         ItemStatusAnswer answer = rAnswer(control);
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
-        IndexedField indexedField = app.indexedFieldForControlOptional(response.homePageId(), control.getId()).get();
+        App app = appRepository.byId(response.getAppId());
+        IndexedField indexedField = app.indexedFieldForControlOptional(response.getHomePageId(), control.getId()).get();
         Submission submission = submissionRepository.byId(submissionId);
         ItemStatusAnswer updatedAnswer = (ItemStatusAnswer) submission.allAnswers().get(control.getId());
         assertEquals(answer, updatedAnswer);
@@ -244,12 +244,12 @@ public class ItemStatusControlApiTest extends BaseApiTest {
 
         FItemStatusControl control = defaultItemStatusControlBuilder().fillableSetting(defaultFillableSettingBuilder().mandatory(true).build())
                 .build();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         ItemStatusAnswer answer = rAnswerBuilder(control).optionId(null).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), MANDATORY_ANSWER_REQUIRED);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), MANDATORY_ANSWER_REQUIRED);
     }
 
     @Test
@@ -257,12 +257,12 @@ public class ItemStatusControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemStatusControl control = defaultItemStatusControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         ItemStatusAnswer answer = rAnswerBuilder(control).optionId(newShortUuid()).build();
-        NewSubmissionCommand command = newSubmissionCommand(response.qrId(), response.homePageId(), answer);
+        NewSubmissionCommand command = newSubmissionCommand(response.getQrId(), response.getHomePageId(), answer);
 
-        assertError(() -> SubmissionApi.newSubmissionRaw(response.jwt(), command), ITEM_STATUS_ANSWER_NOT_IN_CONTROL);
+        assertError(() -> SubmissionApi.newSubmissionRaw(response.getJwt(), command), ITEM_STATUS_ANSWER_NOT_IN_CONTROL);
     }
 
     @Test
@@ -272,10 +272,10 @@ public class ItemStatusControlApiTest extends BaseApiTest {
         FItemStatusControl control = defaultItemStatusControl();
         String initialOptionId = control.allOptionIds().stream().findAny().get();
         ReflectionTestUtils.setField(control, "initialOptionId", initialOptionId);
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
 
         ItemStatusAnswer answer = rAnswerBuilder(control).optionId(null).build();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
         Submission submission = submissionRepository.byId(submissionId);
         ItemStatusAnswer updatedAnswer = (ItemStatusAnswer) submission.getAnswers().get(control.getId());
@@ -311,17 +311,17 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, itemStatusControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, itemStatusControl);
         NumberInputAnswer answer = rAnswerBuilder(numberInputControl).number(11.0).build();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
         Submission submission = submissionRepository.byId(submissionId);
         ItemStatusAnswer updatedAnswer = (ItemStatusAnswer) submission.getAnswers().get(itemStatusControl.getId());
         assertEquals(optionsId, updatedAnswer.getOptionId());
 
         assertNull(submissionRepository
-                .byId(SubmissionApi.newSubmission(response.jwt(),
-                        response.qrId(),
-                        response.homePageId(),
+                .byId(SubmissionApi.newSubmission(response.getJwt(),
+                        response.getQrId(),
+                        response.getHomePageId(),
                         rAnswerBuilder(numberInputControl).number(9.0).build()))
                 .getAnswers().get(itemStatusControl.getId()));
     }
@@ -356,10 +356,10 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, itemStatusControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, itemStatusControl);
         NumberInputAnswer numberInputAnswer = rAnswerBuilder(numberInputControl).number(11.0).build();
         ItemStatusAnswer statusAnswer = rAnswerBuilder(itemStatusControl).optionId(optionId2).build();
-        String submissionId = SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), numberInputAnswer,
+        String submissionId = SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), numberInputAnswer,
                 statusAnswer);
         Submission submission = submissionRepository.byId(submissionId);
         ItemStatusAnswer updatedAnswer = (ItemStatusAnswer) submission.getAnswers().get(itemStatusControl.getId());
@@ -395,12 +395,12 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, itemStatusControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, itemStatusControl);
 
         assertNull(submissionRepository
-                .byId(SubmissionApi.newSubmission(response.jwt(),
-                        response.qrId(),
-                        response.homePageId(),
+                .byId(SubmissionApi.newSubmission(response.getJwt(),
+                        response.getQrId(),
+                        response.getHomePageId(),
                         rAnswerBuilder(numberInputControl).number(9.0).build()))
                 .getAnswers().get(itemStatusControl.getId()));
     }
@@ -434,12 +434,12 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, itemStatusControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, itemStatusControl);
 
         assertNull(submissionRepository
-                .byId(SubmissionApi.newSubmission(response.jwt(),
-                        response.qrId(),
-                        response.homePageId()))
+                .byId(SubmissionApi.newSubmission(response.getJwt(),
+                        response.getQrId(),
+                        response.getHomePageId()))
                 .getAnswers().get(itemStatusControl.getId()));
     }
 
@@ -472,12 +472,12 @@ public class ItemStatusControlApiTest extends BaseApiTest {
                         .build())
                 .build();
 
-        AppApi.updateAppControls(response.jwt(), response.appId(), numberInputControl, itemStatusControl);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), numberInputControl, itemStatusControl);
 
         assertNull(submissionRepository
-                .byId(SubmissionApi.newSubmission(response.jwt(),
-                        response.qrId(),
-                        response.homePageId(),
+                .byId(SubmissionApi.newSubmission(response.getJwt(),
+                        response.getQrId(),
+                        response.getHomePageId(),
                         rAnswerBuilder(numberInputControl).number(null).build()))
                 .getAnswers().get(itemStatusControl.getId()));
     }
@@ -487,18 +487,18 @@ public class ItemStatusControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemStatusControl control = defaultItemStatusControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_FIRST)
-                .pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         ItemStatusAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         ItemStatusAttributeValue attributeValue = (ItemStatusAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(control.getId(), attributeValue.getControlId());
         assertEquals(answer.getOptionId(), attributeValue.getOptionId());
@@ -511,18 +511,18 @@ public class ItemStatusControlApiTest extends BaseApiTest {
         PreparedQrResponse response = setupApi.registerWithQr();
 
         FItemStatusControl control = defaultItemStatusControl();
-        AppApi.updateAppControls(response.jwt(), response.appId(), control);
+        AppApi.updateAppControls(response.getJwt(), response.getAppId(), control);
         Attribute attribute = Attribute.builder().name(rAttributeName()).id(newAttributeId()).type(CONTROL_LAST)
-                .pageId(response.homePageId()).controlId(control.getId()).range(NO_LIMIT).build();
-        AppApi.updateAppAttributes(response.jwt(), response.appId(), attribute);
+                .pageId(response.getHomePageId()).controlId(control.getId()).range(NO_LIMIT).build();
+        AppApi.updateAppAttributes(response.getJwt(), response.getAppId(), attribute);
 
         ItemStatusAnswer answer = rAnswer(control);
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), rAnswer(control));
-        SubmissionApi.newSubmission(response.jwt(), response.qrId(), response.homePageId(), answer);
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), rAnswer(control));
+        SubmissionApi.newSubmission(response.getJwt(), response.getQrId(), response.getHomePageId(), answer);
 
-        App app = appRepository.byId(response.appId());
+        App app = appRepository.byId(response.getAppId());
         IndexedField indexedField = app.indexedFieldForAttributeOptional(attribute.getId()).get();
-        QR qr = qrRepository.byId(response.qrId());
+        QR qr = qrRepository.byId(response.getQrId());
         ItemStatusAttributeValue attributeValue = (ItemStatusAttributeValue) qr.getAttributeValues().get(attribute.getId());
         assertEquals(control.getId(), attributeValue.getControlId());
         assertEquals(answer.getOptionId(), attributeValue.getOptionId());

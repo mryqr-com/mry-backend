@@ -11,10 +11,6 @@ public class GroupIdValidator implements ConstraintValidator<GroupId, String> {
 
     private static final Pattern PATTERN = Pattern.compile("^GRP[0-9]{17,19}$");
 
-    public static boolean isGroupId(String groupId) {
-        return PATTERN.matcher(groupId).matches();
-    }
-
     @Override
     public void initialize(GroupId constraintAnnotation) {
     }
@@ -26,6 +22,10 @@ public class GroupIdValidator implements ConstraintValidator<GroupId, String> {
         }
 
         return isGroupId(groupId);
+    }
+
+    public static boolean isGroupId(String groupId) {
+        return PATTERN.matcher(groupId).matches();
     }
 
 }

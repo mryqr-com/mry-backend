@@ -106,11 +106,11 @@ public class MemberCommandService {
         memberRepository.save(member);
 
         if (command.getRole() == TENANT_MEMBER) {
-            memberDomainService.checkMinActiveTenantAdminLimit(user.getTenantId());
+            memberDomainService.checkMinTenantAdminLimit(user.getTenantId());
         }
 
         if (command.getRole() == TENANT_ADMIN) {
-            memberDomainService.checkMaxActiveTenantAdminLimit(user.getTenantId());
+            memberDomainService.checkMaxTenantAdminLimit(user.getTenantId());
         }
 
         log.info("Updated member[{}] role to {}.", memberId, command.getRole());
@@ -124,7 +124,7 @@ public class MemberCommandService {
         Member member = memberRepository.byIdAndCheckTenantShip(memberId, user);
         member.onDelete(user);
         memberRepository.delete(member);
-        memberDomainService.checkMinActiveTenantAdminLimit(member.getTenantId());
+        memberDomainService.checkMinTenantAdminLimit(member.getTenantId());
         log.info("Deleted member[{}].", memberId);
     }
 
@@ -271,7 +271,6 @@ public class MemberCommandService {
         Member member = memberRepository.byIdAndCheckTenantShip(memberId, user);
         member.activate(user);
         memberRepository.save(member);
-        memberDomainService.checkMaxActiveTenantAdminLimit(user.getTenantId());
         log.info("Activated member[{}].", memberId);
     }
 
@@ -283,7 +282,7 @@ public class MemberCommandService {
         Member member = memberRepository.byIdAndCheckTenantShip(memberId, user);
         member.deactivate(user);
         memberRepository.save(member);
-        memberDomainService.checkMinActiveTenantAdminLimit(member.getTenantId());
+        memberDomainService.checkMinTenantAdminLimit(member.getTenantId());
         log.info("Deactivated member[{}].", memberId);
     }
 }

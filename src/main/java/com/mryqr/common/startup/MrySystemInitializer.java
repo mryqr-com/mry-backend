@@ -3,6 +3,8 @@ package com.mryqr.common.startup;
 import com.mryqr.common.domain.administrative.AdministrativeProvider;
 import com.mryqr.common.domain.indexedfield.IndexedField;
 import com.mryqr.common.properties.CommonProperties;
+import com.mryqr.common.wx.accesstoken.WxAccessTokenService;
+import com.mryqr.common.wx.jssdk.WxJsSdkService;
 import com.mryqr.core.app.domain.AppRepository;
 import com.mryqr.management.MryManageTenant;
 import com.mryqr.management.apptemplate.MryAppTemplateManageApp;
@@ -55,6 +57,8 @@ public class MrySystemInitializer implements ApplicationListener<ApplicationRead
     private final MryOperationApp mryOperationApp;
     private final MryOffenceReportApp mryOffenceReportApp;
     private final CacheClearer cacheClearer;
+    private final WxAccessTokenService wxAccessTokenService;
+    private final WxJsSdkService wxJsSdkService;
     private final AdministrativeProvider administrativeProvider;
 
     private final PlatformRepository platformRepository;
@@ -77,6 +81,8 @@ public class MrySystemInitializer implements ApplicationListener<ApplicationRead
         ensureMongoIndexExist();
         ensureMryManageAppsExist();
         ensurePlatformArExists();
+        wxAccessTokenService.refreshAccessToken();
+        wxJsSdkService.refreshJsApiTicket();
         administrativeProvider.init();
         log.info("Mr.Y system initialized.");
     }
