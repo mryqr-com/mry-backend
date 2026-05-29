@@ -142,184 +142,184 @@ public class MrySystemInitializer implements ApplicationListener<ApplicationRead
 
     private void ensureAppIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(APP_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC));
-        indexOperations.ensureIndex(new Index().on("managers", DESC));
-        indexOperations.ensureIndex(new Index().on("name", DESC));
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
-        indexOperations.ensureIndex(new Index().on("appTemplateId", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("createdBy", DESC));
+        indexOperations.createIndex(new Index().on("tenantId", DESC));
+        indexOperations.createIndex(new Index().on("managers", DESC));
+        indexOperations.createIndex(new Index().on("name", DESC));
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("appTemplateId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("createdBy", DESC));
     }
 
     private void ensureAppManualIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(APP_MANUAL_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("appId", DESC));
+        indexOperations.createIndex(new Index().on("appId", DESC));
     }
 
     private void ensureAssignmentIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(ASSIGNMENT_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("expireAt", DESC));
-        indexOperations.ensureIndex(new Index().on("nearExpireNotifyAt", DESC));
-        indexOperations.ensureIndex(new Index().on("appId", DESC));
-        indexOperations.ensureIndex(new Index().on("pageId", DESC));
-        indexOperations.ensureIndex(new Index().on("allQrIds", DESC));
-        indexOperations.ensureIndex(new Index().on("assignmentPlanId", DESC));
-        indexOperations.ensureIndex(new Index().on("groupId", DESC));
-        indexOperations.ensureIndex(new Index().on("operators", DESC));
-        indexOperations.ensureIndex(new Index().on("startAt", DESC));
-        indexOperations.ensureIndex(new Index().on("status", DESC));
+        indexOperations.createIndex(new Index().on("expireAt", DESC));
+        indexOperations.createIndex(new Index().on("nearExpireNotifyAt", DESC));
+        indexOperations.createIndex(new Index().on("appId", DESC));
+        indexOperations.createIndex(new Index().on("pageId", DESC));
+        indexOperations.createIndex(new Index().on("allQrIds", DESC));
+        indexOperations.createIndex(new Index().on("assignmentPlanId", DESC));
+        indexOperations.createIndex(new Index().on("groupId", DESC));
+        indexOperations.createIndex(new Index().on("operators", DESC));
+        indexOperations.createIndex(new Index().on("startAt", DESC));
+        indexOperations.createIndex(new Index().on("status", DESC));
     }
 
     private void ensureAssignmentPlanIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(ASSIGNMENT_PLAN_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("setting.startTime.time", DESC));
-        indexOperations.ensureIndex(new Index().on("setting.appId", DESC));
-        indexOperations.ensureIndex(new Index().on("setting.pageId", DESC));
-        indexOperations.ensureIndex(new Index().on("excludedGroups", DESC));
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC));
-        indexOperations.ensureIndex(new Index().on("name", DESC));
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("setting.startTime.time", DESC));
+        indexOperations.createIndex(new Index().on("setting.appId", DESC));
+        indexOperations.createIndex(new Index().on("setting.pageId", DESC));
+        indexOperations.createIndex(new Index().on("excludedGroups", DESC));
+        indexOperations.createIndex(new Index().on("tenantId", DESC));
+        indexOperations.createIndex(new Index().on("name", DESC));
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
     }
 
     private void ensureDepartmentIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(DEPARTMENT_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC));
-        indexOperations.ensureIndex(new Index().on("managers", DESC));
-        indexOperations.ensureIndex(new Index().on("customId", DESC));
+        indexOperations.createIndex(new Index().on("tenantId", DESC));
+        indexOperations.createIndex(new Index().on("managers", DESC));
+        indexOperations.createIndex(new Index().on("customId", DESC));
     }
 
     private void ensureDepartmentHierarchyIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(DEPARTMENT_HIERARCHY_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC).unique());
+        indexOperations.createIndex(new Index().on("tenantId", DESC).unique());
     }
 
     private void ensureGroupIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(GROUP_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("appId", DESC));
-        indexOperations.ensureIndex(new Index().on("managers", DESC));
-        indexOperations.ensureIndex(new Index().on("members", DESC));
-        indexOperations.ensureIndex(new Index().on("customId", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
-        indexOperations.ensureIndex(new Index().on("createdBy", DESC));
-        indexOperations.ensureIndex(new Index().on("departmentId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("appId", DESC));
+        indexOperations.createIndex(new Index().on("managers", DESC));
+        indexOperations.createIndex(new Index().on("members", DESC));
+        indexOperations.createIndex(new Index().on("customId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("createdBy", DESC));
+        indexOperations.createIndex(new Index().on("departmentId", DESC).sparse());
     }
 
     private void ensureGroupHierarchyIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(GROUP_HIERARCHY_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("appId", DESC));
+        indexOperations.createIndex(new Index().on("appId", DESC));
     }
 
     private void ensureMemberIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(MEMBER_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC));
-        indexOperations.ensureIndex(new Index().on("mobile", DESC).sparse().unique());
-        indexOperations.ensureIndex(new Index().on("email", DESC).sparse().unique());
-        indexOperations.ensureIndex(new Index().on("wxUnionId", DESC).sparse().unique());
-        indexOperations.ensureIndex(new Index().on("name", DESC));
-        indexOperations.ensureIndex(new Index().on("customId", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
-        indexOperations.ensureIndex(new Index().on("departmentIds", DESC));
+        indexOperations.createIndex(new Index().on("tenantId", DESC));
+        indexOperations.createIndex(new Index().on("mobile", DESC).sparse().unique());
+        indexOperations.createIndex(new Index().on("email", DESC).sparse().unique());
+        indexOperations.createIndex(new Index().on("wxUnionId", DESC).sparse().unique());
+        indexOperations.createIndex(new Index().on("name", DESC));
+        indexOperations.createIndex(new Index().on("customId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("departmentIds", DESC));
     }
 
     private void ensureOrderIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(ORDER_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("createdBy", DESC));
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC));
-        indexOperations.ensureIndex(new Index().on("status", DESC));
-        indexOperations.ensureIndex(new Index().on("wxTxnId", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("bankTransferCode", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("bankTransferAccountId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("createdBy", DESC));
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("tenantId", DESC));
+        indexOperations.createIndex(new Index().on("status", DESC));
+        indexOperations.createIndex(new Index().on("wxTxnId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("bankTransferCode", DESC).sparse());
+        indexOperations.createIndex(new Index().on("bankTransferAccountId", DESC).sparse());
     }
 
     private void ensurePlateIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(PLATE_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC));
-        indexOperations.ensureIndex(new Index().on("appId", DESC));
-        indexOperations.ensureIndex(new Index().on("groupId", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("batchId", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("qrId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("tenantId", DESC));
+        indexOperations.createIndex(new Index().on("appId", DESC));
+        indexOperations.createIndex(new Index().on("groupId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("batchId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("qrId", DESC).sparse());
     }
 
     private void ensurePlateBatchIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(PLATE_BATCH_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("appId", DESC));
-        indexOperations.ensureIndex(new Index().on("name", DESC));
-        indexOperations.ensureIndex(new Index().on("createdBy", DESC));
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
-        indexOperations.ensureIndex(new Index().on("totalCount", DESC));
+        indexOperations.createIndex(new Index().on("appId", DESC));
+        indexOperations.createIndex(new Index().on("name", DESC));
+        indexOperations.createIndex(new Index().on("createdBy", DESC));
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("totalCount", DESC));
     }
 
     private void ensureQrIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(QR_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC));
-        indexOperations.ensureIndex(new Index().on("appId", DESC));
-        indexOperations.ensureIndex(new Index().on("name", DESC));
-        indexOperations.ensureIndex(new Index().on("text", DESC));
-        indexOperations.ensureIndex(new Index().on("plateId", DESC));
-        indexOperations.ensureIndex(new Index().on("groupId", DESC));
-        indexOperations.ensureIndex(new Index().on("customId", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("createdBy", DESC));
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
-        indexOperations.ensureIndex(new Index().on("svs", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("lastAccessedAt", DESC));
-        indexOperations.ensureIndex(new GeospatialIndex("geolocation.point").typed(GEO_2DSPHERE));
+        indexOperations.createIndex(new Index().on("tenantId", DESC));
+        indexOperations.createIndex(new Index().on("appId", DESC));
+        indexOperations.createIndex(new Index().on("name", DESC));
+        indexOperations.createIndex(new Index().on("text", DESC));
+        indexOperations.createIndex(new Index().on("plateId", DESC));
+        indexOperations.createIndex(new Index().on("groupId", DESC));
+        indexOperations.createIndex(new Index().on("customId", DESC).sparse());
+        indexOperations.createIndex(new Index().on("createdBy", DESC));
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("svs", DESC).sparse());
+        indexOperations.createIndex(new Index().on("lastAccessedAt", DESC));
+        indexOperations.createIndex(new GeospatialIndex("geolocation.point").typed(GEO_2DSPHERE));
 
         for (IndexedField indexedField : IndexedField.values()) {
-            indexOperations.ensureIndex(new Index().on(mongoTextFieldOf(indexedField), DESC).sparse());
-            indexOperations.ensureIndex(new Index().on(mongoSortableFieldOf(indexedField), DESC).sparse());
+            indexOperations.createIndex(new Index().on(mongoTextFieldOf(indexedField), DESC).sparse());
+            indexOperations.createIndex(new Index().on(mongoSortableFieldOf(indexedField), DESC).sparse());
         }
     }
 
     private void ensureSubmissionIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(SUBMISSION_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("tenantId", DESC));
-        indexOperations.ensureIndex(new Index().on("appId", DESC));
-        indexOperations.ensureIndex(new Index().on("groupId", DESC));
-        indexOperations.ensureIndex(new Index().on("qrId", DESC));
-        indexOperations.ensureIndex(new Index().on("pageId", DESC));
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
-        indexOperations.ensureIndex(new Index().on("createdBy", DESC).sparse());
-        indexOperations.ensureIndex(new Index().on("svs", DESC).sparse());
+        indexOperations.createIndex(new Index().on("tenantId", DESC));
+        indexOperations.createIndex(new Index().on("appId", DESC));
+        indexOperations.createIndex(new Index().on("groupId", DESC));
+        indexOperations.createIndex(new Index().on("qrId", DESC));
+        indexOperations.createIndex(new Index().on("pageId", DESC));
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("createdBy", DESC).sparse());
+        indexOperations.createIndex(new Index().on("svs", DESC).sparse());
 
         for (IndexedField indexedField : IndexedField.values()) {
-            indexOperations.ensureIndex(new Index().on(mongoTextFieldOf(indexedField), DESC).sparse());
-            indexOperations.ensureIndex(new Index().on(mongoSortableFieldOf(indexedField), DESC).sparse());
+            indexOperations.createIndex(new Index().on(mongoTextFieldOf(indexedField), DESC).sparse());
+            indexOperations.createIndex(new Index().on(mongoSortableFieldOf(indexedField), DESC).sparse());
         }
     }
 
     private void ensureTenantIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(TENANT_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("createdBy", DESC));
-        indexOperations.ensureIndex(new Index().on("apiSetting.apiKey", DESC).unique());
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("createdBy", DESC));
+        indexOperations.createIndex(new Index().on("apiSetting.apiKey", DESC).unique());
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
     }
 
     private void ensureVerificationIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(VERIFICATION_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("code", DESC));
-        indexOperations.ensureIndex(new Index().on("mobileOrEmail", DESC));
-        indexOperations.ensureIndex(new Index().on("type", DESC));
-        indexOperations.ensureIndex(new Index().on("usedCount", DESC));
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("code", DESC));
+        indexOperations.createIndex(new Index().on("mobileOrEmail", DESC));
+        indexOperations.createIndex(new Index().on("type", DESC));
+        indexOperations.createIndex(new Index().on("usedCount", DESC));
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
     }
 
     private void ensureInAppNotificationIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(IN_APP_NOTIFICATION_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("memberId", DESC));
-        indexOperations.ensureIndex(new Index().on("viewed", DESC));
-        indexOperations.ensureIndex(new Index().on("createdAt", DESC));
+        indexOperations.createIndex(new Index().on("memberId", DESC));
+        indexOperations.createIndex(new Index().on("viewed", DESC));
+        indexOperations.createIndex(new Index().on("createdAt", DESC));
     }
 
     private void ensurePublishingDomainEventIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(PUBLISHING_DOMAIN_EVENT_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("status", DESC));
-        indexOperations.ensureIndex(new Index().on("publishedCount", DESC));
-        indexOperations.ensureIndex(new Index().on("raisedAt", DESC));
+        indexOperations.createIndex(new Index().on("status", DESC));
+        indexOperations.createIndex(new Index().on("publishedCount", DESC));
+        indexOperations.createIndex(new Index().on("raisedAt", DESC));
     }
 
     private void ensureConsumingDomainEventIndex() {
         IndexOperations indexOperations = mongoTemplate.indexOps(CONSUMING_DOMAIN_EVENT_COLLECTION);
-        indexOperations.ensureIndex(new Index().on("eventId", DESC));
+        indexOperations.createIndex(new Index().on("eventId", DESC));
     }
 
     private void ensurePlatformArExists() {
