@@ -17,7 +17,7 @@ import com.mryqr.core.submission.domain.Submission;
 import com.mryqr.core.submission.domain.SubmissionApproval;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -41,7 +41,7 @@ public class WxNotificationService implements NotificationService {
     private final MemberRepository memberRepository;
     private final GroupRepository groupRepository;
     private final QrRepository qrRepository;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final WxAccessTokenService wxAccessTokenService;
     private final PropertyService propertyService;
 
@@ -295,7 +295,7 @@ public class WxNotificationService implements NotificationService {
         try {
             String accessToken = wxAccessTokenService.getAccessToken();
             String url = "https://api.weixin.qq.com/cgi-bin/message/template/send?access_token=" + accessToken;
-            Response response = restTemplate.postForObject(url, message, Response.class);
+            Response response = restClient.post().uri(url).body(message).retrieve().body(Response.class);
             if (response == null || response.getErrcode() != 0) {
                 log.error("Failed to send wx template message[{}] with error[{}].", message, response);
             }

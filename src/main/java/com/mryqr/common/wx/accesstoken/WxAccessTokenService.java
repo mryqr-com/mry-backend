@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
@@ -19,7 +19,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @RequiredArgsConstructor
 public class WxAccessTokenService {
     private static final String WX_ACCESS_TOKEN = "Wx:AccessToken";
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final WxProperties wxProperties;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
@@ -43,7 +43,7 @@ public class WxAccessTokenService {
         String appId = wxProperties.getMobileAppId();
         String secret = wxProperties.getMobileAppSecret();
         String url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + appId + "&secret=" + secret;
-        String resultString = restTemplate.getForObject(url, String.class);
+        String resultString = restClient.get().uri(url).retrieve().body(String.class);
         Map<String, String> resultMap = objectMapper.readValue(resultString, new TypeReference<>() {
         });
 

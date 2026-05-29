@@ -20,11 +20,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import tools.jackson.databind.ObjectMapper;
 
@@ -44,7 +43,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
-import static org.springframework.http.HttpMethod.GET;
 
 @Component
 @RequiredArgsConstructor
@@ -55,7 +53,7 @@ public class OrderQueryService {
     private final MryRateLimiter mryRateLimiter;
     private final OrderRepository orderRepository;
     private final MongoTemplate mongoTemplate;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final AliyunProperties aliyunProperties;
     private final ObjectMapper objectMapper;
 
@@ -189,7 +187,9 @@ public class OrderQueryService {
                 .queryParam("type", delivery.getCarrier().getType())
                 .toUriString();
 
-        ResponseEntity<String> response = restTemplate.exchange(url, GET, new HttpEntity<>(headers), String.class);
+        ResponseEntity<String> response = restClient.get().uri(url)
+                .headers(httpHeaders -> httpHeaders.addAll(headers))
+                .retrieve().toEntity(String.class);
         String responseBody = response.getBody();
         RawShipment rawShipment = objectMapper.readValue(responseBody, RawShipment.class);
 

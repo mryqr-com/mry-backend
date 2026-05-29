@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -24,7 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 @RequiredArgsConstructor
 public class DefaultPcWxAuthService implements PcWxAuthService {
     private static final String PC_WX_AUTH_ACCESS_TOKEN_PREFIX = "PcWxAuthAccessToken:";
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
     private final WxProperties wxProperties;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
@@ -34,7 +34,7 @@ public class DefaultPcWxAuthService implements PcWxAuthService {
         String appId = wxProperties.getPcAppId();
         String secret = wxProperties.getPcAppSecret();
         String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=" + appId + "&secret=" + secret + "&code=" + code + "&grant_type=authorization_code";
-        String resultString = restTemplate.getForObject(url, String.class);
+        String resultString = restClient.get().uri(url).retrieve().body(String.class);
         Map<String, String> resultMap = objectMapper.readValue(resultString, new TypeReference<>() {
         });
 
@@ -59,9 +59,9 @@ public class DefaultPcWxAuthService implements PcWxAuthService {
     @Override
     public PcWxAuthUserInfo fetchUserInfo(String accessToken, String pcWxOpenId) {
         String url = "https://api.weixin.qq.com/sns/userinfo?access_token=" + accessToken + "&openid=" + pcWxOpenId + "&lang=zh_CN";
-        String resultString = restTemplate.getForObject(url, String.class);
-        JsonNode jsonNode = objectMapper.readTree(resultString);
+        String resultString = restClient.get().uri(url).retrieve().body(String.class);
 
+        JsonNode jsonNode = objectMapper.readTree(resultString);
         JsonNode nicknameNode = jsonNode.get("nickname");
         JsonNode headImageNode = jsonNode.get("headimgurl");
         if (nicknameNode == null || isBlank(nicknameNode.stringValue())) {
