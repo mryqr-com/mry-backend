@@ -7,8 +7,6 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
   data:
-    mongodb:
-      uri: mongodb://localhost:27017/mry_local_db
     redis:
       database: 0
       host: localhost
@@ -27,6 +25,8 @@ spring:
           from: notapplicable@126.com
   cache:
     type: redis
+  mongodb:
+    uri: mongodb://localhost:27017/mry_local_db
 mry:
   aliyun:
     ak: your-aliyun-access-key
