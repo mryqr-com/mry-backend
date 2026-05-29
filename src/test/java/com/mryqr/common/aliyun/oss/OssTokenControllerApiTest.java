@@ -30,7 +30,7 @@ import static com.mryqr.utils.RandomTestFixture.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Disabled("由于ci环境未配置阿里云ak，aks和role，因此无法运行")
+@Disabled("由于未配置阿里云ak，aks和role，因此无法运行")
 class OssTokenControllerApiTest extends BaseApiTest {
 
     @Test

@@ -141,7 +141,7 @@ class RegisterControllerApiTest extends BaseApiTest {
     }
 
     @Test
-    @Disabled
+    @Disabled("当前没有对验证码进行校验")
     public void should_fail_to_register_if_verification_not_valid() {
         String tenantName = rTenantName();
         String email = rEmail();

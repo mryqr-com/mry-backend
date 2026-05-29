@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class WxControllerApiTest extends BaseApiTest {
 
     @Test
-    @Disabled("由于CI环境未配置mobileAppId和mobileAppSecret，因此无法运行")
+    @Disabled("由于未配置mobileAppId和mobileAppSecret，因此无法运行")
     public void should_create_wx_jssdk_config() {
         String url = "http://www.whatever.com";
 

@@ -4,6 +4,7 @@ import com.mryqr.BaseApiTest;
 import com.mryqr.core.qr.domain.QR;
 import com.mryqr.core.submission.domain.Submission;
 import com.mryqr.management.operation.MrySelfOperationJob;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,6 +15,7 @@ import static java.time.ZoneId.systemDefault;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@Disabled("这个测试会针对每个Tenant进行数据统计，因此非常慢，故禁用掉")
 public class MryOperationStatisticsJobTest extends BaseApiTest {
     @Autowired
     private MrySelfOperationJob mrySelfOperationJob;

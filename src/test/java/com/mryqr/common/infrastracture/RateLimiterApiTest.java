@@ -14,7 +14,7 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 import static java.util.stream.Collectors.toSet;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Disabled("经常挂")
+@Disabled("命令行build时经常挂，单独运行正常")
 @Slf4j
 @TestPropertySource(properties = {"mry.common.limitRate = true"})
 public class RateLimiterApiTest extends BaseApiTest {
