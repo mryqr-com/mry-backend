@@ -17,18 +17,16 @@ import com.mryqr.management.platform.domain.Platform;
 import com.mryqr.management.platform.domain.PlatformFactory;
 import com.mryqr.management.platform.domain.PlatformRepository;
 import com.mryqr.management.printingproduct.PrintingProductApp;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.stereotype.Component;
-
-import java.time.ZoneId;
 
 import static com.mryqr.common.utils.MongoCriteriaUtils.mongoSortableFieldOf;
 import static com.mryqr.common.utils.MongoCriteriaUtils.mongoTextFieldOf;
@@ -36,8 +34,6 @@ import static com.mryqr.common.utils.MryConstants.*;
 import static com.mryqr.management.MryManageTenant.MRY_MANAGE_TENANT_ID;
 import static com.mryqr.management.apptemplate.MryAppTemplateTenant.MRY_APP_TEMPLATE_TENANT_ID;
 import static java.util.Locale.CHINESE;
-import static java.util.TimeZone.getTimeZone;
-import static java.util.TimeZone.setDefault;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static org.springframework.data.mongodb.core.CollectionOptions.just;
 import static org.springframework.data.mongodb.core.index.GeoSpatialIndexType.GEO_2DSPHERE;
@@ -46,7 +42,7 @@ import static org.springframework.data.mongodb.core.query.Collation.of;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MrySystemInitializer implements ApplicationListener<ApplicationReadyEvent> {
+public class MrySystemInitializer implements SmartLifecycle {
     private final MongoTemplate mongoTemplate;
     private final PrintingProductApp printingProductApp;
     private final MryManageTenant mryManageTenant;
@@ -56,27 +52,19 @@ public class MrySystemInitializer implements ApplicationListener<ApplicationRead
     private final MryTenantManageApp mryTenantManageApp;
     private final MryOperationApp mryOperationApp;
     private final MryOffenceReportApp mryOffenceReportApp;
-    private final CacheClearer cacheClearer;
     private final WxAccessTokenService wxAccessTokenService;
     private final WxJsSdkService wxJsSdkService;
     private final AdministrativeProvider administrativeProvider;
-
     private final PlatformRepository platformRepository;
-
     private final PlatformFactory platformFactory;
-
     private final AppRepository appRepository;
-
     private final CommonProperties commonProperties;
-
-    @PostConstruct
-    void init() {
-        setDefault(getTimeZone(ZoneId.of(CHINA_TIME_ZONE)));
-    }
+    private final CacheManager cacheManager;
+    private volatile boolean running = false;
 
     @Override
-    public void onApplicationEvent(ApplicationReadyEvent event) {
-        cacheClearer.evictAllCache();
+    public void start() {
+        clearCaches();
         ensureMongoCollectionExist();
         ensureMongoIndexExist();
         ensureMryManageAppsExist();
@@ -85,6 +73,7 @@ public class MrySystemInitializer implements ApplicationListener<ApplicationRead
         wxJsSdkService.refreshJsApiTicket();
         administrativeProvider.init();
         log.info("Mr.Y system initialized.");
+        running = true;
     }
 
     private void ensureMongoCollectionExist() {
@@ -353,5 +342,30 @@ public class MrySystemInitializer implements ApplicationListener<ApplicationRead
 
         appRepository.evictTenantAppsCache(MRY_MANAGE_TENANT_ID);
         appRepository.evictTenantAppsCache(MRY_APP_TEMPLATE_TENANT_ID);
+    }
+
+    private void clearCaches() {
+        this.cacheManager.getCacheNames().forEach(cacheName -> {
+            Cache cache = cacheManager.getCache(cacheName);
+            if (cache != null) {
+                cache.clear();
+            }
+        });
+        log.info("Cleared all application caches.");
+    }
+
+    @Override
+    public void stop() {
+        running = false;
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running;
+    }
+
+    @Override
+    public int getPhase() {
+        return 0;
     }
 }
