@@ -24,8 +24,8 @@ public class TaskExecutorConfiguration implements AsyncConfigurer {
         executor.setCorePoolSize(5);
         executor.setMaxPoolSize(20);
         executor.setQueueCapacity(500);
-        executor.initialize();
         executor.setThreadNamePrefix("mry-common-");
+        executor.initialize();
         return executor;
     }
 

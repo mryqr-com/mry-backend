@@ -152,6 +152,7 @@ public class SchedulingConfiguration {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(5);
         scheduler.setThreadNamePrefix("mry-scheduling-");
+        scheduler.initialize();
         return scheduler;
     }
 }
