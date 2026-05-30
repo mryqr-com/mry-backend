@@ -13,9 +13,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 import static com.mryqr.core.app.domain.attribute.AttributeStatisticRange.*;
 import static java.time.LocalDateTime.now;
@@ -143,6 +145,14 @@ public class SchedulingConfiguration {
         } catch (Throwable t) {
             log.error("Failed remove old notification events from redis.", t);
         }
+    }
+
+    @Bean
+    public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(5);
+        scheduler.setThreadNamePrefix("mry-scheduling-");
+        return scheduler;
     }
 }
 
