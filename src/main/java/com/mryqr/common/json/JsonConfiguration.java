@@ -25,6 +25,7 @@ import static com.fasterxml.jackson.annotation.PropertyAccessor.FIELD;
 import static com.mryqr.common.utils.MryConstants.CHINA_TIME_ZONE;
 import static java.time.ZoneId.of;
 import static java.util.TimeZone.getTimeZone;
+import static tools.jackson.databind.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES;
 import static tools.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static tools.jackson.databind.MapperFeature.REQUIRE_SETTERS_FOR_GETTERS;
 import static tools.jackson.databind.cfg.DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS;
@@ -69,6 +70,7 @@ public class JsonConfiguration {
                 .defaultTimeZone(getTimeZone(of(CHINA_TIME_ZONE)))
                 .enable(REQUIRE_SETTERS_FOR_GETTERS)
                 .disable(FAIL_ON_UNKNOWN_PROPERTIES)
+                .disable(FAIL_ON_NULL_FOR_PRIMITIVES)
                 .disable(WRITE_DATES_AS_TIMESTAMPS)
                 .disable(WRITE_DURATIONS_AS_TIMESTAMPS);
     }
