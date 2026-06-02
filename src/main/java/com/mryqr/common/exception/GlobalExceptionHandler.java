@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
     @ResponseBody
     @ExceptionHandler(MryException.class)
     public ResponseEntity<?> handleMryException(MryException ex, HttpServletRequest request) {
-        log.error("Mry error access[{}]: {}", request.getRequestURI(), ex.getMessage());
+        log.error("Mry error access[{}:{}]: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
         return createErrorResponse(ex, request.getRequestURI());
     }
 
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({ServletRequestBindingException.class, HttpMessageNotReadableException.class, ConstraintViolationException.class})
     public ResponseEntity<QErrorResponse> handleServletRequestBindingException(Exception ex, HttpServletRequest request) {
         MryException exception = MryException.requestValidationException("message", "请求验证失败。");
-        log.error("Request processing error while access[{}]: {}", request.getRequestURI(), ex.getMessage());
+        log.error("Request processing error while access[{}:{}]: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
         return createErrorResponse(exception, request.getRequestURI());
     }
 
@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
         String path = request.getRequestURI();
         String traceId = mryTracingService.currentTraceId();
 
-        log.error("Error access[{}]:", path, ex);
+        log.error("Error access[{}:{}]:", request.getMethod(), path, ex);
         Error error = new Error(ErrorCode.SYSTEM_ERROR, ErrorCode.SYSTEM_ERROR.getStatus(), "系统错误。", path, traceId, null);
         return new ResponseEntity<>(error.toErrorResponse(), new HttpHeaders(), HttpStatus.valueOf(ErrorCode.SYSTEM_ERROR.getStatus()));
     }
