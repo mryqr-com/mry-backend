@@ -145,12 +145,12 @@ public class AssignmentPlan extends AggregateRoot {
         return setting.expireAtFor(cycleIndex).atZone(systemDefault()).toInstant();
     }
 
-    public Instant nearExpireNotifyAtFor(long cycleIndex) {
+    public Instant nearExpireNotifyAtFor(Instant expireAt) {
         if (!setting.isNearExpireNotifyEnabled()) {
             return null;
         }
 
-        return setting.nearExpireNotifyAtFor(cycleIndex).atZone(systemDefault()).toInstant();
+        return expireAt.minusSeconds(this.setting.nearExpireBetweenSeconds());
     }
 
     public long secondsBetweenStartAndExpire() {

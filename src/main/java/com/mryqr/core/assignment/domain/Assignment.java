@@ -62,7 +62,7 @@ public class Assignment extends AggregateRoot {
         this.startAt = startTime.atZone(systemDefault()).toInstant();
         this.cycleIndex = assignmentPlan.cycleIndexOf(startTime);
         this.expireAt = assignmentPlan.expireAtFor(this.cycleIndex);
-        this.nearExpireNotifyAt = assignmentPlan.nearExpireNotifyAtFor(this.cycleIndex);
+        this.nearExpireNotifyAt = assignmentPlan.nearExpireNotifyAtFor(this.expireAt);
         tryFixTime(assignmentPlan);
         this.allQrIds = qrIds;
         this.allQrCount = qrIds.size();
